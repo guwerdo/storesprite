@@ -1,0 +1,11 @@
+*.d.ts
+*.map
+app/logs
+app/dist
+app/node_modules
+app/secrets/unas-api-key
+app/data-source/data-source.schema.json
+app/data-source/product-dto.schema.json
+app/secrets/cromwell-sftp-private-id_rsa
+deploy/temp
+containers/test-csv-server/unas-ezermesterszerszam.csv

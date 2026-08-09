@@ -1,0 +1,22 @@
+FROM alpine:3.21
+
+# Install required packages and csvkit
+RUN apk add --no-cache python3 py3-pip bash wget curl tzdata openssh-client openssl \
+    && pip install --break-system-packages csvkit \
+    && mkdir -p /data
+
+COPY run.sh run-cromwell.sh run-magictools.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/run.sh /usr/local/bin/run-cromwell.sh /usr/local/bin/run-magictools.sh
+
+RUN mkdir -p /secrets
+COPY cromwell-sftp-private-id_rsa /secrets/
+RUN chmod 600 /secrets/cromwell-sftp-private-id_rsa
+
+ENV TZ=Europe/Budapest
+RUN cp /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
+    && echo "Europe/Budapest" > /etc/timezone
+
+# Set up cron to run script every day
+RUN echo "0 20 * * * /usr/local/bin/run.sh >> /csv-provider-data/cron.log 2>&1" > /etc/crontabs/root
+
+CMD ["crond", "-f", "-l", "2"]

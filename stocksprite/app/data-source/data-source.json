@@ -1,0 +1,68 @@
+[
+    {
+        "id": "cromwell",
+        "enabled": false,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/cromwell-raw.csv",
+            "testData": "/app/test-data/cromwell.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["part"] },
+            "name": { "fields": ["web_title"] },
+            "descriptionLong": { "fields": ["description"] },
+            "images": {
+                "fields": ["main_image_url", "additional_image_1_url", "additional_image_2_url", "additional_image_3_url"],
+                "fn": "mapImages"
+            },
+            "stocks": [
+                {
+                    "warehouseId": 1,
+                    "mapping": { "fields": ["free_stock_hu"] }
+                },
+                {
+                    "warehouseId": 5726549,
+                    "mapping": { "fields": ["free_stock_cz"] }
+                },
+                {
+                    "warehouseId": 5726554,
+
+                    "mapping": { "fields": ["free_stock_wdc"] }
+                }
+            ]
+        }
+    },
+    {
+        "id": "magictools",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/magictools.csv",
+            "testData": "/app/test-data/magictools.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["Cikkszám"], "fn": "mapMagicToolsSku" },
+            "stocks": [
+                {
+                    "warehouseId": 6071756,
+                    "mapping": { "fields": ["Készlet"] }
+                },
+                {
+                    "warehouseId": 6071761,
+                    "mapping": { "fields": ["Gyártói készlet"] }
+                },
+                {
+                    "warehouseId": 6071786,
+                    "mapping": { "fields": ["Várható érkezés mennyiség", "Várható érkezés dátum"], "fn": "mapMagicToolsIncomingStockCount" }
+                }
+            ],
+            "datas": [
+                {
+                    "id": 1,
+                    "name": "Várható érkezés dátum",
+                    "mapping": { "fields": ["Várható érkezés mennyiség", "Várható érkezés dátum"], "fn": "mapMagicToolsIncomingStockDate" }
+                }
+            ]
+        }
+    }
+]
