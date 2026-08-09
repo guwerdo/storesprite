@@ -5,6 +5,10 @@ import AuthGuard from './components/AuthGuard.js';
 import HomePage from './pages/HomePage.js';
 import SamplePage from './pages/SamplePage.js';
 import ProfilePage from './pages/ProfilePage.js';
+import { AppThemeProvider, useColorMode } from './theme/AppThemeProvider.js';
+import { ClerkProvider } from '@clerk/clerk-react';
+
+const PUBLISHABLE_KEY = 'pk_test_aW50ZXJuYWwtZWZ0LTg3LmNsZXJrLmFjY291bnRzLmRldiQ';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +26,20 @@ const router = createBrowserRouter([
   },
 ]);
 
+function ClerkWithTheme(): React.JSX.Element {
+  const { clerkAppearance } = useColorMode();
+
+  return (
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} appearance={clerkAppearance}>
+      <RouterProvider router={router} />
+    </ClerkProvider>
+  );
+}
+
 export default function App(): React.JSX.Element {
-  return <RouterProvider router={router} />;
+  return (
+    <AppThemeProvider>
+      <ClerkWithTheme />
+    </AppThemeProvider>
+  );
 }

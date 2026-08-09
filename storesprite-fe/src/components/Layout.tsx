@@ -12,9 +12,16 @@ import {
   Toolbar,
   Typography,
   Button,
+  IconButton,
+  useTheme,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import ArticleIcon from '@mui/icons-material/Article';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { useColorMode } from '../theme/AppThemeProvider.js';
+
+import { useUser } from '@clerk/clerk-react';
 
 const DRAWER_WIDTH = 220;
 
@@ -32,6 +39,15 @@ const NAV_ITEMS: NavItem[] = [
 export default function Layout(): React.JSX.Element {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string>('/');
+  const theme = useTheme();
+  const { toggleColorMode } = useColorMode();
+  const { user } = useUser();
+
+  const displayName =
+    user?.fullName ||
+    user?.username ||
+    user?.primaryEmailAddress?.emailAddress ||
+    'User';
 
   const handleNavClick = (path: string): void => {
     setSelected(path);
@@ -51,8 +67,11 @@ export default function Layout(): React.JSX.Element {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             storesprite
           </Typography>
+          <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit" aria-label="toggle dark/light mode">
+            {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
           <Button color="inherit" component={RouterLink} to="/profile">
-            username
+            {displayName}
           </Button>
         </Toolbar>
       </AppBar>
