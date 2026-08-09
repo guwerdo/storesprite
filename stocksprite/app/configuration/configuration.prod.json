@@ -1,0 +1,17 @@
+{
+    "unasApiBase": "https://api.unas.eu/shop/",
+    "redis": {
+        "connection": {
+            "host": "redis-stack",
+            "port": 6379
+        }
+    },
+    "bullMq": {
+        "worker": {
+            "connection": {
+                "host": "redis-stack",
+                "port": 6379
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+const stanleyWarehouseId = "6487126";
+const stanleyWarehouseContainer = document.querySelector(`.artdet__warehouse.warehouse-${stanleyWarehouseId}`);
+
+if (stanleyWarehouseContainer) {
+    const quantityElement = stanleyWarehouseContainer.querySelector('.artdet__warehouse-quantity');
+    
+    if (quantityElement) {   
+        const quantity = parseInt(quantityElement.textContent.trim());
+
+        if (!isNaN(quantity) && quantity > 0) {
+            quantityElement.textContent = 'Raktáron';
+        }
+        else {
+            quantityElement.textContent = 'Nincs raktáron';
+        }
+    }
+}

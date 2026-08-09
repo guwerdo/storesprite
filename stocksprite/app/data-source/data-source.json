@@ -1,0 +1,118 @@
+[
+    {
+        "id": "cromwell",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/cromwell.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["part"] },
+            "stocks": [
+                {
+                    "warehouseId": 1,
+                    "mapping": { "fields": ["free_stock_hu"] }
+                },
+                {
+                    "warehouseId": 5726549,
+                    "mapping": { "fields": ["free_stock_cz"] }
+                },
+                {
+                    "warehouseId": 5726554,
+
+                    "mapping": { "fields": ["free_stock_wdc"] }
+                }
+            ]
+        }
+    },
+    {
+        "id": "magictools",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/magictools.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["Cikkszám"], "ruleId": "magictools-replace-spaces-in-sku-with-underscores" },
+            "stocks": [
+                {
+                    "warehouseId": 6071756,
+                    "mapping": { "fields": ["Készlet"] }
+                },
+                {
+                    "warehouseId": 6071761,
+                    "mapping": { "fields": ["Gyártói készlet"] }
+                },
+                {
+                    "warehouseId": 6071786,
+                    "mapping": { "fields": ["Várható érkezés mennyiség", "Várható érkezés dátum"], "ruleId": "magictools-expected-incoming-quantity" }
+                }
+            ],
+            "datas": [
+                {
+                    "id": 1,
+                    "name": "Várható érkezés dátum",
+                    "mapping": { "fields": ["Várható érkezés mennyiség", "Várható érkezés dátum"], "ruleId": "magictools-expected-incoming-date" }
+                }
+            ]
+        }
+    },
+    {
+        "id": "madalbal",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/madalbal.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["sku"] },
+            "stocks": [
+                {
+                    "warehouseId": 6278166,
+                    "mapping": { "fields": ["stock"] }
+                }
+            ]
+        }
+    },
+    {
+        "id": "stanley",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/stanley.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["sku"] },
+            "stocks": [
+                {
+                    "warehouseId": 6487126,
+                    "mapping": { "fields": ["stock"], "ruleId": "stanley-stock-multiplier" }
+                }
+            ]
+        }
+    },
+    {
+        "id": "depiend",
+        "enabled": true,
+        "connection": {
+            "protocol": "file",
+            "path": "/csv-provider-data/depiend.csv"
+        },
+        "productMapping": {
+            "sku": { "fields": ["Cikkszám"] },
+            "stocks": [
+                {
+                    "warehouseId": 6281866,
+                    "mapping": { "fields": ["Készlet"] }
+                },
+                {
+                    "warehouseId": 6281851,
+                    "mapping": {
+                        "fields": ["Gyártói készlet"],
+                        "ruleId": "depiend-stock-count-from-stock-interval"
+                    }
+                }
+            ]
+        }
+    }
+]

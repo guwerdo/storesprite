@@ -1,0 +1,18 @@
+# Feladat:
+
+Depiend
+Ez a rule mos t 0 vagy 1et ad vissza. Ezt torolni es lecserelni egy uj rulera.
+
+# Uj rule:
+A depiend csvben a ["Gyártói készlet"] intervallumnak a szamtani kozepet venni.
+Pl ha az intervallum 200-500 akkior az unason megjelenitendo ertek: 350
+
+Regi rule:
+
+``` torolni ezt a stockspripte configbol
+"fields": ["Gyártói készlet"],
+"ruleId": "depiend-stock-count-from-stock-interval"
+```
+
+Torolni komletten ezt az Unas scriptet az unasrol:
+`d:\my-git\agrogarden-dev\stocksprite\doc\depiend\Depiend script.txt`

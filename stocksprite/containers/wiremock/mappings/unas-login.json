@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/shop/login"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "unas-login-response.xml",
+    "headers": {
+      "Content-Type": "text/html; charset=UTF-8"
+    }
+  }
+}

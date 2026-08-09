@@ -1,0 +1,40 @@
+# -------- Stage 1: Base layer --------
+FROM node:24.4.1-alpine3.22 AS base
+RUN apk update && apk add mc tzdata dcron dos2unix
+
+# -------- Stage 1: Build and compile layer --------
+FROM base AS build
+WORKDIR /app
+COPY app /app
+RUN npm install && npm run build
+
+# -------- Stage 3: Final runtime image --------
+FROM base AS final
+LABEL stocksprite-version="1.0.0"
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/data-source /app/data-source
+COPY --from=build /app/configuration /app/configuration
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/package*.json /app
+COPY --from=build /app/version.json /app
+
+COPY ./entrypoint.sh ./stocksprite-cron-cache.sh ./stocksprite-cron-parse.sh ./cronjob /app/
+RUN dos2unix /app/entrypoint.sh \
+             /app/stocksprite-cron-cache.sh \
+             /app/stocksprite-cron-parse.sh \
+             /app/cronjob
+
+RUN chmod +x /app/entrypoint.sh /app/stocksprite-cron-cache.sh /app/stocksprite-cron-parse.sh /app/cronjob \
+    && crontab /app/cronjob
+
+WORKDIR /app
+CMD ["/app/entrypoint.sh"]
+
+# -------- Notes for testing this container --------
+# sudo docker build -t test-img .
+# sudo docker run -it --rm --name test-cont test-img /bin/ash
+#
+# force recreate image of service
+# sudo docker compose build --no-cache app
+# sudo docker compose up -d --force-recreate app
+# sudo docker exec -it 7cf5c4e8aef0 /bin/ash

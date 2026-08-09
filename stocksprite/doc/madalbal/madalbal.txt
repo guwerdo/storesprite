@@ -1,0 +1,38 @@
+https://xml.madalbal.hu/partnerwebxml/xml?id=xEhQKOrrIe
+stockAmount kell
+<product id="8803720" a termekazonosito az unason
+
+	<product id="1820">
+		<name>köszörűkő klt. fúrógéphez; 5db, 6mm tengely, bliszter</name>
+		<producer>EXTOL CRAFT</producer>
+		<shortDescription>nagyker ár: 5db-tól; 3% kedv.: 10db-tól; 5% kedv.: 30db-tól</shortDescription>
+		<description><![CDATA[]]></description>
+		<category id="AUF">Alkatrészek, kiegészítők elektromos gépekhez</category>
+		<status>Raktáron</status>
+		<weight>0,1 Kg</weight>
+		<VendorProductURL>https://www.madalbal.hu/alkatreszek-kiegeszitok-elektromos-gepekhez/koszoruko-klt-furogephez-5db-6mm-tengely-bliszter-p22.html</VendorProductURL>
+		<SmallPictureURL>https://www.madalbal.hu/koszoruko_klt_furogephez_5db_6mm_tengely_bliszter-i67443.jpg</SmallPictureURL>
+		<PictureURL>https://www.madalbal.hu/koszoruko_klt_furogephez_5db_6mm_tengely_bliszter-i67442.jpg</PictureURL>
+		<partnerAtadasiAr>427,88</partnerAtadasiAr>
+		<javasoltjavasoltBruttoKiskerAr>945</javasoltjavasoltBruttoKiskerAr>
+		<minimumBruttoFogyAr>856</minimumBruttoFogyAr>
+		<nettoNagykerAr>0</nettoNagykerAr>
+		<stockAmount>100</stockAmount>
+		<packaging>db</packaging>
+		<m1>5</m1>
+		<m2>10</m2>
+		<m3>30</m3>
+		<vonalkod>8595126964326</vonalkod>
+		<xmeret>18</xmeret>
+		<ymeret>11</ymeret>
+		<zmeret>3</zmeret>
+		<cikkfajta>cs1</cikkfajta>
+		<markavedelem>1</markavedelem>
+		<AkcioDatumig></AkcioDatumig>
+		<kepek>
+			<kep>https://www.madalbal.hu/koszoruko_klt_furogephez_5db_6mm_tengely_bliszter-i67442.jpg</kep>
+			<kep>https://www.madalbal.hu/koszoruko_klt_furogephez_5db_6mm_tengely_bliszter-i67446.jpg</kep>
+		</kepek>
+		<videok>
+		</videok>
+	</product>

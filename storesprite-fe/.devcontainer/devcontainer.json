@@ -1,0 +1,21 @@
+{
+  "name": "Store Sprite Frontend (storesprite-fe)",
+  "dockerComposeFile": [
+    "../../docker-compose.yaml"
+  ],
+  "service": "storesprite-fe",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "npm install",
+  "forwardPorts": [
+    5173
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.path-intellisense"
+      ]
+    }
+  }
+}

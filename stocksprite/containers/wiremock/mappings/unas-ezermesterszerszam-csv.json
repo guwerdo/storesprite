@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/shop/temp/ezermesterszerszam.csv"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "ezermesterszerszam.csv",
+    "headers": {
+      "Content-Type": "text/csv; charset=UTF-8",
+      "Content-Disposition": "attachment; filename=\"ezermesterszerszam.csv\""
+    }
+  }
+}

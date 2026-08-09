@@ -1,0 +1,17 @@
+{
+    "name": "Stocksprite",
+    "dockerComposeFile": [
+        "D:/my-git/agrogarden-dev/stocksprite/docker-compose.yaml"
+    ],
+    "service": "app",
+    "workspaceFolder": "/app",
+    "postCreateCommand": "npm install",
+    "forwardPorts": [6379],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }  
+}

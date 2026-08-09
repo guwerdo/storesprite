@@ -1,0 +1,27 @@
+SEN4450520K - stock is -1, not updating
+SHR0242100L - stock is -1 in cache but -1 is no found in scv, not updating
+then the published item is 1 and the cached item is -1 it is not updating the stock
+ST40WHRM -1
+C733WHRXS
+
+Ezeknel is megjelenik valahogy a foraktar
+DX443BKR38 = 6
+KS31BKRL
+PUM-633130-42 = this show difference for "Magictools magyar raktár" (keszlet in magictools)
+
+
+
+Updated after cache->pub then cache->pub againPUM-643890-48
+varhato erkezes magyar raktarra ertek beragad ha nincs datum hozza
+
+ALB-204850-600-38
+ALB-204850-600-43
+8819412
+FP50RBR
+ST40WHRM
+VO-A1031
+LEM-893-44
+ALB-649020-46'
+ALB-646600-45
+EXE-ANTIGUA-24-46
+FW80BKR46

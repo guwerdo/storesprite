@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Login>
+    <Token>06c39cdf85c34da7a7477c9dd5aeab8dae883cf6</Token>
+    <Expire>2026.02.24 11:23:00</Expire>
+    <ShopId>83219</ShopId>
+    <Subscription>vip-100000</Subscription>
+    <Permissions>
+        <Permission>getOrder</Permission>
+        <Permission>setOrder</Permission>
+        <Permission>getStock</Permission>
+        <Permission>setStock</Permission>
+        <Permission>getProduct</Permission>
+        <Permission>setProduct</Permission>
+        <Permission>getProductDB</Permission>
+        <Permission>setProductDB</Permission>
+        <Permission>getProductParameter</Permission>
+        <Permission>setProductParameter</Permission>
+        <Permission>getCategory</Permission>
+        <Permission>setCategory</Permission>
+        <Permission>getCustomer</Permission>
+        <Permission>setCustomer</Permission>
+        <Permission>checkCustomer</Permission>
+        <Permission>getCustomerGroup</Permission>
+        <Permission>setCustomerGroup</Permission>
+        <Permission>getNewsletter</Permission>
+        <Permission>setNewsletter</Permission>
+        <Permission>getScriptTag</Permission>
+        <Permission>setScriptTag</Permission>
+        <Permission>getPage</Permission>
+        <Permission>setPage</Permission>
+        <Permission>getPageContent</Permission>
+        <Permission>setPageContent</Permission>
+        <Permission>getStorage</Permission>
+        <Permission>setStorage</Permission>
+        <Permission>getAutomatism</Permission>
+        <Permission>setAutomatism</Permission>
+        <Permission>getOrderStatus</Permission>
+        <Permission>setOrderStatus</Permission>
+        <Permission>getOrderType</Permission>
+        <Permission>setOrderType</Permission>
+        <Permission>getCoupon</Permission>
+        <Permission>setCoupon</Permission>
+        <Permission>getMethod</Permission>
+        <Permission>setMethod</Permission>
+        <Permission>getDeliveryPointGroup</Permission>
+        <Permission>setDeliveryPointGroup</Permission>
+        <Permission>getDeliveryPoint</Permission>
+        <Permission>setDeliveryPoint</Permission>
+        <Permission>getWarehouse</Permission>
+        <Permission>setWarehouse</Permission>
+        <Permission>getPackageOffer</Permission>
+        <Permission>setPackageOffer</Permission>
+    </Permissions>
+    <Status>ok</Status>
+</Login>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Products>
+    {{#each (xPath request.body '//Product/Sku/text()') as |sku|}}
+    <Product>
+        <Id>1340633016</Id>
+        <Sku>{{sku}}</Sku>
+        <Action>modify</Action>
+        <Status>ok</Status>
+    </Product>
+    {{/each}}
+</Products>

@@ -1,0 +1,457 @@
+{
+	"info": {
+		"_postman_id": "ad62c1fd-f82c-42b8-9a29-7b1c18d393fd",
+		"name": "Unas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18737"
+	},
+	"item": [
+		{
+			"name": "login",
+			"request": {
+				"auth": {
+					"type": "bearer"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Params>\r\n    <ApiKey>{{unas-api-key}}</ApiKey>\r\n</Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/login",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductDB",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n        <Params>\r\n            <Format>csv</Format>\r\n            <GetStock>1</GetStock>\r\n            <GetImage>1</GetImage>\r\n            <GetData>1</GetData>\r\n            <GetParam>1</GetParam>\r\n            <LimitStart>0</LimitStart>\r\n            <LimitNum>5</LimitNum>\r\n        </Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/getProductDB",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"getProductDB"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProductDB",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "29a1b267fd6a79424ca3728d5a7695358e1b30df",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Params>\r\n\t<Url>http://agrogarden.hu/it/webshop-updater/f7780ab1-0981-4ad2-ac45-eeb395166930.csv</Url>\r\n\t<DB></DB>\r\n\t<DelType>no</DelType>\r\n</Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProductDB",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProductDB"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProduct",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n    <Params>\r\n        <Sku>KEN5824600K</Sku>\r\n        <StatusBase>0,1,2,3</StatusBase>\r\n        <LimitStart>0</LimitStart>\r\n        <LimitNum>1</LimitNum>\r\n        <ContentType>full</ContentType>\r\n    </Params>\r\n"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/getProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"getProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductParameter [all]",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Params>\r\n\t<Type>text</Type>\r\n</Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/getProductParameter",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"getProductParameter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductParameter [cromwell-update-meta]",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Params>\r\n\t<Id>6828164</Id>\r\n</Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/getProductParameter",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"getProductParameter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProduct image",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Products>\r\n    <Product>\r\n        <Sku>KEN5824600K</Sku>\r\n        <Action>modify</Action>\r\n        <Images>\r\n\t\t\t<DefaultFilename><![CDATA[termekkep4]]></DefaultFilename> \r\n\t\t\t<DefaultAlt><![CDATA[termeknev4]]></DefaultAlt> \r\n\t\t\t<OG>2</OG> \r\n\t\t\t<Version>8</Version> \r\n            <Image>\r\n            \t<Type>base</Type> \r\n\t\t\t\t<Id>1</Id> \r\n\t\t\t\t<SefUrl><![CDATA[https://i.ytimg.com/vi/1x35EQxDOvA/sddefault.jpg]]></SefUrl> \r\n\t\t\t\t<Filename><![CDATA[elsokepjpg]]></Filename> \r\n\t\t\t\t<Alt><![CDATA[elsokep]]></Alt>\r\n                <Import>\r\n                    <Url>https://i.ytimg.com/vi/1x35EQxDOvA/sddefault.jpg</Url>\r\n                </Import>\r\n            </Image>\r\n            <Image>\r\n            \t<Type>alt</Type> \r\n\t\t\t\t<Id>2</Id> \r\n\t\t\t\t<SefUrl><![CDATA[https://as1.ftcdn.net/v2/jpg/01/11/22/44/1000_F_111224494_Vcl3eafzhx6Uc5GulbI2rk0eAOq0np59.jpg]]></SefUrl> \r\n\t\t\t\t<Filename><![CDATA[masodikkep]]></Filename> \r\n\t\t\t\t<Alt><![CDATA[masodikalt]]></Alt>\r\n                <Import>\r\n                    <Url>https://as1.ftcdn.net/v2/jpg/01/11/22/44/1000_F_111224494_Vcl3eafzhx6Uc5GulbI2rk0eAOq0np59.jpg</Url>\r\n                </Import>\r\n            </Image>\r\n        </Images>\r\n    </Product>\r\n</Products>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProduct image - works",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Products>\r\n  <Product>\r\n    <Sku>teszt-00004</Sku>\r\n    <Action>modify</Action>\r\n    <Images>\r\n      <DefaultFilename><![CDATA[termekkep]]></DefaultFilename>\r\n      <DefaultAlt><![CDATA[termeknev]]></DefaultAlt>\r\n      <OG>1</OG>\r\n      <Version>20200108</Version>\r\n      <Image>\r\n        <Type>base</Type>\r\n        <Id>1</Id>\r\n        <SefUrl><![CDATA[https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_1.jpg]]></SefUrl>\r\n        <Filename><![CDATA[kep-1]]></Filename>\r\n        <Alt><![CDATA[rrrrrr]]></Alt>\r\n        <Import>\r\n            <Url>https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_1.jpg</Url>\r\n        </Import>\r\n      </Image>\r\n      <Image>\r\n        <Type>alt</Type>\r\n        <Id>2</Id>\r\n        <SefUrl><![CDATA[https://static-content.cromwell.co.uk/images/854_854/z/graphics/created_by_ctl/400_graphics/c_443-v.jpg]]></SefUrl>\r\n        <Filename><![CDATA[kep-2]]></Filename>\r\n        <Alt><![CDATA[ssssss]]></Alt>\r\n        <Import>\r\n          <Url>https://static-content.cromwell.co.uk/images/854_854/z/graphics/created_by_ctl/400_graphics/c_443-v.jpg</Url>\r\n        </Import>\r\n      </Image>\r\n    </Images>\r\n  </Product>\r\n</Products>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProduct image - works2",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Products>\r\n  <Product>\r\n    <Sku>teszt-00009</Sku>\r\n    <Action>modify</Action>\r\n    <Params>\r\n      <Param>\r\n        <Name>stocksprite-param</Name>\r\n        <Value>\r\n          <![CDATA[description:1,image:1]]>\r\n        </Value>\r\n      </Param>\r\n    </Params>\r\n    <Images>\r\n      <DefaultFilename>\r\n        <![CDATA[atl4431720k_1-jpg]]>\r\n      </DefaultFilename>\r\n      <DefaultAlt>\r\n        <![CDATA[t13 Atlas Workholders. V450-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ]]>\r\n      </DefaultAlt>\r\n      <OG>0</OG>\r\n      <Version>2025-06-03T17:33:57.524Z</Version>\r\n      <Image>\r\n        <Type>base</Type>\r\n        <Id>0</Id>\r\n        <SefUrl>\r\n          <![CDATA[https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_1.jpg]]>\r\n        </SefUrl>\r\n        <Filename><![CDATA[atl4431720k_1-jpg]]></Filename>\r\n        <Alt>\r\n          <![CDATA[t13 Atlas Workholders. V450-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ]]>\r\n        </Alt>\r\n        <Import>\r\n          <Url>https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_1.jpg</Url>\r\n        </Import>\r\n      </Image>\r\n      <Image>\r\n        <Type>alt</Type>\r\n        <Id>1</Id>\r\n        <SefUrl>\r\n          <![CDATA[https://static-content.cromwell.co.uk/images/854_854/z/graphics/created_by_ctl/400_graphics/c_443-v.jpg]]>\r\n        </SefUrl>\r\n        <Filename><![CDATA[c443-v_jpg]]></Filename>\r\n        <Alt>\r\n          <![CDATA[t13 Atlas Workholders. V450-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ]]>\r\n        </Alt>\r\n        <Import>\r\n          <Url>https://static-content.cromwell.co.uk/images/854_854/z/graphics/created_by_ctl/400_graphics/c_443-v.jpg</Url>\r\n        </Import>\r\n      </Image>\r\n      <Image>\r\n        <Type>alt</Type>\r\n        <Id>2</Id>\r\n        <SefUrl>\r\n          <![CDATA[https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_2.jpg]]>\r\n        </SefUrl>\r\n        <Filename><![CDATA[atl4431720k_2.jpg]]></Filename>\r\n        <Alt>\r\n          <![CDATA[t13 Atlas Workholders. V450-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ]]>\r\n        </Alt>\r\n        <Import>\r\n          <Url>https://static-content.cromwell.co.uk/images/854_854/g/jeeps/443/atl4431720k_2.jpg</Url>\r\n        </Import>\r\n      </Image>\r\n    </Images>\r\n  </Product>\r\n</Products>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProduct - modify",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Products>\r\n    <Product>\r\n        <Sku>KEN5824600K</Sku>\r\n        <Action>modify</Action>\r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ <b>test4123</b> ]]>\r\n            </Long>\r\n        </Description>\r\n        <Images>\r\n            <Image>\r\n                <Import>\r\n                    <Url>https://flyingmag1.b-cdn.net/wp-content/uploads/sites/2/2022/06/AdobeStock_249454423-scaled-1.jpeg</Url>\r\n                </Import>\r\n            </Image>\r\n        </Images>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>22</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>33</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:1,images:1]]></Value>\r\n            </Param>\r\n        </Params>\r\n    </Product>\r\n</Products>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setProduct - add",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Products>\r\n    <Product>\r\n        <Sku>teszt-00001</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>\r\n        <Name> <![CDATA[teszt-00001]]> </Name>\r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ <b>test123</b> ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>         \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00002</Sku>       \r\n        <Action>add</Action>\r\n        <NoList>1</NoList>         \r\n        <Name> <![CDATA[teszt-00002]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00002 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00003</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00003]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00003 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00004</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>\r\n        <Name> <![CDATA[teszt-00004]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00004 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00005</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>                \r\n        <Name> <![CDATA[teszt-00005]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00005 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00006</Sku>     \r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00006]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00006 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00007</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00007]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00007 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00008</Sku>        \r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00008]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00008 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00009</Sku>        \r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00009]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00009 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00010</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>                \r\n        <Name> <![CDATA[teszt-00010]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00010 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00011</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>                \r\n        <Name> <![CDATA[teszt-00011]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00011 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00012</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>        \r\n        <Name> <![CDATA[teszt-00012]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00012 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n    <Product>\r\n        <Sku>teszt-00013</Sku>\r\n        <Action>add</Action>\r\n        <NoList>1</NoList>\r\n        <Name> <![CDATA[teszt-00013]]> </Name>        \r\n        <Description>\r\n            <Long>\r\n                <![CDATA[ teszt-00013 leiras ]]>\r\n            </Long>\r\n        </Description>\r\n        <Stocks>\r\n            <Status>\r\n                <Active>1</Active>\r\n            </Status>\r\n            <Stock>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>11</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726549</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>12</Qty>\r\n            </Stock>\r\n            <Stock>\r\n                <WarehouseId>5726554</WarehouseId>\r\n                <IsActive>yes</IsActive>\r\n                <Qty>13</Qty>\r\n            </Stock>\r\n        </Stocks>\r\n        <Params>\r\n            <Param>\r\n                <Name>stocksprite-param</Name>\r\n                <Value><![CDATA[description:0,images:0]]></Value>\r\n            </Param>\r\n        </Params>\r\n        <Categories>\r\n            <Category>\r\n                <Type>base</Type>\r\n                <Id>933828</Id>\r\n            </Category>\r\n        </Categories>\r\n        <Prices>\r\n            <Vat>27%</Vat>\r\n            <Price>\r\n                <Type>normal</Type>\r\n                <Net>100</Net>\r\n                <Gross>200</Gross>\r\n                <Actual>1</Actual>\r\n            </Price>\r\n        </Prices>        \r\n    </Product>\r\n</Products>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/setProduct",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"setProduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductParameter",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{unas-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n<Params>\r\n\t<Type>text</Type>\r\n</Params>"
+				},
+				"url": {
+					"raw": "https://api.unas.eu/shop/getProductParameter",
+					"protocol": "https",
+					"host": [
+						"api",
+						"unas",
+						"eu"
+					],
+					"path": [
+						"shop",
+						"getProductParameter"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "unas-token",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "unas-api-key",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

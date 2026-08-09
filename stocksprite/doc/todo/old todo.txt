@@ -1,0 +1,51 @@
+# NEXT
+- !!!!!!!!!!: test magictools and cromwell updates with test data and test products on unas
+- check what xml is actually sent to unas, if stock updated, image updated, description updated.
+- NOT SURE: Store product internal unas id not just sku, it will be needed for using the setStock api
+- DONE: use fast-json-stable-stringify guarantees stable, predictable JSON serialization instead of json.stringify. so object properties are always sorted
+- DONE: change productdto to interface instead of class
+- DONE: redis exception in logs: WRONGTYPE Operation against a key holding the wrong kind of value
+- DONE: use Util.stringifyError for all catch errors
+- DONE: log the different productdto property name if there is a difference not just the value: `compareProductDto()`
+- DONE: test cache.js
+- DONE: move getNumberValue and similar common functions to map basecalss to share with unas mapper and default maper
+- DONE (store empty array): shoud we store stocks data in redis as an empyt array [] or undefined if the array is empty?
+- DONT KNOW: compile avj shema in a central place like inversify or config
+
+# LATER
+Stock sprite
+- show the last update date on the unas product page for each product that stocksprite touches, like: stocksprite last update: "10:30 2025-09-25"
+- concert csv files ; separated because thats more common in Europe since numbers separated with ,
+- Setup script that sets up/checks una's store, egy stocksorote-param
+- Publish should validate warehouse IDs if exists in una's
+- TODO Validate if warehouse id exists in unas, read and save warehouse ids to redis when this script starts
+- normalize() and stringify() functions might do the same, by making the json object deterministic. check this and remove one of them after unit and integration tests
+/app/src/data-source/data-source-mapper.ts
+
+
+# Magictools
+Cikkszám;Név;Kiszerelés;Gyüjtő;Méret;Szín;Cikkcsoport;Gyártó;Készlet;"Gyártói készlet
+Várható érkezés dátum
+Várható érkezés mennyiség
+Nettó ajánlott fogyasztói ár";Leírás;"Kép URL
+Termék URL";Státusz;Kivitel;EAN
+
+----------------------------
+
+Magictools
+cikkszamban lehet szokoz. az unasban legyen alahuzas. pl: "ALB-631080-39 S3"
+
+https://media.magictools.hu/shared/products.csv
+
+# CSV oszlopok
+- "Készlet" = megic magyar raktar
+- "Gyártói készlet" = magic kulfoldi raktar
+- "Várható érkezés mennyiség" = magic erkezo raktar
+- "Várható érkezés dátum" = ezt megjeleniteni a "magic erkezo raktar" mellett mint comment (pl.: "varhato erkezes datuma")
+    - Unas api: Stocks.Stock.Comment
+
+
+# Warehouse and page display
+UNAS frontend does not filter warehouses by product assignment the way the API does. Instead, it respects the VisibleOnProductDetails flag.
+So if I have 4 warehouses, but i assign 2 warehouses for my product on the UNAS webshop i still will see all 4 warehouses.
+To hide warehouses not assigned to the product, set the "Csak, ha van ezen a raktáron" flag to true.

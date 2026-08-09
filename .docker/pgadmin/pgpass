@@ -1,0 +1,2 @@
+postgres:5432:storesprite_db:storesprite:storesprite_secure_pass
+postgres:5432:*:storesprite:storesprite_secure_pass

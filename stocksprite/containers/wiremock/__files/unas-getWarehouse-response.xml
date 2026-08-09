@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Warehouses>
+    <Warehouse>
+        <Id>5726549</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Cseh raktár (Cromwell)]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Központi magyar raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Kiszállítás vagy személyes átvétel: 5 munkanap]]>
+        </Info>
+        <Order>1</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>5726554</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Angol raktár (Cromwell)]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Külföldi beszállítói raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Kiszállítás vagy személyes átvétel: 15 munkanap]]>
+        </Info>
+        <Order>2</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6071756</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Magictools magyar raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Központi magyar raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Kiszállítás vagy személyes átvétel: 2 munkanap]]>
+        </Info>
+        <Order>3</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6071761</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Magictools külföldi raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Külföldi beszállítói raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Kiszállítás vagy személyes átvétel: 10 munkanap]]>
+        </Info>
+        <Order>4</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6071786</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Magictools érkező raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Várható érkezés magyar raktárra]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Az érkezés dátuma az adatok menüben található]]>
+        </Info>
+        <Order>5</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6278166</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Madalbal magyar raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Központi magyar raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Kiszállítás vagy személyes átvétel: 3 munkanap]]>
+        </Info>
+        <Order>6</Order>
+        <Type>own</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6281866</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Depiend magyar raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Központi magyar raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Várható szállítási határidő 3 munkanap]]>
+        </Info>
+        <Order>7</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+    <Warehouse>
+        <Id>6281851</Id>
+        <Active>yes</Active>
+        <Name>
+            <![CDATA[Depiend külföldi raktár]]>
+        </Name>
+        <PublicName>
+            <![CDATA[Külföldi beszállítói raktár]]>
+        </PublicName>
+        <Info>
+            <![CDATA[Várható szállítási határidő 8 munkanap]]>
+        </Info>
+        <Order>8</Order>
+        <Type>external</Type>
+        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
+        <UseFilter>no</UseFilter>
+    </Warehouse>
+</Warehouses>

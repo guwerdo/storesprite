@@ -1,0 +1,4 @@
+FROM node:24.4.1-alpine3.22
+
+# 'apk add bash' is used to add copilot shell integration in VS Code
+RUN apk update && apk add mc && apk add tzdata && apk add bash

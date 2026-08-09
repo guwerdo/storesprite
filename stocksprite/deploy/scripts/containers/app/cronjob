@@ -1,0 +1,2 @@
+10 3,9,15,21 * * * /app/stocksprite-cron-cache.sh
+20 3,9,15,21 * * * /app/stocksprite-cron-parse.sh

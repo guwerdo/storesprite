@@ -1,0 +1,26 @@
+{
+  "name": "Storesprite Monorepo Root",
+  "dockerComposeFile": [
+    "../docker-compose.yaml"
+  ],
+  "service": "storesprite-fe",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "cd storesprite-be && npm install && cd ../storesprite-fe && npm install",
+  "forwardPorts": [
+    3000,
+    5173,
+    5432,
+    9200,
+    5601
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.path-intellisense"
+      ]
+    }
+  }
+}

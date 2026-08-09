@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/shop/setProduct"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "unas-setProduct-response.xml",
+    "headers": {
+      "Content-Type": "text/html; charset=UTF-8"
+    }
+  }
+}

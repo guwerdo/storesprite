@@ -1,0 +1,39 @@
+# Depiend raktar keszlet megvaltoztatasa unas scriptbol
+
+
+További raktárkészlet: Depiend külföldi raktár
+Ez a raktarkeszlet intervallumot ad meg. pl "100 - 299 db"
+Hogyha az intervallum nagyobb mint 0 akkor az unason a 
+depiend raktakeszletenek 1et allitunk be
+
+## Mi jelenik meg
+``` Ehelyett a szoveg helyett
+Külföldi beszállítói raktár                  1 pár
+Várható szállítási határidő 8 munkanap
+```
+
+``` Ez a szoveg jelenjen meg 
+Külföldi beszállítói raktár                  Raktáron
+Várható szállítási határidő 8 munkanap
+```
+
+## Unas script neve:
+"Depiend külföldi beszállítói raktár "Raktáron" szöveg megjelenítése a darabszám helyett"
+
+## Unas script:
+```
+const depiendWarehouseId = "6281851";
+const warehouseContainer = document.querySelector(`.artdet__warehouse.warehouse-${depiendWarehouseId}`);
+
+if (warehouseContainer) {
+    const quantityElement = warehouseContainer.querySelector('.artdet__warehouse-quantity');
+    
+    if (quantityElement) {   
+        const quantity = parseInt(quantityElement.textContent.trim());
+
+        if (!isNaN(quantity) && quantity > 0) {
+            quantityElement.textContent = 'Raktáron';
+        }
+    }
+}
+```

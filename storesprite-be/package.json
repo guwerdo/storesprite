@@ -1,0 +1,47 @@
+{
+  "name": "storesprite-be",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "CHOKIDAR_USEPOLLING=1 CHOKIDAR_INTERVAL=3000 tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "rel": "node dist/server.js",
+    "test": "vitest run --config vitest.config.ts",
+    "test-api": "vitest run --config vitest.e2e.config.ts",
+    "lint": "npx eslint ./src",
+    "migration:create": "npm run build && mikro-orm migration:create",
+    "migration:up": "npm run build && mikro-orm migration:up",
+    "migration:down": "npm run build && mikro-orm migration:down",
+    "migration:list": "npm run build && mikro-orm migration:list"
+  },
+  "dependencies": {
+    "@clerk/backend": "^1.8.0",
+    "@fastify/cors": "^9.0.1",
+    "@mikro-orm/core": "^6.6.16",
+    "@mikro-orm/migrations": "^6.6.16",
+    "@mikro-orm/postgresql": "^6.6.16",
+    "dotenv": "^16.4.5",
+    "fast-json-stable-stringify": "^2.1.0",
+    "fastify": "^4.28.1",
+    "fastify-plugin": "^4.5.1",
+    "inversify": "^6.0.2",
+    "log4js": "^6.9.1",
+    "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.7.5",
+    "svix": "^1.24.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@mikro-orm/cli": "^6.6.16",
+    "@types/node": "^20.14.9",
+    "esbuild": "^0.23.0",
+    "eslint": "^10.8.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^2.0.5",
+    "vitest-mock-extended": "^2.0.2"
+  }
+}

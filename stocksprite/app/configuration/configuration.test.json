@@ -1,0 +1,20 @@
+{
+    "redis": {
+        "connection": {
+            "host": "redis-stack-test",
+            "port": 6379
+        }
+    },
+    "bullMq": {
+        "queue": {
+            "parsed": "parsed-data-queue-test",
+            "translated": "translated-data-queue-test"
+        },
+        "worker": {
+            "connection": {
+                "host": "redis-stack-test",
+                "port": 6379
+            }
+        }
+    }
+}

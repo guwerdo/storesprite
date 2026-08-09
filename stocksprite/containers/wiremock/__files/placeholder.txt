@@ -1,0 +1,1 @@
+put the downloaded exermesterszerszam exported csv here from unas: `ezermesterszerszam.csv` usung postman to download a real csv from unasthe postman script is in my account
