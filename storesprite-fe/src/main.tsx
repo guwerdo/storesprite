@@ -6,11 +6,7 @@ import { ContainerProvider } from './di/ContainerProvider.js';
 import { container } from './di/container.js';
 import App from './App.js';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Vite environment variable: VITE_CLERK_PUBLISHABLE_KEY');
-}
+const PUBLISHABLE_KEY = 'pk_test_aW50ZXJuYWwtZWZ0LTg3LmNsZXJrLmFjY291bnRzLmRldiQ';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
