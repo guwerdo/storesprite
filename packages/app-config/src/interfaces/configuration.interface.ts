@@ -4,10 +4,10 @@
  */
 export interface IConfiguration {
     /**
-     * Gets a configuration value by key using colon notation for nested values.
+     * Gets a configuration value by key using colon notation or dot notation for nested values.
      * @example
      * config.get<string>("redis:connection:host") // "localhost"
-     * config.get<number>("redis:connection:port") // 6379
+     * config.get<number>("redis.connection.port") // 6379
      */
     get<T>(key: string): T | undefined;
 

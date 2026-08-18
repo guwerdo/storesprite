@@ -16,14 +16,16 @@ services:
 
   storesprite-be:
     build:
-      context: ./storesprite-be
+      context: .
+      dockerfile: ./storesprite-be/Dockerfile
     container_name: storesprite-be
     restart: always
     ports:
       - "3000:3000"
     volumes:
-      - ./storesprite-be:/workspace
-      - /workspace/node_modules
+      - ./storesprite-be:/workspace/storesprite-be
+      - ./packages:/workspace/packages
+      - /workspace/storesprite-be/node_modules
     depends_on:
       - opensearch
       - postgres

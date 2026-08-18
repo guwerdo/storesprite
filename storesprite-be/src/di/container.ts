@@ -2,6 +2,7 @@ import { Container } from "inversify";
 import log4js from "log4js";
 import { jsonWithDataFieldLayout } from "../log/index.js";
 import { log4jsConfig } from "../config/log4js.config.js";
+import { configuration } from "../config/configuration.js";
 import { TYPES } from "./types.js";
 import { UserService } from "../services/UserService.js";
 import { UserRepository } from "../repositories/UserRepository.js";
@@ -13,6 +14,9 @@ log4js.addLayout("json-with-data-field", jsonWithDataFieldLayout);
 
 export function createContainer(orm?: MikroORM): Container {
   const container = new Container();
+
+  // Bind configuration instance
+  container.bind(TYPES.IConfiguration).toConstantValue(configuration);
 
   // Configure and bind log4js structured Logger
   const logger = log4js.configure(log4jsConfig).getLogger("storesprite-be");

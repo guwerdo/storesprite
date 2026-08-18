@@ -1,7 +1,17 @@
 FROM node:24-slim
 WORKDIR /workspace
-COPY package*.json ./
+
+# Copy shared packages and build them
+COPY packages/ /workspace/packages/
+WORKDIR /workspace/packages/app-config
+RUN npm install && npm run build
+
+# Install and build backend
+COPY storesprite-be/package*.json /workspace/storesprite-be/
+WORKDIR /workspace/storesprite-be
 RUN npm install
-COPY . .
+
+COPY storesprite-be/ /workspace/storesprite-be/
+
 EXPOSE 3000
 CMD ["sh", "-c", "echo 'To start the service run: npm run dev' && tail -f /dev/null"]

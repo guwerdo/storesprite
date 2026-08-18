@@ -5,8 +5,10 @@ export type { IUserRepository } from "../types/UserRepository.interface.js";
 export type { IUserService } from "../types/UserService.interface.js";
 export type { ISettingRepository } from "../types/SettingRepository.interface.js";
 export type { ISettingService, UserSettingsDto, SaveUserSettingsDto } from "../types/SettingService.interface.js";
+export type { IConfiguration } from "@storesprite/app-config";
 
 export const TYPES = {
+  IConfiguration: Symbol.for("IConfiguration"),
   IUserRepository: Symbol.for("IUserRepository"),
   IUserService: Symbol.for("IUserService"),
   ISettingRepository: Symbol.for("ISettingRepository"),

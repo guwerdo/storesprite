@@ -46,6 +46,7 @@ services:
     command: top
     volumes:
       - ./app:/app
+      - ../packages:/packages
       - ./app/logs:/app/logs
       - ./app/secrets:/run/secrets:ro
       - csv-provider-data:/csv-provider-data:ro

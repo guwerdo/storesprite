@@ -20,7 +20,7 @@
  * }
  * ```
  */
-import { ConfigurationBuilder } from "./configuration-builder.js";
+import { ConfigurationBuilder } from "@storesprite/app-config";
 
 /**
  * Default application configuration instance.
