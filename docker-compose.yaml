@@ -26,6 +26,7 @@ services:
       - ./storesprite-be:/workspace/storesprite-be
       - ./packages:/workspace/packages
       - /workspace/storesprite-be/node_modules
+      - /workspace/packages/app-config/node_modules
     depends_on:
       - opensearch
       - postgres
