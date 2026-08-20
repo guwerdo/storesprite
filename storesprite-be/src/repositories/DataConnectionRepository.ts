@@ -50,8 +50,8 @@ export class DataConnectionRepository implements IDataConnectionRepository {
       data.name,
       data.channel,
       data.dataFormat,
-      data.config as unknown as Record<string, unknown>,
-      data.dataFormatConfig as unknown as Record<string, unknown>,
+      data.config,
+      data.dataFormatConfig,
       data.isActive !== undefined ? data.isActive : true,
       data.credentials ?? null
     );
@@ -83,10 +83,10 @@ export class DataConnectionRepository implements IDataConnectionRepository {
       connection.dataFormat = data.dataFormat;
     }
     if (data.config !== undefined) {
-      connection.config = data.config as unknown as Record<string, unknown>;
+      connection.config = data.config;
     }
     if (data.dataFormatConfig !== undefined) {
-      connection.dataFormatConfig = data.dataFormatConfig as unknown as Record<string, unknown>;
+      connection.dataFormatConfig = data.dataFormatConfig;
     }
     if (data.isActive !== undefined) {
       connection.isActive = data.isActive;

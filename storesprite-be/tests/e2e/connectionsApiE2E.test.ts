@@ -29,8 +29,21 @@ describe("E2E Connections API Tests", () => {
     await app.close();
   });
 
+  describe("Authentication & Authorization Security", () => {
+    it("should return 401 Unauthorized when Bearer token is missing", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/client/connections",
+      });
+
+      expect(response.statusCode).toBe(401);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toContain("Missing Bearer Token");
+    });
+  });
+
   describe("GET /api/client/connections", () => {
-    it("should return empty list when no connections exist", async () => {
+    it("should return empty list when no connections exist for user", async () => {
       const response = await app.inject({
         method: "GET",
         url: "/api/client/connections",
@@ -45,7 +58,7 @@ describe("E2E Connections API Tests", () => {
     });
   });
 
-  describe("POST & GET /api/client/connections CRUD", () => {
+  describe("POST & GET /api/client/connections CRUD Operations", () => {
     it("should create HTTP connection with Bearer credentials, fetch, update and delete", async () => {
       // 1. Create HTTP / CSV connection with Bearer credentials
       const createResponse = await app.inject({
@@ -199,6 +212,50 @@ describe("E2E Connections API Tests", () => {
       expect(createBody.connection.credentials.authType).toBe("PRIVATE_KEY");
       expect(createBody.connection.credentials.username).toBe("cromwell_feed_user");
     });
+  });
+
+  describe("Validation & Edge Cases", () => {
+    it("should reject connection when name is empty", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+        payload: {
+          name: "   ",
+          channel: "HTTP",
+          dataFormat: "CSV",
+          config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+          dataFormatConfig: { format: "CSV", delimiter: ";" },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toContain("Connection name is required");
+    });
+
+    it("should reject connection when name exceeds 255 characters", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+        payload: {
+          name: "x".repeat(256),
+          channel: "HTTP",
+          dataFormat: "CSV",
+          config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+          dataFormatConfig: { format: "CSV", delimiter: ";" },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toContain("Connection name cannot exceed 255 characters");
+    });
 
     it("should reject invalid schema payload with 400 status code", async () => {
       const response = await app.inject({
@@ -226,6 +283,37 @@ describe("E2E Connections API Tests", () => {
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.payload);
       expect(body.error).toContain("Invalid SFTP connection config");
+    });
+
+    it("should return 404 when updating non-existent connection", async () => {
+      const response = await app.inject({
+        method: "PUT",
+        url: "/api/client/connections/11111111-2222-3333-4444-555555555555",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+        payload: {
+          name: "Non-existent",
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toBe("Connection not found");
+    });
+
+    it("should return 404 when deleting non-existent connection", async () => {
+      const response = await app.inject({
+        method: "DELETE",
+        url: "/api/client/connections/11111111-2222-3333-4444-555555555555",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toBe("Connection not found");
     });
   });
 });

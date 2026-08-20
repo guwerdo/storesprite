@@ -5,6 +5,7 @@ import { DataConnectionService } from "../../src/services/DataConnectionService.
 import {
   IDataConnectionRepository,
   CreateDataConnectionDto,
+  UpdateDataConnectionDto,
 } from "../../src/types/DataConnectionRepository.interface.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
 import { User } from "../../src/entities/User.js";
@@ -45,9 +46,58 @@ describe("DataConnectionService Unit Tests", () => {
       expect(result[0].dataFormat).toBe("CSV");
       expect(result[0].isActive).toBe(true);
     });
+
+    it("should return empty array if repository is not initialized", async () => {
+      // Arrange
+      const uninitService = new DataConnectionService(undefined);
+
+      // Act
+      const result = await uninitService.getConnections("user_123");
+
+      // Assert
+      expect(result).toEqual([]);
+    });
   });
 
-  describe("createConnection validation", () => {
+  describe("getConnectionById", () => {
+    it("should return mapped DTO when connection exists", async () => {
+      // Arrange
+      const conn = new DataConnection(
+        mockUser,
+        "Magictools HTTP",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        { authType: "NONE" }
+      );
+      conn.id = "conn-uuid-1";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(conn);
+
+      // Act
+      const result = await service.getConnectionById("conn-uuid-1", "user_123");
+
+      // Assert
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe("conn-uuid-1");
+      expect(result?.name).toBe("Magictools HTTP");
+      expect(result?.credentials).toEqual({ authType: "NONE" });
+    });
+
+    it("should return null when connection does not exist", async () => {
+      // Arrange
+      repositoryMock.getByIdAndUserId.mockResolvedValue(null);
+
+      // Act
+      const result = await service.getConnectionById("non-existent", "user_123");
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("createConnection validation & credentials", () => {
     it("should reject connection when name is missing or empty", async () => {
       // Arrange
       const dto: CreateDataConnectionDto = {
@@ -60,6 +110,20 @@ describe("DataConnectionService Unit Tests", () => {
 
       // Act & Assert
       await expect(service.createConnection("user_123", dto)).rejects.toThrow("Connection name is required");
+    });
+
+    it("should reject connection when name exceeds 255 characters", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "a".repeat(256),
+        channel: "HTTP",
+        dataFormat: "CSV",
+        config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+        dataFormatConfig: { format: "CSV", delimiter: ";" },
+      };
+
+      // Act & Assert
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Connection name cannot exceed 255 characters");
     });
 
     it("should reject HTTP connection with invalid URL", async () => {
@@ -118,7 +182,7 @@ describe("DataConnectionService Unit Tests", () => {
       await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid XML format config");
     });
 
-    it("should successfully create and return DTO when all fields and credentials are valid", async () => {
+    it("should successfully create connection with HTTP Bearer credentials", async () => {
       // Arrange
       const dto: CreateDataConnectionDto = {
         name: "Magictools Feed",
@@ -151,6 +215,70 @@ describe("DataConnectionService Unit Tests", () => {
       expect(result.channel).toBe("HTTP");
       expect(result.dataFormat).toBe("CSV");
       expect(result.credentials).toEqual({ authType: "BEARER", token: "my-jwt-token" });
+    });
+
+    it("should successfully create connection with HTTP API Key credentials", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "API Key Feed",
+        channel: "HTTP",
+        dataFormat: "CSV",
+        config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+        dataFormatConfig: { format: "CSV", delimiter: ";" },
+        credentials: { authType: "API_KEY", headerName: "X-Api-Key", headerValue: "secret-key-123" },
+      };
+
+      const createdConn = new DataConnection(
+        mockUser,
+        "API Key Feed",
+        "HTTP",
+        "CSV",
+        dto.config,
+        dto.dataFormatConfig,
+        true,
+        dto.credentials
+      );
+      createdConn.id = "conn-apikey";
+      repositoryMock.create.mockResolvedValue(createdConn);
+
+      // Act
+      const result = await service.createConnection("user_123", dto);
+
+      // Assert
+      expect(result.id).toBe("conn-apikey");
+      expect(result.credentials).toEqual({ authType: "API_KEY", headerName: "X-Api-Key", headerValue: "secret-key-123" });
+    });
+
+    it("should successfully create connection with SFTP Password credentials", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "SFTP Pass Feed",
+        channel: "SFTP",
+        dataFormat: "XML",
+        config: { channel: "SFTP", host: "sftp.dunitker.hu", port: 22, remoteDir: "/export" },
+        dataFormatConfig: { format: "XML", rowPath: ".//item" },
+        credentials: { authType: "PASSWORD", username: "dunitker_user", password: "dunitker_password" },
+      };
+
+      const createdConn = new DataConnection(
+        mockUser,
+        "SFTP Pass Feed",
+        "SFTP",
+        "XML",
+        dto.config,
+        dto.dataFormatConfig,
+        true,
+        dto.credentials
+      );
+      createdConn.id = "conn-sftp-pass";
+      repositoryMock.create.mockResolvedValue(createdConn);
+
+      // Act
+      const result = await service.createConnection("user_123", dto);
+
+      // Assert
+      expect(result.id).toBe("conn-sftp-pass");
+      expect(result.credentials).toEqual({ authType: "PASSWORD", username: "dunitker_user", password: "dunitker_password" });
     });
 
     it("should reject HTTP connection when credentials schema is invalid", async () => {
@@ -219,6 +347,121 @@ describe("DataConnectionService Unit Tests", () => {
       expect(result.id).toBe("conn-sftp-key");
       expect(result.channel).toBe("SFTP");
       expect(result.credentials).toEqual(dto.credentials);
+    });
+  });
+
+  describe("updateConnection", () => {
+    it("should return null if existing connection is not found", async () => {
+      // Arrange
+      repositoryMock.getByIdAndUserId.mockResolvedValue(null);
+
+      // Act
+      const result = await service.updateConnection("non-existent-id", "user_123", { name: "New Name" });
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it("should update connection name and credentials partially", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Old Name",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        { authType: "NONE" }
+      );
+      existing.id = "conn-to-update";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      const updatedConn = new DataConnection(
+        mockUser,
+        "New Name",
+        "HTTP",
+        "CSV",
+        existing.config,
+        existing.dataFormatConfig,
+        true,
+        { authType: "BEARER", token: "updated-token" }
+      );
+      updatedConn.id = "conn-to-update";
+      repositoryMock.update.mockResolvedValue(updatedConn);
+
+      const dto: UpdateDataConnectionDto = {
+        name: "New Name",
+        credentials: { authType: "BEARER", token: "updated-token" },
+      };
+
+      // Act
+      const result = await service.updateConnection("conn-to-update", "user_123", dto);
+
+      // Assert
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe("New Name");
+      expect(result?.credentials).toEqual({ authType: "BEARER", token: "updated-token" });
+    });
+
+    it("should validate and switch channel from HTTP to SFTP during update", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Switch Channel",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        { authType: "NONE" }
+      );
+      existing.id = "conn-switch";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      const updatedConn = new DataConnection(
+        mockUser,
+        "Switch Channel",
+        "SFTP",
+        "CSV",
+        { channel: "SFTP", host: "sftp.newhost.com", remoteDir: "/feeds" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        { authType: "PASSWORD", username: "sftpuser", password: "secretpassword" }
+      );
+      updatedConn.id = "conn-switch";
+      repositoryMock.update.mockResolvedValue(updatedConn);
+
+      const dto: UpdateDataConnectionDto = {
+        channel: "SFTP",
+        config: { channel: "SFTP", host: "sftp.newhost.com", remoteDir: "/feeds" },
+        credentials: { authType: "PASSWORD", username: "sftpuser", password: "secretpassword" },
+      };
+
+      // Act
+      const result = await service.updateConnection("conn-switch", "user_123", dto);
+
+      // Assert
+      expect(result).not.toBeNull();
+      expect(result?.channel).toBe("SFTP");
+      expect(result?.credentials).toEqual({ authType: "PASSWORD", username: "sftpuser", password: "secretpassword" });
+    });
+
+    it("should reject update when new name is empty", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Valid Name",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" }
+      );
+      existing.id = "conn-1";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      // Act & Assert
+      await expect(service.updateConnection("conn-1", "user_123", { name: "  " })).rejects.toThrow("Connection name is required");
     });
   });
 
