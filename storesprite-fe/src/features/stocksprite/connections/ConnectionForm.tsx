@@ -464,6 +464,8 @@ export default function ConnectionForm({
               <TextField
                 fullWidth
                 required
+                name="connection_name"
+                autoComplete="off"
                 label={t('stocksprite.connections.form.name')}
                 placeholder={t('stocksprite.connections.form.namePlaceholder')}
                 value={name}
@@ -532,6 +534,8 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   required
+                  name="http_url"
+                  autoComplete="off"
                   label={t('stocksprite.connections.form.http.url')}
                   placeholder={t('stocksprite.connections.form.http.urlPlaceholder')}
                   value={httpUrl}
@@ -559,6 +563,7 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   type="number"
+                  name="http_timeout"
                   label={t('stocksprite.connections.form.http.timeout')}
                   value={httpTimeout}
                   onChange={(e) => setHttpTimeout(e.target.value)}
@@ -585,6 +590,8 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   required
+                  name="sftp_host"
+                  autoComplete="off"
                   label={t('stocksprite.connections.form.sftp.host')}
                   placeholder={t('stocksprite.connections.form.sftp.hostPlaceholder')}
                   value={sftpHost}
@@ -597,6 +604,7 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   type="number"
+                  name="sftp_port"
                   label={t('stocksprite.connections.form.sftp.port')}
                   value={sftpPort}
                   onChange={(e) => setSftpPort(e.target.value)}
@@ -607,6 +615,8 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   required
+                  name="sftp_remote_dir"
+                  autoComplete="off"
                   label={t('stocksprite.connections.form.sftp.remoteDir')}
                   placeholder={t('stocksprite.connections.form.sftp.remoteDirPlaceholder')}
                   value={sftpRemoteDir}
@@ -683,6 +693,9 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_basic_username"
+                      autoComplete="new-password"
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       label={t('stocksprite.connections.form.credentials.http.username')}
                       value={httpBasicUsername}
                       onChange={(e) => setHttpBasicUsername(e.target.value)}
@@ -694,12 +707,15 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_basic_password"
+                      autoComplete="new-password"
                       type={showBasicPassword ? 'text' : 'password'}
                       label={t('stocksprite.connections.form.credentials.http.password')}
                       value={httpBasicPassword}
                       onChange={(e) => setHttpBasicPassword(e.target.value)}
                       error={Boolean(httpBasicPasswordError)}
                       helperText={httpBasicPasswordError}
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -727,6 +743,8 @@ export default function ConnectionForm({
                   <TextField
                     fullWidth
                     required
+                    name="ss_auth_bearer_token"
+                    autoComplete="new-password"
                     type={showBearerToken ? 'text' : 'password'}
                     label={t('stocksprite.connections.form.credentials.http.token')}
                     placeholder={t('stocksprite.connections.form.credentials.http.tokenPlaceholder')}
@@ -734,6 +752,7 @@ export default function ConnectionForm({
                     onChange={(e) => setHttpBearerToken(e.target.value)}
                     error={Boolean(httpBearerTokenError)}
                     helperText={httpBearerTokenError}
+                    inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
@@ -761,6 +780,9 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_api_header_name"
+                      autoComplete="off"
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'off' }}
                       label={t('stocksprite.connections.form.credentials.http.headerName')}
                       placeholder={t('stocksprite.connections.form.credentials.http.headerNamePlaceholder')}
                       value={httpApiKeyHeaderName}
@@ -773,12 +795,15 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_api_header_value"
+                      autoComplete="new-password"
                       type={showApiKeyValue ? 'text' : 'password'}
                       label={t('stocksprite.connections.form.credentials.http.headerValue')}
                       value={httpApiKeyHeaderValue}
                       onChange={(e) => setHttpApiKeyHeaderValue(e.target.value)}
                       error={Boolean(httpApiKeyHeaderValueError)}
                       helperText={httpApiKeyHeaderValueError}
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -828,6 +853,9 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_sftp_username"
+                      autoComplete="new-password"
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       label={t('stocksprite.connections.form.credentials.sftp.username')}
                       value={sftpPasswordUsername}
                       onChange={(e) => setSftpPasswordUsername(e.target.value)}
@@ -839,12 +867,15 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_sftp_password"
+                      autoComplete="new-password"
                       type={showSftpPassword ? 'text' : 'password'}
                       label={t('stocksprite.connections.form.credentials.sftp.password')}
                       value={sftpPasswordPassword}
                       onChange={(e) => setSftpPasswordPassword(e.target.value)}
                       error={Boolean(sftpPasswordPasswordError)}
                       helperText={sftpPasswordPasswordError}
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -873,6 +904,9 @@ export default function ConnectionForm({
                     <TextField
                       fullWidth
                       required
+                      name="ss_auth_sftp_key_username"
+                      autoComplete="new-password"
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       label={t('stocksprite.connections.form.credentials.sftp.username')}
                       value={sftpKeyUsername}
                       onChange={(e) => setSftpKeyUsername(e.target.value)}
@@ -909,11 +943,14 @@ export default function ConnectionForm({
                       required
                       multiline
                       rows={5}
+                      name="ss_auth_sftp_private_key"
+                      autoComplete="off"
                       placeholder={t('stocksprite.connections.form.credentials.sftp.privateKeyPlaceholder')}
                       value={sftpPrivateKey}
                       onChange={(e) => setSftpPrivateKey(e.target.value)}
                       error={Boolean(sftpPrivateKeyError)}
                       helperText={sftpPrivateKeyError}
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true' }}
                       InputProps={{
                         sx: {
                           fontFamily: 'Consolas, Monaco, "Lucida Console", monospace',
@@ -926,11 +963,14 @@ export default function ConnectionForm({
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
+                      name="ss_auth_sftp_passphrase"
+                      autoComplete="new-password"
                       type={showSftpPassphrase ? 'text' : 'password'}
                       label={t('stocksprite.connections.form.credentials.sftp.passphrase')}
                       value={sftpKeyPassphrase}
                       onChange={(e) => setSftpKeyPassphrase(e.target.value)}
                       helperText={t('stocksprite.connections.form.credentials.sftp.passphraseHelper')}
+                      inputProps={{ 'data-lpignore': 'true', 'data-1p-ignore': 'true', autoComplete: 'new-password' }}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -1050,6 +1090,8 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   required
+                  name="xml_row_path"
+                  autoComplete="off"
                   label={t('stocksprite.connections.form.xml.rowPath')}
                   placeholder={t('stocksprite.connections.form.xml.rowPathPlaceholder')}
                   value={xmlRowPath}
@@ -1061,6 +1103,8 @@ export default function ConnectionForm({
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
+                  name="xml_attribute_prefix"
+                  autoComplete="off"
                   label={t('stocksprite.connections.form.xml.attributePrefix')}
                   placeholder={t('stocksprite.connections.form.xml.attributePrefixPlaceholder')}
                   value={xmlAttributePrefix}

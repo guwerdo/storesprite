@@ -251,6 +251,32 @@ export function AppThemeProvider({ children }: IAppThemeProviderProps): React.JS
             },
           },
         },
+        MuiInputBase: {
+          styleOverrides: {
+            input: {
+              '&:-webkit-autofill': {
+                WebkitBoxShadow: `0 0 0 100px ${isDark ? '#131B2E' : '#FFFFFF'} inset !important`,
+                WebkitTextFillColor: `${isDark ? '#F8FAFC' : '#0F172A'} !important`,
+                caretColor: isDark ? '#F8FAFC' : '#0F172A',
+                borderRadius: 'inherit',
+                transition: 'background-color 5000s ease-in-out 0s',
+              },
+            },
+          },
+        },
+        MuiOutlinedInput: {
+          styleOverrides: {
+            input: {
+              '&:-webkit-autofill': {
+                WebkitBoxShadow: `0 0 0 100px ${isDark ? '#131B2E' : '#FFFFFF'} inset !important`,
+                WebkitTextFillColor: `${isDark ? '#F8FAFC' : '#0F172A'} !important`,
+                caretColor: isDark ? '#F8FAFC' : '#0F172A',
+                borderRadius: 'inherit',
+                transition: 'background-color 5000s ease-in-out 0s',
+              },
+            },
+          },
+        },
       },
     }, muiLocale);
   }, [mode, activeLanguage]);
