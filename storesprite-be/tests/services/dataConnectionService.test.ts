@@ -73,7 +73,7 @@ describe("DataConnectionService Unit Tests", () => {
       };
 
       // Act & Assert
-      await expect(service.createConnection("user_123", dto)).rejects.toThrow("HTTP connection 'url' must be a valid URL");
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid HTTP connection config");
     });
 
     it("should reject SFTP connection when host is missing", async () => {
@@ -87,7 +87,7 @@ describe("DataConnectionService Unit Tests", () => {
       };
 
       // Act & Assert
-      await expect(service.createConnection("user_123", dto)).rejects.toThrow("SFTP connection requires a non-empty 'host'");
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid SFTP connection config");
     });
 
     it("should reject CSV format when delimiter is missing", async () => {
@@ -101,7 +101,7 @@ describe("DataConnectionService Unit Tests", () => {
       };
 
       // Act & Assert
-      await expect(service.createConnection("user_123", dto)).rejects.toThrow("CSV data format requires a non-empty 'delimiter'");
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid CSV format config");
     });
 
     it("should reject XML format when rowPath is missing", async () => {
@@ -115,10 +115,10 @@ describe("DataConnectionService Unit Tests", () => {
       };
 
       // Act & Assert
-      await expect(service.createConnection("user_123", dto)).rejects.toThrow("XML data format requires a non-empty 'rowPath'");
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid XML format config");
     });
 
-    it("should successfully create and return DTO when all fields are valid", async () => {
+    it("should successfully create and return DTO when all fields and credentials are valid", async () => {
       // Arrange
       const dto: CreateDataConnectionDto = {
         name: "Magictools Feed",
@@ -126,6 +126,7 @@ describe("DataConnectionService Unit Tests", () => {
         dataFormat: "CSV",
         config: { channel: "HTTP", url: "https://media.magictools.hu/shared/products.csv", insecureIgnoreSsl: true },
         dataFormatConfig: { format: "CSV", delimiter: ";", hasHeaders: true },
+        credentials: { authType: "BEARER", token: "my-jwt-token" },
       };
 
       const createdConn = new DataConnection(
@@ -135,7 +136,8 @@ describe("DataConnectionService Unit Tests", () => {
         "CSV",
         { channel: "HTTP", url: "https://media.magictools.hu/shared/products.csv", method: "GET", insecureIgnoreSsl: true },
         { format: "CSV", delimiter: ";", encoding: "UTF-8", hasHeaders: true },
-        true
+        true,
+        { authType: "BEARER", token: "my-jwt-token" }
       );
       createdConn.id = "conn-uuid-magic";
       repositoryMock.create.mockResolvedValue(createdConn);
@@ -148,6 +150,75 @@ describe("DataConnectionService Unit Tests", () => {
       expect(result.name).toBe("Magictools Feed");
       expect(result.channel).toBe("HTTP");
       expect(result.dataFormat).toBe("CSV");
+      expect(result.credentials).toEqual({ authType: "BEARER", token: "my-jwt-token" });
+    });
+
+    it("should reject HTTP connection when credentials schema is invalid", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "Invalid HTTP Credentials",
+        channel: "HTTP",
+        dataFormat: "CSV",
+        config: { channel: "HTTP", url: "https://example.com/data.csv" },
+        dataFormatConfig: { format: "CSV", delimiter: ";" },
+        credentials: { authType: "BASIC", username: "only-username" } as unknown as CreateDataConnectionDto["credentials"],
+      };
+
+      // Act & Assert
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid HTTP credentials");
+    });
+
+    it("should reject SFTP connection when credentials schema is invalid", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "Invalid SFTP Credentials",
+        channel: "SFTP",
+        dataFormat: "CSV",
+        config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/stock" },
+        dataFormatConfig: { format: "CSV", delimiter: ";" },
+        credentials: { authType: "PRIVATE_KEY", username: "user-only" } as unknown as CreateDataConnectionDto["credentials"],
+      };
+
+      // Act & Assert
+      await expect(service.createConnection("user_123", dto)).rejects.toThrow("Invalid SFTP credentials");
+    });
+
+    it("should successfully accept valid SFTP Private Key credentials", async () => {
+      // Arrange
+      const dto: CreateDataConnectionDto = {
+        name: "SFTP Key Connection",
+        channel: "SFTP",
+        dataFormat: "CSV",
+        config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/stock" },
+        dataFormatConfig: { format: "CSV", delimiter: ";" },
+        credentials: {
+          authType: "PRIVATE_KEY",
+          username: "keyuser",
+          privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----",
+          passphrase: "secret-passphrase",
+        },
+      };
+
+      const createdConn = new DataConnection(
+        mockUser,
+        "SFTP Key Connection",
+        "SFTP",
+        "CSV",
+        dto.config,
+        dto.dataFormatConfig,
+        true,
+        dto.credentials
+      );
+      createdConn.id = "conn-sftp-key";
+      repositoryMock.create.mockResolvedValue(createdConn);
+
+      // Act
+      const result = await service.createConnection("user_123", dto);
+
+      // Assert
+      expect(result.id).toBe("conn-sftp-key");
+      expect(result.channel).toBe("SFTP");
+      expect(result.credentials).toEqual(dto.credentials);
     });
   });
 

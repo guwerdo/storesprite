@@ -10,6 +10,7 @@ import { SettingService } from "../services/SettingService.js";
 import { SettingRepository } from "../repositories/SettingRepository.js";
 import { DataConnectionService } from "../services/DataConnectionService.js";
 import { DataConnectionRepository } from "../repositories/DataConnectionRepository.js";
+import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
 import type { MikroORM } from "@mikro-orm/postgresql";
 
 log4js.addLayout("json-with-data-field", jsonWithDataFieldLayout);
@@ -23,6 +24,9 @@ export function createContainer(orm?: MikroORM): Container {
   // Configure and bind log4js structured Logger
   const logger = log4js.configure(log4jsConfig).getLogger("storesprite-be");
   container.bind<log4js.Logger>(TYPES.Logger).toConstantValue(logger);
+
+  // Bind Schema Validator in singleton scope
+  container.bind(TYPES.IJsonSchemaValidator).to(JsonSchemaValidator).inSingletonScope();
 
   // If MikroORM is initialized, bind the EntityManager factory or instance
   if (orm) {

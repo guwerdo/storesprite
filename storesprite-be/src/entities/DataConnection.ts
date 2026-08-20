@@ -1,5 +1,10 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
 import { User } from "./User.js";
+import type {
+  ConnectionConfig,
+  DataFormatConfig,
+  ConnectionCredentials,
+} from "../types/DataConnectionRepository.interface.js";
 
 export type DataConnectionChannel = "HTTP" | "SFTP";
 export type DataConnectionFormat = "CSV" | "XML";
@@ -22,16 +27,16 @@ export class DataConnection {
   dataFormat!: DataConnectionFormat;
 
   @Property({ type: "jsonb" })
-  dataFormatConfig!: Record<string, unknown>;
+  dataFormatConfig!: DataFormatConfig | Record<string, unknown>;
 
   @Property({ type: "boolean", default: true })
   isActive = true;
 
   @Property({ type: "jsonb" })
-  config!: Record<string, unknown>;
+  config!: ConnectionConfig | Record<string, unknown>;
 
   @Property({ type: "jsonb", nullable: true })
-  credentials?: Record<string, unknown> | null;
+  credentials?: ConnectionCredentials | Record<string, unknown> | null;
 
   @Property({ type: "timestamptz", defaultRaw: "CURRENT_TIMESTAMP" })
   createdAt: Date = new Date();
@@ -44,10 +49,10 @@ export class DataConnection {
     name: string,
     channel: DataConnectionChannel,
     dataFormat: DataConnectionFormat,
-    config: Record<string, unknown>,
-    dataFormatConfig: Record<string, unknown>,
+    config: ConnectionConfig | Record<string, unknown>,
+    dataFormatConfig: DataFormatConfig | Record<string, unknown>,
     isActive = true,
-    credentials?: Record<string, unknown> | null
+    credentials?: ConnectionCredentials | Record<string, unknown> | null
   ) {
     this.user = user;
     this.name = name;

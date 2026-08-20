@@ -1,0 +1,30 @@
+{
+  "$ref": "#/definitions/XmlDataFormatConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "XmlDataFormatConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "attributePrefix": {
+          "type": "string"
+        },
+        "format": {
+          "const": "XML",
+          "type": "string"
+        },
+        "includeAttributes": {
+          "type": "boolean"
+        },
+        "rowPath": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "rowPath"
+      ],
+      "type": "object"
+    }
+  }
+}

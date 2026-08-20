@@ -1,0 +1,42 @@
+{
+  "$ref": "#/definitions/SftpConnectionConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "SftpConnectionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "const": "SFTP",
+          "type": "string"
+        },
+        "fileSelectionStrategy": {
+          "enum": [
+            "LATEST_ALPHABETICAL",
+            "LATEST_MODIFIED",
+            "EXACT_MATCH"
+          ],
+          "type": "string"
+        },
+        "host": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "port": {
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "number"
+        },
+        "remoteDir": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel",
+        "host",
+        "remoteDir"
+      ],
+      "type": "object"
+    }
+  }
+}

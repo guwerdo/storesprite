@@ -1,0 +1,40 @@
+{
+  "$ref": "#/definitions/HttpConnectionConfig",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "HttpConnectionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "const": "HTTP",
+          "type": "string"
+        },
+        "insecureIgnoreSsl": {
+          "type": "boolean"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST"
+          ],
+          "type": "string"
+        },
+        "timeoutSeconds": {
+          "maximum": 300,
+          "minimum": 1,
+          "type": "number"
+        },
+        "url": {
+          "minLength": 1,
+          "pattern": "^https?://",
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel",
+        "url"
+      ],
+      "type": "object"
+    }
+  }
+}

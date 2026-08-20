@@ -37,6 +37,57 @@ export interface XmlDataFormatConfig {
 
 export type DataFormatConfig = CsvDataFormatConfig | XmlDataFormatConfig;
 
+// Credentials (credentials)
+export type HttpAuthType = 'NONE' | 'BASIC' | 'BEARER' | 'API_KEY';
+export type SftpAuthType = 'PASSWORD' | 'PRIVATE_KEY';
+export type ConnectionAuthType = HttpAuthType | SftpAuthType;
+
+export interface HttpNoneCredentials {
+  authType: 'NONE';
+}
+
+export interface HttpBasicCredentials {
+  authType: 'BASIC';
+  username: string;
+  password: string;
+}
+
+export interface HttpBearerCredentials {
+  authType: 'BEARER';
+  token: string;
+}
+
+export interface HttpApiKeyCredentials {
+  authType: 'API_KEY';
+  headerName: string;
+  headerValue: string;
+}
+
+export type HttpCredentials =
+  | HttpNoneCredentials
+  | HttpBasicCredentials
+  | HttpBearerCredentials
+  | HttpApiKeyCredentials;
+
+export interface SftpPasswordCredentials {
+  authType: 'PASSWORD';
+  username: string;
+  password: string;
+}
+
+export interface SftpPrivateKeyCredentials {
+  authType: 'PRIVATE_KEY';
+  username: string;
+  privateKey: string;
+  passphrase?: string;
+}
+
+export type SftpCredentials =
+  | SftpPasswordCredentials
+  | SftpPrivateKeyCredentials;
+
+export type ConnectionCredentials = HttpCredentials | SftpCredentials;
+
 export interface IDataConnection {
   id: string;
   name: string;
@@ -45,7 +96,7 @@ export interface IDataConnection {
   config: ConnectionConfig;
   dataFormatConfig: DataFormatConfig;
   isActive: boolean;
-  credentials?: Record<string, unknown> | null;
+  credentials?: ConnectionCredentials | Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,7 +108,7 @@ export interface ICreateConnectionPayload {
   config: ConnectionConfig;
   dataFormatConfig: DataFormatConfig;
   isActive?: boolean;
-  credentials?: Record<string, unknown> | null;
+  credentials?: ConnectionCredentials | Record<string, unknown> | null;
 }
 
 export interface IUpdateConnectionPayload {
@@ -67,7 +118,7 @@ export interface IUpdateConnectionPayload {
   config?: ConnectionConfig;
   dataFormatConfig?: DataFormatConfig;
   isActive?: boolean;
-  credentials?: Record<string, unknown> | null;
+  credentials?: ConnectionCredentials | Record<string, unknown> | null;
 }
 
 export interface IConnectionsApiResponse {

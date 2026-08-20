@@ -10,17 +10,24 @@ import {
   DataFormatConfig,
 } from "../types/DataConnectionRepository.interface.js";
 import { IDataConnectionService } from "../types/DataConnectionService.interface.js";
+import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 import { TYPES } from "../di/types.js";
-import { DataConnectionValidator } from "../utils/connection-validator-util.js";
+import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
 
 @injectable()
 export class DataConnectionService implements IDataConnectionService {
+  private readonly _validator: IJsonSchemaValidator;
+
   constructor(
     @inject(TYPES.IDataConnectionRepository)
     private readonly _repository?: IDataConnectionRepository,
+    @inject(TYPES.IJsonSchemaValidator)
+    validator?: IJsonSchemaValidator,
     @inject(TYPES.Logger)
     private readonly _logger?: Logger
-  ) {}
+  ) {
+    this._validator = validator || new JsonSchemaValidator();
+  }
 
   public async getConnections(userId: string): Promise<DataConnectionDto[]> {
     this._logger?.info("Service fetching all data connections", { userId });
@@ -59,17 +66,19 @@ export class DataConnectionService implements IDataConnectionService {
       throw new Error("Connection name cannot exceed 255 characters");
     }
 
-    const validatedConfig = DataConnectionValidator.validateConfig(data.channel, data.config);
-    const validatedDataFormatConfig = DataConnectionValidator.validateDataFormatConfig(
+    const validatedConfig = this._validator.validateConfig(data.channel, data.config);
+    const validatedDataFormatConfig = this._validator.validateDataFormatConfig(
       data.dataFormat,
       data.dataFormatConfig
     );
+    const validatedCredentials = this._validator.validateCredentials(data.channel, data.credentials);
 
     const created = await this._repository.create(userId, {
       ...data,
       name: data.name.trim(),
       config: validatedConfig,
       dataFormatConfig: validatedDataFormatConfig,
+      credentials: validatedCredentials,
     });
 
     return this._mapToDto(created);
@@ -96,7 +105,7 @@ export class DataConnectionService implements IDataConnectionService {
 
     let validatedConfig = data.config;
     if (data.config !== undefined || data.channel !== undefined) {
-      validatedConfig = DataConnectionValidator.validateConfig(
+      validatedConfig = this._validator.validateConfig(
         channel,
         data.config !== undefined ? data.config : existing.config
       );
@@ -104,10 +113,15 @@ export class DataConnectionService implements IDataConnectionService {
 
     let validatedDataFormatConfig = data.dataFormatConfig;
     if (data.dataFormatConfig !== undefined || data.dataFormat !== undefined) {
-      validatedDataFormatConfig = DataConnectionValidator.validateDataFormatConfig(
+      validatedDataFormatConfig = this._validator.validateDataFormatConfig(
         dataFormat,
         data.dataFormatConfig !== undefined ? data.dataFormatConfig : existing.dataFormatConfig
       );
+    }
+
+    let validatedCredentials = data.credentials;
+    if (data.credentials !== undefined) {
+      validatedCredentials = this._validator.validateCredentials(channel, data.credentials);
     }
 
     if (data.name !== undefined) {
@@ -124,6 +138,7 @@ export class DataConnectionService implements IDataConnectionService {
       name: data.name !== undefined ? data.name.trim() : undefined,
       config: validatedConfig,
       dataFormatConfig: validatedDataFormatConfig,
+      credentials: validatedCredentials,
     });
 
     return updated ? this._mapToDto(updated) : null;

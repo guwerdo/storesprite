@@ -81,7 +81,7 @@ describe('StockSpriteConnectionsTab', () => {
     });
   });
 
-  it('renders existing connections in table and opens edit form on row click', async () => {
+  it('renders existing connections in table and opens edit form with credentials on row click', async () => {
     getConnectionsSpy.mockResolvedValueOnce({
       connections: [
         {
@@ -92,6 +92,7 @@ describe('StockSpriteConnectionsTab', () => {
           config: { channel: 'HTTP', url: 'https://media.magictools.hu/shared/products.csv' },
           dataFormatConfig: { format: 'CSV', delimiter: ';' },
           isActive: true,
+          credentials: { authType: 'BASIC', username: 'feed_user', password: 'feed_password' },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -118,6 +119,176 @@ describe('StockSpriteConnectionsTab', () => {
     await waitFor(() => {
       expect(screen.getByText(/Edit Data Connection|Adatkapcsolat szerkesztése/i)).toBeInTheDocument();
       expect(screen.getByDisplayValue('Magictools Feed')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('feed_user')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('feed_password')).toBeInTheDocument();
+    });
+  });
+
+  it('creates HTTP connection with Bearer token credentials', async () => {
+    render(
+      <I18nProvider>
+        <ContainerProvider container={testContainer}>
+          <StockSpriteConnectionsTab />
+        </ContainerProvider>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
+    });
+
+    const addButtons = screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
+    fireEvent.click(addButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Create New Data Connection|Új adatkapcsolat létrehozása/i)).toBeInTheDocument();
+    });
+
+    // Fill base fields
+    fireEvent.change(screen.getByLabelText(/Connection Name|Kapcsolat neve/i), {
+      target: { value: 'API Feed' },
+    });
+    fireEvent.change(screen.getByLabelText(/Remote File URL|Távoli fájl URL/i), {
+      target: { value: 'https://example.com/feed.csv' },
+    });
+
+    // Switch auth type to Bearer Token
+    const authTypeCombobox = screen.getByRole('combobox', { name: /Authentication Type|Hitelesítés típusa/i });
+    fireEvent.mouseDown(authTypeCombobox);
+    const bearerOption = await screen.findByRole('option', { name: /Bearer Token/i });
+    fireEvent.click(bearerOption);
+
+    // Enter Bearer token
+    const tokenInput = await screen.findByPlaceholderText(/eyJhbGciOiJIUzI1Ni/i);
+    fireEvent.change(tokenInput, { target: { value: 'jwt-token-12345' } });
+
+    // Save
+    const saveButton = screen.getByRole('button', { name: /Save Connection|Kapcsolat mentése/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(createConnectionSpy).toHaveBeenCalledWith(
+        'test_token',
+        expect.objectContaining({
+          name: 'API Feed',
+          channel: 'HTTP',
+          dataFormat: 'CSV',
+          credentials: {
+            authType: 'BEARER',
+            token: 'jwt-token-12345',
+          },
+        })
+      );
+    });
+  });
+
+  it('creates SFTP connection with SSH Private Key credentials and optional passphrase', async () => {
+    render(
+      <I18nProvider>
+        <ContainerProvider container={testContainer}>
+          <StockSpriteConnectionsTab />
+        </ContainerProvider>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
+    });
+
+    const addButtons = screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
+    fireEvent.click(addButtons[0]);
+
+    // Switch Channel to SFTP
+    const channelCombobox = screen.getByRole('combobox', { name: /^Channel$|^Csatorna$/i });
+    fireEvent.mouseDown(channelCombobox);
+    const sftpOption = await screen.findByRole('option', { name: /SFTP/i });
+    fireEvent.click(sftpOption);
+
+    // Fill base fields
+    fireEvent.change(screen.getByLabelText(/Connection Name|Kapcsolat neve/i), {
+      target: { value: 'SFTP Supplier Feed' },
+    });
+    fireEvent.change(screen.getByLabelText(/SFTP Server Host|SFTP Kiszolgáló címe/i), {
+      target: { value: 'sftp.supplier.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/Remote Directory|Távoli mappa/i), {
+      target: { value: '/stock/csv' },
+    });
+
+    // Switch Auth Type to SSH Private Key
+    const authTypeCombobox = screen.getByRole('combobox', { name: /Authentication Type|Hitelesítés típusa/i });
+    fireEvent.mouseDown(authTypeCombobox);
+    const keyOption = await screen.findByRole('option', { name: /SSH Private Key|SSH Privát Kulcs/i });
+    fireEvent.click(keyOption);
+
+    // Fill Key credentials
+    fireEvent.change(screen.getByLabelText(/Username|Felhasználónév/i), {
+      target: { value: 'sftp_user' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/BEGIN RSA PRIVATE KEY/), {
+      target: { value: '-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----' },
+    });
+    fireEvent.change(screen.getByLabelText(/Key Passphrase|Kulcs jelmondata/i), {
+      target: { value: 'mypassphrase' },
+    });
+
+    // Save
+    const saveButton = screen.getByRole('button', { name: /Save Connection|Kapcsolat mentése/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(createConnectionSpy).toHaveBeenCalledWith(
+        'test_token',
+        expect.objectContaining({
+          name: 'SFTP Supplier Feed',
+          channel: 'SFTP',
+          credentials: {
+            authType: 'PRIVATE_KEY',
+            username: 'sftp_user',
+            privateKey: '-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----',
+            passphrase: 'mypassphrase',
+          },
+        })
+      );
+    });
+  });
+
+  it('resets credentials state when switching channel from HTTP to SFTP and back', async () => {
+    render(
+      <I18nProvider>
+        <ContainerProvider container={testContainer}>
+          <StockSpriteConnectionsTab />
+        </ContainerProvider>
+      </I18nProvider>
+    );
+
+    const addButtons = await screen.findAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
+    fireEvent.click(addButtons[0]);
+
+    // Select Basic Auth in HTTP
+    const authTypeCombobox = screen.getByRole('combobox', { name: /Authentication Type|Hitelesítés típusa/i });
+    fireEvent.mouseDown(authTypeCombobox);
+    const basicOption = await screen.findByRole('option', { name: /Basic Auth|Alapvető hitelesítés/i });
+    fireEvent.click(basicOption);
+
+    fireEvent.change(screen.getByLabelText(/Username|Felhasználónév/i), {
+      target: { value: 'temp_user' },
+    });
+
+    // Switch Channel to SFTP
+    const channelCombobox = screen.getByRole('combobox', { name: /^Channel$|^Csatorna$/i });
+    fireEvent.mouseDown(channelCombobox);
+    const sftpOption = await screen.findByRole('option', { name: /SFTP/i });
+    fireEvent.click(sftpOption);
+
+    // Switch back to HTTP
+    fireEvent.mouseDown(channelCombobox);
+    const httpOption = await screen.findByRole('option', { name: /HTTP/i });
+    fireEvent.click(httpOption);
+
+    // AuthType should reset to NONE
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/Username|Felhasználónév/i)).not.toBeInTheDocument();
     });
   });
 });
