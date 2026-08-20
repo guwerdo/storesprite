@@ -13,13 +13,12 @@ import {
   Select,
   MenuItem,
   CircularProgress,
-  Snackbar,
-  Alert,
   IconButton,
   InputAdornment,
   Tooltip,
   type SelectChangeEvent,
 } from '@mui/material';
+import ToastNotification from '../../components/ToastNotification.js';
 import SaveIcon from '@mui/icons-material/Save';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -294,21 +293,12 @@ export default function SettingsPage(): React.JSX.Element {
         </CardContent>
       </Card>
 
-      <Snackbar
+      <ToastNotification
         open={snackbar.open}
-        autoHideDuration={4000}
+        message={snackbar.message}
+        severity={snackbar.severity}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%', boxShadow: 3 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      />
     </Box>
   );
 }

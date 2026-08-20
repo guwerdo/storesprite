@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, CircularProgress, Snackbar } from '@mui/material';
+import { Alert, Box, CircularProgress } from '@mui/material';
 import { useAuth } from '@clerk/clerk-react';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
+import ToastNotification from '../../../components/ToastNotification.js';
 import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
 import type {
   IDataConnection,
@@ -25,7 +26,15 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   const fetchConnections = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -64,6 +73,10 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
     setViewMode('LIST');
   };
 
+  const handleCloseSnackbar = (): void => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
   const handleSave = async (payload: ICreateConnectionPayload): Promise<void> => {
     setSaving(true);
     try {
@@ -78,10 +91,20 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         await connectionService.createConnection(token, payload);
       }
 
-      setSnackbarMessage(t('stocksprite.connections.form.savedSuccess'));
+      setSnackbar({
+        open: true,
+        message: t('stocksprite.connections.form.savedSuccess'),
+        severity: 'success',
+      });
       setViewMode('LIST');
       setSelectedConnection(null);
       await fetchConnections();
+    } catch (err: unknown) {
+      setSnackbar({
+        open: true,
+        message: (err as Error).message || t('stocksprite.connections.form.saveFailed'),
+        severity: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -96,10 +119,20 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
       }
 
       await connectionService.deleteConnection(token, id);
-      setSnackbarMessage(t('stocksprite.connections.form.deleteSuccess'));
+      setSnackbar({
+        open: true,
+        message: t('stocksprite.connections.form.deleteSuccess'),
+        severity: 'success',
+      });
       setViewMode('LIST');
       setSelectedConnection(null);
       await fetchConnections();
+    } catch (err: unknown) {
+      setSnackbar({
+        open: true,
+        message: (err as Error).message || t('stocksprite.connections.form.deleteFailed'),
+        severity: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -137,11 +170,11 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         />
       )}
 
-      <Snackbar
-        open={Boolean(snackbarMessage)}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarMessage(null)}
-        message={snackbarMessage}
+      <ToastNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={handleCloseSnackbar}
       />
     </Box>
   );
