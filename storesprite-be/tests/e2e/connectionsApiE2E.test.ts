@@ -46,8 +46,8 @@ describe("E2E Connections API Tests", () => {
   });
 
   describe("POST & GET /api/client/connections CRUD", () => {
-    it("should create, fetch, update and delete a data connection", async () => {
-      // 1. Create HTTP / CSV connection
+    it("should create HTTP connection with Bearer credentials, fetch, update and delete", async () => {
+      // 1. Create HTTP / CSV connection with Bearer credentials
       const createResponse = await app.inject({
         method: "POST",
         url: "/api/client/connections",
@@ -71,6 +71,10 @@ describe("E2E Connections API Tests", () => {
             encoding: "UTF-8",
             hasHeaders: true,
           },
+          credentials: {
+            authType: "BEARER",
+            token: "secret-bearer-token-xyz",
+          },
           isActive: true,
         },
       });
@@ -79,6 +83,10 @@ describe("E2E Connections API Tests", () => {
       const createBody = JSON.parse(createResponse.payload);
       expect(createBody.success).toBe(true);
       expect(createBody.connection.name).toBe("Magictools Feed");
+      expect(createBody.connection.credentials).toEqual({
+        authType: "BEARER",
+        token: "secret-bearer-token-xyz",
+      });
       expect(createBody.connection.id).toBeDefined();
 
       const connectionId = createBody.connection.id;
@@ -96,8 +104,12 @@ describe("E2E Connections API Tests", () => {
       const getBody = JSON.parse(getResponse.payload);
       expect(getBody.connection.id).toBe(connectionId);
       expect(getBody.connection.channel).toBe("HTTP");
+      expect(getBody.connection.credentials).toEqual({
+        authType: "BEARER",
+        token: "secret-bearer-token-xyz",
+      });
 
-      // 3. Update connection name
+      // 3. Update connection name and credentials
       const updateResponse = await app.inject({
         method: "PUT",
         url: `/api/client/connections/${connectionId}`,
@@ -106,12 +118,22 @@ describe("E2E Connections API Tests", () => {
         },
         payload: {
           name: "Magictools Feed (Updated)",
+          credentials: {
+            authType: "API_KEY",
+            headerName: "X-Api-Key",
+            headerValue: "new-api-key-value",
+          },
         },
       });
 
       expect(updateResponse.statusCode).toBe(200);
       const updateBody = JSON.parse(updateResponse.payload);
       expect(updateBody.connection.name).toBe("Magictools Feed (Updated)");
+      expect(updateBody.connection.credentials).toEqual({
+        authType: "API_KEY",
+        headerName: "X-Api-Key",
+        headerValue: "new-api-key-value",
+      });
 
       // 4. Delete connection
       const deleteResponse = await app.inject({
@@ -134,6 +156,76 @@ describe("E2E Connections API Tests", () => {
       });
 
       expect(verifyResponse.statusCode).toBe(404);
+    });
+
+    it("should create SFTP connection with SSH Private Key credentials", async () => {
+      const createResponse = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+        payload: {
+          name: "Cromwell SFTP Server",
+          channel: "SFTP",
+          dataFormat: "XML",
+          config: {
+            channel: "SFTP",
+            host: "sftp.cromwell.co.uk",
+            port: 2222,
+            remoteDir: "/feeds/daily",
+            fileSelectionStrategy: "LATEST_MODIFIED",
+          },
+          dataFormatConfig: {
+            format: "XML",
+            rowPath: ".//items/item",
+            includeAttributes: true,
+            attributePrefix: "@",
+          },
+          credentials: {
+            authType: "PRIVATE_KEY",
+            username: "cromwell_feed_user",
+            privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----",
+            passphrase: "key-passphrase",
+          },
+          isActive: true,
+        },
+      });
+
+      expect(createResponse.statusCode).toBe(201);
+      const createBody = JSON.parse(createResponse.payload);
+      expect(createBody.connection.channel).toBe("SFTP");
+      expect(createBody.connection.dataFormat).toBe("XML");
+      expect(createBody.connection.credentials.authType).toBe("PRIVATE_KEY");
+      expect(createBody.connection.credentials.username).toBe("cromwell_feed_user");
+    });
+
+    it("should reject invalid schema payload with 400 status code", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: {
+          authorization: "Bearer mock_jwt_user_conn",
+        },
+        payload: {
+          name: "Invalid SFTP Missing Host",
+          channel: "SFTP",
+          dataFormat: "CSV",
+          config: {
+            channel: "SFTP",
+            host: "",
+            remoteDir: "/feeds",
+          },
+          dataFormatConfig: {
+            format: "CSV",
+            delimiter: ";",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.payload);
+      expect(body.error).toContain("Invalid SFTP connection config");
     });
   });
 });
