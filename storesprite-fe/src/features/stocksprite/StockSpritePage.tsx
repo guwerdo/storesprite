@@ -1,9 +1,9 @@
 import React from 'react';
 import TabbedPageLayout from '../../components/TabbedPageLayout.js';
-import StockSpriteMainTab from './tabs/StockSpriteMainTab.js';
-import StockSpriteSettingsTab from './tabs/StockSpriteSettingsTab.js';
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import StockSpriteConnectionsTab from './tabs/StockSpriteConnectionsTab.js';
+import StockSpriteMappingTab from './tabs/StockSpriteMappingTab.js';
+import CableOutlinedIcon from '@mui/icons-material/CableOutlined';
+import SchemaOutlinedIcon from '@mui/icons-material/SchemaOutlined';
 import { useAppTranslation } from '../../i18n/I18nProvider.js';
 import type { ITabItemConfig } from '../../types/TabbedPageLayout.interface.js';
 
@@ -12,16 +12,16 @@ export default function StockSpritePage(): React.JSX.Element {
 
   const tabs: ITabItemConfig[] = [
     {
-      id: 'stocksprite-main',
-      label: t('stocksprite.tabs.sync'),
-      icon: <Inventory2OutlinedIcon fontSize="small" />,
-      content: <StockSpriteMainTab />,
+      id: 'stocksprite-connections',
+      label: t('stocksprite.tabs.connections'),
+      icon: <CableOutlinedIcon fontSize="small" />,
+      content: <StockSpriteConnectionsTab />,
     },
     {
-      id: 'stocksprite-settings',
-      label: t('stocksprite.tabs.settings'),
-      icon: <SettingsOutlinedIcon fontSize="small" />,
-      content: <StockSpriteSettingsTab />,
+      id: 'stocksprite-mapping',
+      label: t('stocksprite.tabs.mapping'),
+      icon: <SchemaOutlinedIcon fontSize="small" />,
+      content: <StockSpriteMappingTab />,
     },
   ];
 
@@ -33,3 +33,4 @@ export default function StockSpritePage(): React.JSX.Element {
     />
   );
 }
+

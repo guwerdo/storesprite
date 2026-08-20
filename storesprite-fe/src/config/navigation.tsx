@@ -1,4 +1,4 @@
-import React from 'react';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import SavedSearchOutlinedIcon from '@mui/icons-material/SavedSearchOutlined';
@@ -8,10 +8,17 @@ export type { INavItemConfig };
 
 export const DRAWER_NAV_ITEMS: INavItemConfig[] = [
   {
+    id: 'home',
+    label: 'Home',
+    labelKey: 'nav.home',
+    path: '/',
+    icon: <HomeOutlinedIcon />,
+  },
+  {
     id: 'stocksprite',
     label: 'Stock Sprite',
     labelKey: 'nav.stockSprite',
-    path: '/',
+    path: '/stocksprite',
     icon: <Inventory2OutlinedIcon />,
   },
   {

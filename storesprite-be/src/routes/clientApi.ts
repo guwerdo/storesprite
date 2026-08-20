@@ -1,7 +1,15 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { verifyToken, createClerkClient } from "@clerk/backend";
 import type { Logger } from "log4js";
-import { TYPES, IUserService, ISettingService, SaveUserSettingsDto } from "../di/index.js";
+import {
+  TYPES,
+  IUserService,
+  ISettingService,
+  SaveUserSettingsDto,
+  IDataConnectionService,
+  CreateDataConnectionDto,
+  UpdateDataConnectionDto,
+} from "../di/index.js";
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
 
 declare module "fastify" {
@@ -160,6 +168,123 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
       }
 
       return { user };
+    }
+  );
+
+  // Protected route: GET /api/client/connections - List all connections for current user
+  fastify.get(
+    "/connections",
+    { config: { auth: true } },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const connections = await connectionService.getConnections(userId);
+      return { connections };
+    }
+  );
+
+  // Protected route: GET /api/client/connections/:id - Get single connection details
+  fastify.get(
+    "/connections/:id",
+    { config: { auth: true } },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const { id } = request.params;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const connection = await connectionService.getConnectionById(id, userId);
+
+      if (!connection) {
+        return reply.code(404).send({ error: "Connection not found" });
+      }
+
+      return { connection };
+    }
+  );
+
+  // Protected route: POST /api/client/connections - Create a new connection
+  fastify.post(
+    "/connections",
+    { config: { auth: true } },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const body = request.body as CreateDataConnectionDto;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      try {
+        const created = await connectionService.createConnection(userId, body);
+        return reply.code(201).send({ success: true, connection: created });
+      } catch (err: unknown) {
+        logger.error("Failed to create data connection", { userId, error: Util.stringifyError(err) });
+        return reply.code(400).send({ error: (err as Error).message || "Failed to create connection" });
+      }
+    }
+  );
+
+  // Protected route: PUT /api/client/connections/:id - Update an existing connection
+  fastify.put(
+    "/connections/:id",
+    { config: { auth: true } },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const { id } = request.params;
+      const body = request.body as UpdateDataConnectionDto;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      try {
+        const updated = await connectionService.updateConnection(id, userId, body);
+        if (!updated) {
+          return reply.code(404).send({ error: "Connection not found" });
+        }
+        return { success: true, connection: updated };
+      } catch (err: unknown) {
+        logger.error("Failed to update data connection", { id, userId, error: Util.stringifyError(err) });
+        return reply.code(400).send({ error: (err as Error).message || "Failed to update connection" });
+      }
+    }
+  );
+
+  // Protected route: DELETE /api/client/connections/:id - Delete a connection
+  fastify.delete(
+    "/connections/:id",
+    { config: { auth: true } },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const { id } = request.params;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      try {
+        const deleted = await connectionService.deleteConnection(id, userId);
+        if (!deleted) {
+          return reply.code(404).send({ error: "Connection not found" });
+        }
+        return { success: true, message: "Connection deleted successfully" };
+      } catch (err: unknown) {
+        logger.error("Failed to delete data connection", { id, userId, error: Util.stringifyError(err) });
+        return reply.code(500).send({ error: "Failed to delete connection" });
+      }
     }
   );
 

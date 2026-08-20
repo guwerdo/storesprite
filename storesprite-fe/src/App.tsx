@@ -2,6 +2,7 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout.js';
 import AuthGuard from './components/AuthGuard.js';
+import HomePage from './features/home/HomePage.js';
 import StockSpritePage from './features/stocksprite/StockSpritePage.js';
 import StoreChatPage from './features/store-chat/StoreChatPage.js';
 import SearchSpritePage from './features/search-sprite/SearchSpritePage.js';
@@ -22,7 +23,8 @@ const router = createBrowserRouter([
       </AuthGuard>
     ),
     children: [
-      { index: true, element: <StockSpritePage /> },
+      { index: true, element: <HomePage /> },
+      { path: 'stocksprite', element: <StockSpritePage /> },
       { path: 'chat', element: <StoreChatPage /> },
       { path: 'search', element: <SearchSpritePage /> },
       { path: 'settings', element: <SettingsPage /> },

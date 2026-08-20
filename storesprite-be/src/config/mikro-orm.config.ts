@@ -3,6 +3,7 @@ import { Migrator } from "@mikro-orm/migrations";
 import { User } from "../entities/User.js";
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
+import { DataConnection } from "../entities/DataConnection.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -14,7 +15,7 @@ const clientUrl =
 const config: Options = {
   driver: PostgreSqlDriver,
   clientUrl,
-  entities: [User, Language, UserSetting],
+  entities: [User, Language, UserSetting, DataConnection],
   extensions: [Migrator],
   migrations: {
     path: "./src/migrations",

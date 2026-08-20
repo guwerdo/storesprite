@@ -1,4 +1,3 @@
-import React from 'react';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import type { IUserMenuItemConfig } from '../types/UserMenu.interface.js';
