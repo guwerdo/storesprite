@@ -1,0 +1,7 @@
+downloader/node_modules
+downloader/dist
+downloader/temp
+downloader/*.log
+processor/
+.git
+.env

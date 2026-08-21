@@ -1,34 +1,35 @@
-# Multi-stage Dockerfile for StoreSprite Downloader Service
-FROM node:20-alpine AS builder
+# Multi-stage Dockerfile for StoreSprite Downloader Service (Production)
+FROM node:24-slim AS builder
 
 WORKDIR /app
 
 # Copy package files and install all dependencies (including devDependencies for TypeScript build)
-COPY package*.json tsconfig.json ./
+COPY downloader/package*.json downloader/tsconfig.json ./
 RUN npm ci
 
 # Copy source code and build TypeScript to dist/
-COPY src ./src
+COPY downloader/src ./src
 RUN npm run build
 
 # Prune devDependencies so node_modules contains production-only dependencies
 RUN npm prune --omit=dev
 
 # Production stage
-FROM node:20-alpine
+FROM node:24-slim
 
-# Install Python & csvkit for ultra-low memory CSV streaming conversion
-RUN apk add --no-cache python3 py3-pip bash tzdata openssh-client openssl \
-    && pip install --break-system-packages csvkit
+# Install Python & csvkit for ultra-low memory CSV streaming conversion, bash, tzdata, openssh-client, openssl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip csvkit bash tzdata openssh-client openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Set timezone
 ENV TZ=Europe/Budapest
-RUN cp /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
-    && echo "Europe/Budapest" > /etc/timezone
+RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
 
-# Copy production node_modules and package.json directly from builder stage (fast, zero-reinstall)
+# Copy production node_modules and package.json directly from builder stage
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 

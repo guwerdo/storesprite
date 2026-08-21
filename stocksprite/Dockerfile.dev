@@ -1,0 +1,31 @@
+FROM node:24-slim
+
+# Install Python & csvkit for ultra-low memory CSV streaming conversion, bash, tools, git
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv csvkit bash tzdata openssh-client openssl git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Set timezone
+ENV TZ=Europe/Budapest
+RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
+
+# Hardcoded environment variables for development
+ENV USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"
+ENV WORKER_TOKEN="mock_worker_token"
+ENV BACKEND_URL="http://storesprite-be:3000"
+ENV OUTPUT_DIR="/workspace/stocksprite/downloader/temp"
+
+# Install downloader dependencies
+COPY downloader/package*.json downloader/tsconfig.json /workspace/stocksprite/downloader/
+WORKDIR /workspace/stocksprite/downloader
+RUN npm install
+
+COPY downloader/ /workspace/stocksprite/downloader/
+
+# Create temp output directory
+RUN mkdir -p /workspace/stocksprite/downloader/temp
+
+CMD ["sh", "-c", "echo 'Run npm run dev to start the download script' && tail -f /dev/null"]

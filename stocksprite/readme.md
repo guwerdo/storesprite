@@ -21,33 +21,41 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
 
 ---
 
-## 2. Environment Variables
+## 2. Development via VS Code Devcontainers
 
-| Variable | Description | Default | Required |
-| :--- | :--- | :--- | :--- |
-| `USER_ID` | The tenant user ID whose connections to process | — | **Yes** |
-| `WORKER_TOKEN` | Secret worker authentication token | `mock_worker_token` | No |
-| `BACKEND_URL` | Base URL of `storesprite-be` backend API | `http://storesprite-be:3000` | No |
-| `OUTPUT_DIR` | Directory where raw, converted CSVs, and logs are saved | `./temp` (or `/app/temp`) | No |
-| `LOG_LEVEL` | Logging level (`debug`, `info`, `warn`, `error`) | `info` | No |
+A dedicated **`.devcontainer/`** and **`Dockerfile.dev`** setup is provided to develop and debug the application inside a Linux container environment with `csvkit` and dependencies pre-installed.
+
+1. Open VS Code in `stocksprite/` (or open Command Palette: `F1` / `Ctrl+Shift+P`).
+2. Select **"Dev Containers: Reopen in Container"**.
+3. Once the container is running, open the integrated terminal and start the downloader:
+   ```bash
+   npm run dev
+   ```
+4. The devcontainer is pre-configured with the development environment variables:
+   - `USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"`
+   - `WORKER_TOKEN="mock_worker_token"`
+   - `BACKEND_URL="http://storesprite-be:3000"`
+   - `OUTPUT_DIR="/workspace/stocksprite/downloader/temp"`
+   - Network attached to `storesprite-shared-net` to reach `storesprite-be`.
 
 ---
 
-## 3. Docker Usage
+## 3. Production Docker Usage
 
-### Build the Docker Image
+### Build the Production Image
+From the `stocksprite/` directory:
 ```bash
-cd stocksprite/downloader
+cd stocksprite
 docker build -t storesprite-downloader .
 ```
 
-### Run the Container (Local Dev / Cloud Run Job)
-To run the container and attach it to the shared Docker network (`storesprite-shared-net` defined in the root `docker-compose.yaml`), with the host `temp/` folder mapped for inspection:
+### Run the Container (Cloud Run Job / Local Container)
+To run the container attached to the shared Docker network (`storesprite-shared-net`), with the host `temp/` folder mapped for inspection:
 
 ```bash
 docker run --rm \
   --network storesprite-shared-net \
-  -e USER_ID="user_2pYj3X..." \
+  -e USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp" \
   -e WORKER_TOKEN="mock_worker_token" \
   -e BACKEND_URL="http://storesprite-be:3000" \
   -e OUTPUT_DIR="/app/temp" \
@@ -57,12 +65,14 @@ docker run --rm \
 
 ---
 
-## 4. Local Development Commands
+## 4. Local CLI Commands
 
 ```bash
 cd stocksprite/downloader
 
-# Run downloader script locally
+# Run downloader script
+npm run dev
+# or
 npm run download
 
 # Run unit tests (Vitest)

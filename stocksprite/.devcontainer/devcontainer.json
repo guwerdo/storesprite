@@ -1,0 +1,21 @@
+{
+  "name": "StoreSprite Downloader (stocksprite-downloader)",
+  "build": {
+    "dockerfile": "../Dockerfile.dev",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace/stocksprite/downloader",
+  "postCreateCommand": "npm install",
+  "runArgs": [
+    "--network=storesprite-shared-net"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.path-intellisense"
+      ]
+    }
+  }
+}
