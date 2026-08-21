@@ -75,9 +75,9 @@ npm test
 ```
 
 ### End-to-End (E2E) Test Suite (`npm run test:e2e`)
-The E2E test suite spins up a real test environment via `docker-compose-test-e2e.yaml`:
+The E2E test suite spins up a real test environment via `test-e2e/docker-compose-test-e2e.yaml`:
 * **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/worker/users/:userId/connections`).
-* **Mock Supplier (`mock-supplier`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
+* **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
 * **Downloader Container (`storesprite-downloader:test-e2e`)**: Runs the production multi-stage image against the test network.
 
 #### Scenarios Covered:

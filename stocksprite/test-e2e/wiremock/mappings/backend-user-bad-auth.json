@@ -17,7 +17,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/bearer/feed_bearer.csv"
+            "url": "http://mock-datasource-server:80/bearer/feed_bearer.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -36,7 +36,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "SFTP",
-            "host": "mock-supplier",
+            "host": "mock-datasource-server",
             "port": 22,
             "remoteDir": "/home/sftpuser/upload"
           },

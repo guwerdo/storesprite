@@ -13,9 +13,9 @@ chmod 755 /home/sftpuser
 chown -R sftpuser:sftpuser /home/sftpuser
 
 # Start SSH daemon in background
-echo "[mock-supplier] Starting OpenSSH server..."
+echo "[mock-datasource-server] Starting OpenSSH server..."
 /usr/sbin/sshd
 
 # Start Nginx in foreground
-echo "[mock-supplier] Starting Nginx server..."
+echo "[mock-datasource-server] Starting Nginx server..."
 exec nginx -g "daemon off;"

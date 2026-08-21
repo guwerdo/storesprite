@@ -3,7 +3,7 @@ services:
     image: wiremock/wiremock:latest
     container_name: mock-backend
     volumes:
-      - ./test-e2e/wiremock/mappings:/home/wiremock/mappings:ro
+      - ./wiremock/mappings:/home/wiremock/mappings:ro
     ports:
       - "8089:8080"
     healthcheck:
@@ -15,11 +15,11 @@ services:
     networks:
       - storesprite-e2e-net
 
-  mock-supplier:
+  mock-datasource-server:
     build:
-      context: ./test-e2e/mock-supplier
+      context: ./mock-datasource-server
       dockerfile: Dockerfile
-    container_name: mock-supplier
+    container_name: mock-datasource-server
     ports:
       - "8088:80"
       - "2224:22"
@@ -29,26 +29,6 @@ services:
       timeout: 2s
       retries: 10
       start_period: 1s
-    networks:
-      - storesprite-e2e-net
-
-  downloader-prod:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: storesprite-downloader-test
-    environment:
-      USER_ID: "${USER_ID:-test_user_all_protocols}"
-      WORKER_TOKEN: "${WORKER_TOKEN:-mock_worker_token}"
-      BACKEND_URL: "http://mock-backend:8080"
-      OUTPUT_DIR: "/app/temp"
-    volumes:
-      - ./test-e2e/temp:/app/temp
-    depends_on:
-      mock-backend:
-        condition: service_healthy
-      mock-supplier:
-        condition: service_healthy
     networks:
       - storesprite-e2e-net
 

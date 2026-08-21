@@ -3,8 +3,9 @@ import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const COMPOSE_FILE = path.resolve(__dirname, "../docker-compose-test-e2e.yaml");
+const COMPOSE_FILE = path.resolve(__dirname, "docker-compose-test-e2e.yaml");
 const ROOT_DIR = path.resolve(__dirname, "..");
+const TEST_E2E_DIR = __dirname;
 const TEMP_DIR = path.resolve(__dirname, "temp");
 
 function cleanTempDir(): void {
@@ -58,14 +59,14 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
       stdio: "inherit",
     });
 
-    // 2. Start mock-backend and mock-supplier services
-    console.log("[E2E] Starting mock-backend and mock-supplier services via docker-compose...");
-    execSync(`docker compose -f "${COMPOSE_FILE}" up -d --build mock-backend mock-supplier`, {
-      cwd: ROOT_DIR,
+    // 2. Start mock-backend and mock-datasource-server services
+    console.log("[E2E] Starting mock-backend and mock-datasource-server services via docker-compose...");
+    execSync(`docker compose -f "${COMPOSE_FILE}" up -d --build mock-backend mock-datasource-server`, {
+      cwd: TEST_E2E_DIR,
       stdio: "inherit",
     });
 
-    // 3. Poll for mock-backend and mock-supplier readiness
+    // 3. Poll for mock-backend and mock-datasource-server readiness
     console.log("[E2E] Waiting for mock services to be ready...");
     let ready = false;
     for (let i = 0; i < 30; i++) {
@@ -94,7 +95,7 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
     console.log("[E2E] Tearing down mock services...");
     try {
       execSync(`docker compose -f "${COMPOSE_FILE}" down`, {
-        cwd: ROOT_DIR,
+        cwd: TEST_E2E_DIR,
         stdio: "inherit",
       });
     } catch {

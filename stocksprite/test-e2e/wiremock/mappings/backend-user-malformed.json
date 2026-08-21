@@ -17,7 +17,7 @@
           "dataFormat": "XML",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/public/feed_malformed.xml"
+            "url": "http://mock-datasource-server:80/public/feed_malformed.xml"
           },
           "dataFormatConfig": {
             "format": "XML",

@@ -17,7 +17,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/public/feed_public_comma.csv"
+            "url": "http://mock-datasource-server:80/public/feed_public_comma.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -35,7 +35,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/public/feed_pipe.csv"
+            "url": "http://mock-datasource-server:80/public/feed_pipe.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -53,7 +53,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/public/feed_semicolon.csv"
+            "url": "http://mock-datasource-server:80/public/feed_semicolon.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -71,7 +71,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/bearer/feed_bearer.csv"
+            "url": "http://mock-datasource-server:80/bearer/feed_bearer.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -90,7 +90,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/apikey/feed_apikey.csv"
+            "url": "http://mock-datasource-server:80/apikey/feed_apikey.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -110,7 +110,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/basic/feed_basic.csv"
+            "url": "http://mock-datasource-server:80/basic/feed_basic.csv"
           },
           "dataFormatConfig": {
             "format": "CSV",
@@ -130,7 +130,7 @@
           "dataFormat": "XML",
           "config": {
             "channel": "HTTP",
-            "url": "http://mock-supplier:80/public/feed_catalog.xml"
+            "url": "http://mock-datasource-server:80/public/feed_catalog.xml"
           },
           "dataFormatConfig": {
             "format": "XML",
@@ -148,7 +148,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "SFTP",
-            "host": "mock-supplier",
+            "host": "mock-datasource-server",
             "port": 22,
             "remoteDir": "/home/sftpuser/upload"
           },
@@ -170,7 +170,7 @@
           "dataFormat": "CSV",
           "config": {
             "channel": "SFTP",
-            "host": "mock-supplier",
+            "host": "mock-datasource-server",
             "port": 22,
             "remoteDir": "/home/keyuser/upload"
           },
