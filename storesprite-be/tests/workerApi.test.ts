@@ -1,7 +1,12 @@
 import "reflect-metadata";
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+
+vi.mock("../src/plugins/mikroOrm.js", () => ({
+  default: Object.assign(async () => {}, { [Symbol.for("fastify.display-name")]: "mikroOrmPlugin" }),
+}));
+
 import { buildApp } from "../src/app.js";
-import { TYPES, IUserService, User } from "../src/di/index.js";
+import { TYPES, IUserService, IDataConnectionService, User } from "../src/di/index.js";
 
 describe("Worker API Unit Tests (Mocked Dependencies)", () => {
   let app: any;
@@ -11,10 +16,19 @@ describe("Worker API Unit Tests (Mocked Dependencies)", () => {
     createUser: vi.fn(),
   };
 
+  const mockConnectionService: IDataConnectionService = {
+    getConnections: vi.fn(),
+    getConnectionById: vi.fn(),
+    createConnection: vi.fn(),
+    updateConnection: vi.fn(),
+    deleteConnection: vi.fn(),
+  };
+
   beforeAll(async () => {
     app = buildApp({ logger: false });
     await app.ready();
     app.container.rebind(TYPES.IUserService).toConstantValue(mockUserService);
+    app.container.rebind(TYPES.IDataConnectionService).toConstantValue(mockConnectionService);
   });
 
   afterAll(async () => {
@@ -65,5 +79,36 @@ describe("Worker API Unit Tests (Mocked Dependencies)", () => {
       name: "John Doe",
     });
     expect(mockUserService.createUser).toHaveBeenCalledWith("user_mock", "test@example.com", "John Doe");
+  });
+
+  it("should return user connections when GET /api/worker/users/:userId/connections is called with valid worker token", async () => {
+    const mockConnections = [
+      {
+        id: "conn_1",
+        name: "Cromwell",
+        channel: "SFTP",
+        dataFormat: "CSV",
+        isActive: true,
+        config: { channel: "SFTP", host: "sftp.cromwell.co.uk", remoteDir: "/" },
+        dataFormatConfig: { format: "CSV", delimiter: "," },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    (mockConnectionService.getConnections as any).mockResolvedValue(mockConnections);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/worker/users/user_mock/connections",
+      headers: {
+        "x-worker-token": "mock_worker_token",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.payload);
+    expect(body.connections).toEqual(mockConnections);
+    expect(mockConnectionService.getConnections).toHaveBeenCalledWith("user_mock");
   });
 });

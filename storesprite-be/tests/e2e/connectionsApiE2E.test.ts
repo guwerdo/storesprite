@@ -26,6 +26,12 @@ describe("E2E Connections API Tests", () => {
   });
 
   afterAll(async () => {
+    if (app.orm) {
+      const em = app.orm.em.fork();
+      await em.nativeDelete(DataConnection, {});
+      await em.nativeDelete(User, {});
+      await em.flush();
+    }
     await app.close();
   });
 

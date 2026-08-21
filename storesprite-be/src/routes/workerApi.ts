@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Logger } from "log4js";
-import { TYPES, IUserService } from "../di/index.js";
+import { TYPES, IUserService, IDataConnectionService } from "../di/index.js";
 
 export default function workerApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
   // Check X-Worker-Token header before executing routes in this plugin
@@ -33,6 +33,21 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
     return reply.code(201).send({ user });
   });
+
+  // Internal route for workers to fetch user data connections
+  fastify.get(
+    "/users/:userId/connections",
+    async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
+      const { userId } = request.params;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      const connections = await connectionService.getConnections(userId);
+      logger.info("Worker API fetched user connections", { userId, count: connections.length });
+
+      return reply.send({ connections });
+    }
+  );
 
   done();
 }
