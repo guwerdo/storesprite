@@ -31,6 +31,7 @@ export interface CsvDataFormatConfig {
 export interface XmlDataFormatConfig {
   format: "XML";
   rowPath: string;
+  encoding?: string;
   includeAttributes?: boolean;
   attributePrefix?: string;
 }

@@ -184,6 +184,63 @@
             "username": "keyuser",
             "privateKey": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn\nNhAAAAAwEAAQAAAQEA2ourNaXOAGFfPlOYTN/Uxm24svY2OQoy3m2mNgkwn5ecopFL5KeJ\nYQMzkLqnYsRNrryTTPy4xe16pOUlAkn1/5TCMFhi3YcGW876Pa5YYyuRCn4c1KOjhaU+O2\nMledpTA4A51dl9e/C/n4KZPj2PFXBYFRt6mLPK4hOg4Ey0LhvaPkereAkrBqAPhtA+9CO5\ncJIUuUmz1S08T/n8ddEUir5ov2VB3DVXjpHZ895ImK8gxcqPCzDFXg4G2gxjNXZJzHD67T\nIaEoNPgfMTgC90fdTCgTz8JCdxShxchIK4ZTRG6jrUHeov2pjfFX7Cl3AcvP0iVHpjKfBg\nqru3WrvNQQAAA9DO5SSEzuUkhAAAAAdzc2gtcnNhAAABAQDai6s1pc4AYV8+U5hM39TGbb\niy9jY5CjLebaY2CTCfl5yikUvkp4lhAzOQuqdixE2uvJNM/LjF7Xqk5SUCSfX/lMIwWGLd\nhwZbzvo9rlhjK5EKfhzUo6OFpT47YyV52lMDgDnV2X178L+fgpk+PY8VcFgVG3qYs8riE6\nDgTLQuG9o+R6t4CSsGoA+G0D70I7lwkhS5SbPVLTxP+fx10RSKvmi/ZUHcNVeOkdnz3kiY\nryDFyo8LMMVeDgbaDGM1dknMcPrtMhoSg0+B8xOAL3R91MKBPPwkJ3FKHFyEgrhlNEbqOt\nQd6i/amN8VfsKXcBy8/SJUemMp8GCqu7dau81BAAAAAwEAAQAAAQEApYtEvleBKuKXTdPu\nutSWDVTRoqZEPoLOM5SlYasmbM1gdfhPn72Un6rYJZpt7q+6FFF91sRchnkz/LIijZBOyj\nH5wrtA8IM2OtcW0SA+jahTrroGxr/JvxODh2K74YiSd0VrCeU8W2TrEj3QLMhemSPHZP2y\nqPcQCJ5Lr3wKxB0oQJcz69oXywHHKMCdCy5LDf+A/KI93rcCeyA3/i5iqVtCZEBu1PMbft\nZGW8o8P1F6ccFG1M5rrut/RQpYCzSJSrjLDSmn+EB8k2bx2HEdzqL0kGDBqQxW8O+61pTs\nCSt/WrmhZ0Wwe0OhmX9IPgMcmOsRV/NXszFDTBjP8t0bQQAAAIEA4hmmWo3z/+nJLKyT10\nJTmIEgNaWXJEYqVBv1xMFqAa8VFyKyPl2Qdb+bIVdp4aZsSnWY5t3PZGGTZMoj48JvpCW0\nKjY3SJDazQLddoWl9RdFUiUTlb9JL7SCSoqUZLrdzekWjbejBso78lyXTvUy3y4y5ufCuG\nx/VOAXwHyfD0sAAACBAPfg33pcKBQgYepLCR0FQTUi2FV0Ocl2kWOy0aWOQPZxXPleUhMM\nBW2KIFCipl3zW0xoUJXg4Lbsnsx5zzDRTjorjmfEOrteP8DjCWDC8u764e5jov4/NJj6OG\nY5ANgJmimIAg/XZmLniZZXEJX9T/TrpuG1NpuTnkevUWaXDJcZAAAAgQDhtMLcjrIeKOBQ\n9eoYyomvKRK7ufC4JHIUfoMb9HKpojo/7GsTRMh956jJGgRKndSzH4ImJIPhQy/sA+nQ14\n2E13WQ5XsB5GaEHew0ANJnOLzsXc60X+MfM5InzH8AOKlsNFto2HUgI7a2GUYE+GqOE8oY\nCF9oEd+FVdg/kr70aQAAABNuZ2Fib0BnYWJvci1sYXB0b3AyAQIDBAUG\n-----END OPENSSH PRIVATE KEY-----"
           }
+        },
+        {
+          "id": "conn_http_win1250",
+          "name": "HTTP Windows-1250 Hungarian Feed",
+          "channel": "HTTP",
+          "dataFormat": "CSV",
+          "config": {
+            "channel": "HTTP",
+            "url": "http://mock-datasource-server:80/public/feed_win1250.csv"
+          },
+          "dataFormatConfig": {
+            "format": "CSV",
+            "delimiter": ",",
+            "encoding": "windows-1250"
+          },
+          "isActive": true,
+          "credentials": {
+            "authType": "NONE"
+          }
+        },
+        {
+          "id": "conn_http_utf8_bom",
+          "name": "HTTP UTF-8-BOM Feed",
+          "channel": "HTTP",
+          "dataFormat": "CSV",
+          "config": {
+            "channel": "HTTP",
+            "url": "http://mock-datasource-server:80/public/feed_utf8_bom.csv"
+          },
+          "dataFormatConfig": {
+            "format": "CSV",
+            "delimiter": ",",
+            "encoding": "UTF-8-BOM"
+          },
+          "isActive": true,
+          "credentials": {
+            "authType": "NONE"
+          }
+        },
+        {
+          "id": "conn_http_iso88592",
+          "name": "HTTP ISO-8859-2 Latin-2 Feed",
+          "channel": "HTTP",
+          "dataFormat": "CSV",
+          "config": {
+            "channel": "HTTP",
+            "url": "http://mock-datasource-server:80/public/feed_iso88592.csv"
+          },
+          "dataFormatConfig": {
+            "format": "CSV",
+            "delimiter": "|",
+            "encoding": "ISO-8859-2"
+          },
+          "isActive": true,
+          "credentials": {
+            "authType": "NONE"
+          }
         }
       ]
     }

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import iconv from "iconv-lite";
 import { injectable, inject } from "inversify";
 import sax from "sax";
 import type { Logger } from "log4js";
@@ -19,18 +20,22 @@ export class XmlConverter implements IDataConverter {
     const formatConfig = connection.dataFormatConfig as XmlDataFormatConfig;
     const targetRowTag = (formatConfig?.rowPath || "product").toLowerCase().split("/").pop() || "product";
     const includeAttributes = formatConfig?.includeAttributes !== false;
+    const encoding = formatConfig?.encoding || "utf-8";
 
     this._logger.info("Converting raw XML to standardized CSV format via SAX stream", {
       connectionId: connection.id,
       inputRawPath,
       outputCsvPath,
       targetRowTag,
+      encoding,
     });
 
     FileUtil.ensureDirExists(outputCsvPath.substring(0, outputCsvPath.lastIndexOf("\\") > -1 ? outputCsvPath.lastIndexOf("\\") : outputCsvPath.lastIndexOf("/")));
 
     return new Promise<ConvertResult>((resolve, reject) => {
+      const normalizedEncoding = this._normalizeEncoding(encoding);
       const readStream = fs.createReadStream(inputRawPath);
+      const decodedStream = readStream.pipe(iconv.decodeStream(normalizedEncoding, { stripBOM: true }));
       const writeStream = fs.createWriteStream(outputCsvPath, { encoding: "utf-8" });
 
       const saxStream = sax.createStream(true, { trim: true, normalize: true });
@@ -177,7 +182,16 @@ export class XmlConverter implements IDataConverter {
         reject(err);
       });
 
-      readStream.pipe(saxStream);
+      decodedStream.pipe(saxStream);
     });
+  }
+
+  private _normalizeEncoding(encoding?: string): string {
+    if (!encoding) return "utf-8";
+    const lower = encoding.trim().toLowerCase();
+    if (lower === "utf-8-bom" || lower === "utf8-bom" || lower === "utf-8 with bom") {
+      return "utf-8";
+    }
+    return lower;
   }
 }

@@ -103,7 +103,7 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
     }
   });
 
-  it("should successfully download and standardize all 9 protocols/auth combinations (Happy Path)", () => {
+  it("should successfully download and standardize all 12 protocols/auth/encoding combinations (Happy Path)", () => {
     cleanTempDir();
 
     const { exitCode, stdout } = runDownloaderContainer("test_user_all_protocols");
@@ -112,9 +112,11 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
     expect(exitCode).toBe(0);
     expect(stdout).toContain("Downloader completed successfully without errors");
 
-    // Verify all 9 CSV files exist in temp/
+    // Verify all 12 converted CSV files exist in temp/
     const files = fs.readdirSync(TEMP_DIR);
     console.log("[E2E Downloaded Files]:", files);
+    const convertedCsvFiles = files.filter((f) => f.endsWith(".csv") && !f.endsWith(".raw.csv"));
+    expect(convertedCsvFiles.length).toBe(12);
 
     // 1. HTTP Public Comma
     const publicComma = files.find((f) => f.includes("conn_http_public_comma") && f.endsWith(".csv"));
@@ -170,6 +172,29 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
     expect(sftpKeyFile).toBeDefined();
     const sftpKeyContent = fs.readFileSync(path.join(TEMP_DIR, sftpKeyFile!), "utf-8");
     expect(sftpKeyContent).toContain("SFTP-701;Hex Key Set 9pc;14.50;110");
+
+    // 10. HTTP Windows-1250 Hungarian characters preserved in UTF-8
+    const win1250File = files.find((f) => f.includes("conn_http_win1250") && f.endsWith(".csv"));
+    expect(win1250File).toBeDefined();
+    const win1250Content = fs.readFileSync(path.join(TEMP_DIR, win1250File!), "utf-8");
+    expect(win1250Content).toContain("Cikkszám;Terméknév;Ár;Készlet");
+    expect(win1250Content).toContain("HU-901;Árvíztűrő tükörfúrógép;14990;25");
+    expect(win1250Content).toContain("HU-902;Ütvefúró és vésőgép;28500;10");
+
+    // 11. HTTP UTF-8 with BOM stripped cleanly
+    const bomFile = files.find((f) => f.includes("conn_http_utf8_bom") && f.endsWith(".csv"));
+    expect(bomFile).toBeDefined();
+    const bomContent = fs.readFileSync(path.join(TEMP_DIR, bomFile!), "utf-8");
+    expect(bomContent.charCodeAt(0)).not.toBe(0xfeff);
+    expect(bomContent).toContain("sku;megnevezés;ár;raktár");
+    expect(bomContent).toContain("BOM-101;Láncfűrész fém fogazattal;34990;12");
+
+    // 12. HTTP ISO-8859-2 Latin-2 preserved in UTF-8
+    const isoFile = files.find((f) => f.includes("conn_http_iso88592") && f.endsWith(".csv"));
+    expect(isoFile).toBeDefined();
+    const isoContent = fs.readFileSync(path.join(TEMP_DIR, isoFile!), "utf-8");
+    expect(isoContent).toContain("Azonosító;Megnevezés;Egységár;Raktár");
+    expect(isoContent).toContain("ISO-001;Csavarhúzó készlet (9 részes);4500;85");
   }, 60000);
 
   it("should catch and gracefully handle malformed XML feeds (Negative Test)", () => {

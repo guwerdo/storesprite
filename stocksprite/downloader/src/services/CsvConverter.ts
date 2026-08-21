@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import readline from "node:readline";
+import iconv from "iconv-lite";
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
@@ -27,6 +28,7 @@ export class CsvConverter implements IDataConverter {
       inputRawPath,
       outputCsvPath,
       inputDelimiter,
+      encoding,
       targetDelimiter: ";",
     });
 
@@ -87,6 +89,7 @@ export class CsvConverter implements IDataConverter {
 
   /**
    * Streaming fallback re-delimits CSV rows with semicolon without loading the full file in memory.
+   * Decodes from any source encoding (e.g. windows-1250, windows-1252, ISO-8859-2, UTF-8, UTF-8-BOM) to UTF-8.
    */
   private async _streamConvertCsv(
     inputRawPath: string,
@@ -95,17 +98,24 @@ export class CsvConverter implements IDataConverter {
     encoding: string
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const inputStream = fs.createReadStream(inputRawPath, {
-        encoding: (encoding as BufferEncoding) || "utf-8",
-      });
+      const normalizedEncoding = this._normalizeEncoding(encoding);
+      const inputStream = fs.createReadStream(inputRawPath);
+      const decodedStream = inputStream.pipe(iconv.decodeStream(normalizedEncoding, { stripBOM: true }));
       const outputStream = fs.createWriteStream(outputCsvPath, { encoding: "utf-8" });
 
       const rl = readline.createInterface({
-        input: inputStream,
+        input: decodedStream,
         crlfDelay: Infinity,
       });
 
+      let isFirstLine = true;
       rl.on("line", (line) => {
+        if (isFirstLine) {
+          isFirstLine = false;
+          if (line.charCodeAt(0) === 0xfeff) {
+            line = line.slice(1);
+          }
+        }
         if (!line || line.trim().length === 0) return;
 
         // Reformat line delimiters
@@ -136,7 +146,21 @@ export class CsvConverter implements IDataConverter {
       outputStream.on("error", (err) => {
         reject(err instanceof Error ? err : new Error(String(err)));
       });
+
+      inputStream.on("error", (err) => {
+        outputStream.close();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      });
     });
+  }
+
+  private _normalizeEncoding(encoding?: string): string {
+    if (!encoding) return "utf-8";
+    const lower = encoding.trim().toLowerCase();
+    if (lower === "utf-8-bom" || lower === "utf8-bom" || lower === "utf-8 with bom") {
+      return "utf-8";
+    }
+    return lower;
   }
 
   private _splitCsvRow(row: string, delimiter: string): string[] {

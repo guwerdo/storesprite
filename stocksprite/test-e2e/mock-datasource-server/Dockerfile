@@ -36,6 +36,9 @@ COPY keys/id_rsa.pub /home/keyuser/.ssh/authorized_keys
 COPY files/feed_public_comma.csv /var/www/supplier/public/feed_public_comma.csv
 COPY files/feed_pipe.csv         /var/www/supplier/public/feed_pipe.csv
 COPY files/feed_semicolon.csv    /var/www/supplier/public/feed_semicolon.csv
+COPY files/feed_win1250.csv      /var/www/supplier/public/feed_win1250.csv
+COPY files/feed_utf8_bom.csv     /var/www/supplier/public/feed_utf8_bom.csv
+COPY files/feed_iso88592.csv     /var/www/supplier/public/feed_iso88592.csv
 COPY files/feed_catalog.xml      /var/www/supplier/public/feed_catalog.xml
 COPY files/feed_malformed.xml    /var/www/supplier/public/feed_malformed.xml
 COPY files/feed_bearer.csv       /var/www/supplier/bearer/feed_bearer.csv
