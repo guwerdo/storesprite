@@ -116,12 +116,14 @@ A containerized instance of **pgAdmin 4** is available for inspecting and managi
 
 ### Access & Login
 * **URL**: [http://localhost:5050](http://localhost:5050)
-* **Email**: `admin@storesprite.com`
-* **Password**: `admin`
+* **Email**: `admin@storesprite.com` (if prompted)
+* **pgAdmin Login Password**: `admin` (if prompted)
+* **PostgreSQL Database Password**: `storesprite_secure_pass` (when prompted to connect to **StoreSprite DB**)
 
 ### Database Connection (Pre-Configured)
 The `StoreSprite DB` connection is pre-configured and automatically loaded upon startup from `.docker/pgadmin/servers.json`.
 
-1. Open [http://localhost:5050](http://localhost:5050) and log in.
-2. In the left navigation tree, expand **Servers** ➔ **StoreSprite DB**.
-3. Browse tables under: `Databases` ➔ `storesprite_db` ➔ `Schemas` ➔ `public` ➔ `Tables` (e.g. `users`).
+1. Open [http://localhost:5050](http://localhost:5050) (automatically logs in in desktop mode).
+2. In the left navigation tree, expand **Servers** ➔ click on **StoreSprite DB**.
+3. When prompted for the database password, enter: **`storesprite_secure_pass`** (check *"Save Password"*).
+4. Browse tables under: `Databases` ➔ `storesprite_db` ➔ `Schemas` ➔ `public` ➔ `Tables` (e.g. `users`, `data_connections`, `user_settings`).

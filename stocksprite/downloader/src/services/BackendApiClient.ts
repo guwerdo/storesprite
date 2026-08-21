@@ -34,7 +34,11 @@ export class BackendApiClient implements IBackendApiClient {
 
       return connections;
     } catch (error) {
-      const errorMsg = ErrorUtil.stringifyError(error);
+      let errorMsg = ErrorUtil.stringifyError(error);
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const responseData = error.response.data as { error?: string; message?: string };
+        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
+      }
       this._logger.error("Failed to fetch user connections from backend", {
         userId,
         url,

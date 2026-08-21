@@ -81,7 +81,25 @@ describe("Worker API Unit Tests (Mocked Dependencies)", () => {
     expect(mockUserService.createUser).toHaveBeenCalledWith("user_mock", "test@example.com", "John Doe");
   });
 
-  it("should return user connections when GET /api/worker/users/:userId/connections is called with valid worker token", async () => {
+  it("should return 404 when GET /api/worker/users/:userId/connections is called for non-existent user", async () => {
+    (mockUserService.getUserById as any).mockResolvedValue(null);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/worker/users/non_existent_user/connections",
+      headers: {
+        "x-worker-token": "mock_worker_token",
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    const body = JSON.parse(response.payload);
+    expect(body.error).toBe("User 'non_existent_user' not found");
+  });
+
+  it("should return user connections when GET /api/worker/users/:userId/connections is called with valid worker token and existing user", async () => {
+    (mockUserService.getUserById as any).mockResolvedValue(new User("user_mock", "test@example.com", "John Doe"));
+
     const mockConnections = [
       {
         id: "conn_1",

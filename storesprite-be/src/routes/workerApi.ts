@@ -39,8 +39,15 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
     "/users/:userId/connections",
     async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
       const { userId } = request.params;
+      const userService = request.server.container.get<IUserService>(TYPES.IUserService);
       const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
       const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      const user = await userService.getUserById(userId);
+      if (!user) {
+        logger.warn("Worker API requested connections for non-existent user", { userId });
+        return reply.code(404).send({ error: `User '${userId}' not found` });
+      }
 
       const connections = await connectionService.getConnections(userId);
       logger.info("Worker API fetched user connections", { userId, count: connections.length });

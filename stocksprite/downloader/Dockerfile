@@ -11,6 +11,9 @@ RUN npm ci
 COPY src ./src
 RUN npm run build
 
+# Prune devDependencies so node_modules contains production-only dependencies
+RUN npm prune --omit=dev
+
 # Production stage
 FROM node:20-alpine
 
@@ -25,9 +28,9 @@ ENV TZ=Europe/Budapest
 RUN cp /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
     && echo "Europe/Budapest" > /etc/timezone
 
-# Copy package definition and install production-only dependencies
-COPY package*.json ./
-RUN npm ci --omit=dev
+# Copy production node_modules and package.json directly from builder stage (fast, zero-reinstall)
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy compiled JavaScript from builder stage
 COPY --from=builder /app/dist ./dist
