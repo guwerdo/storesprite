@@ -1,0 +1,58 @@
+services:
+  mock-backend:
+    image: wiremock/wiremock:latest
+    container_name: mock-backend
+    volumes:
+      - ./test-e2e/wiremock/mappings:/home/wiremock/mappings:ro
+    ports:
+      - "8089:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/__admin/health || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 1s
+    networks:
+      - storesprite-e2e-net
+
+  mock-supplier:
+    build:
+      context: ./test-e2e/mock-supplier
+      dockerfile: Dockerfile
+    container_name: mock-supplier
+    ports:
+      - "8088:80"
+      - "2224:22"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/public/feed_public_comma.csv || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+      start_period: 1s
+    networks:
+      - storesprite-e2e-net
+
+  downloader-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: storesprite-downloader-test
+    environment:
+      USER_ID: "${USER_ID:-test_user_all_protocols}"
+      WORKER_TOKEN: "${WORKER_TOKEN:-mock_worker_token}"
+      BACKEND_URL: "http://mock-backend:8080"
+      OUTPUT_DIR: "/app/temp"
+    volumes:
+      - ./test-e2e/temp:/app/temp
+    depends_on:
+      mock-backend:
+        condition: service_healthy
+      mock-supplier:
+        condition: service_healthy
+    networks:
+      - storesprite-e2e-net
+
+networks:
+  storesprite-e2e-net:
+    name: storesprite-e2e-net
+    driver: bridge

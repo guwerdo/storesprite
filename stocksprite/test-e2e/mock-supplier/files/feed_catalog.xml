@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<products>
+  <product id="XML-601">
+    <sku>XML-601</sku>
+    <name>Digital Caliper 150mm</name>
+    <price>22.50</price>
+    <stock>80</stock>
+  </product>
+  <product id="XML-602">
+    <sku>XML-602</sku>
+    <name>Micrometer 0-25mm</name>
+    <price>34.00</price>
+    <stock>45</stock>
+  </product>
+</products>

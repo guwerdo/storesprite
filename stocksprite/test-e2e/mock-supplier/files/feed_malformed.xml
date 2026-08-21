@@ -1,0 +1,5 @@
+<products>
+  <product id="CORRUPT-1">
+    <sku>CORRUPT-1</sku>
+    <unclosed_tag>This tag is not closed
+</products>

@@ -65,7 +65,48 @@ docker run --rm \
 
 ---
 
-## 4. Local CLI Commands
+## 4. Dual-Tier Testing Strategy
+
+### Unit Tests (In-Memory Fast Mocks)
+Unit tests mock network I/O and verify business logic, conversion, and error handling in isolation:
+```bash
+cd stocksprite/downloader
+npm test
+```
+
+### End-to-End (E2E) Test Suite (`npm run test:e2e`)
+The E2E test suite spins up a real test environment via `docker-compose-test-e2e.yaml`:
+* **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/worker/users/:userId/connections`).
+* **Mock Supplier (`mock-supplier`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
+* **Downloader Container (`storesprite-downloader:test-e2e`)**: Runs the production multi-stage image against the test network.
+
+#### Scenarios Covered:
+1. **Happy Path (9 Protocols/Auth Combinations)**:
+   - HTTP Public (Comma Delimited CSV)
+   - HTTP Pipe Delimited CSV
+   - HTTP Semicolon Delimited CSV
+   - HTTP Bearer Token Auth CSV
+   - HTTP API Key Header (`X-Supplier-API-Key`) CSV
+   - HTTP Basic Auth (`.htpasswd`) CSV
+   - HTTP XML Product Catalog (`<catalog><product>...`) converted via SAX to standardized CSV
+   - SFTP Username & Password Auth CSV
+   - SFTP SSH Private Key (`id_rsa` / `id_rsa.pub`) Auth CSV
+2. **Negative Test: Malformed XML**:
+   - Asserts downstream XML parser catches broken XML syntax and completes with error summary.
+3. **Negative Test: Invalid Authentication**:
+   - Asserts HTTP 401 Bearer Token and SFTP password failures are captured, logged, and isolated.
+4. **Negative Test: 404 User Not Found**:
+   - Asserts downloader terminates immediately with exit code 1 when backend returns 404.
+
+#### Running E2E Tests:
+```bash
+cd stocksprite/downloader
+npm run test:e2e
+```
+
+---
+
+## 5. Local CLI Commands
 
 ```bash
 cd stocksprite/downloader
@@ -75,8 +116,11 @@ npm run dev
 # or
 npm run download
 
-# Run unit tests (Vitest)
+# Run fast unit tests (Vitest)
 npm test
+
+# Run full Docker E2E test suite (WireMock + Real Nginx/SFTP Supplier)
+npm run test:e2e
 
 # Build TypeScript to dist/
 npm run build
