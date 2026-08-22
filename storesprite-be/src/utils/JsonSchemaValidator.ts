@@ -17,6 +17,7 @@ import {
   XmlDataFormatConfig,
   HttpCredentials,
   SftpCredentials,
+  ConnectionTestResult,
 } from "../types/DataConnectionRepository.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 
@@ -39,6 +40,7 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   private readonly _validateXmlFormatConfig: ValidateFunction<XmlDataFormatConfig>;
   private readonly _validateHttpCredentials: ValidateFunction<HttpCredentials>;
   private readonly _validateSftpCredentials: ValidateFunction<SftpCredentials>;
+  private readonly _validateTestResult: ValidateFunction<ConnectionTestResult>;
 
   constructor(
     @inject(TYPES.Logger)
@@ -54,6 +56,22 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
     this._validateXmlFormatConfig = this._compileSchema<XmlDataFormatConfig>("connection-data-format-config-xml.schema.json");
     this._validateHttpCredentials = this._compileSchema<HttpCredentials>("connection-credentials-http.schema.json");
     this._validateSftpCredentials = this._compileSchema<SftpCredentials>("connection-credentials-sftp.schema.json");
+    this._validateTestResult = this._compileSchema<ConnectionTestResult>("connection-test-result.schema.json");
+  }
+
+  public validateTestResult(testResult: unknown): ConnectionTestResult {
+    if (!testResult || typeof testResult !== "object") {
+      throw new SchemaValidationError("Test result must be a non-null object");
+    }
+
+    const valid = this._validateTestResult(testResult);
+    if (!valid) {
+      const errorText = this._formatErrors(this._validateTestResult);
+      this._logger?.warn("Invalid connection test result", { errors: errorText, testResult });
+      throw new SchemaValidationError(`Invalid connection test result: ${errorText}`);
+    }
+
+    return testResult;
   }
 
   public validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig {

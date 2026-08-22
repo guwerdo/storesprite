@@ -67,11 +67,8 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "HTTP",
-            "SFTP"
-          ],
-          "mappedType": "enum"
+          "enumItems": [],
+          "mappedType": "string"
         },
         "data_format": {
           "name": "data_format",
@@ -86,11 +83,8 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "CSV",
-            "XML"
-          ],
-          "mappedType": "enum"
+          "enumItems": [],
+          "mappedType": "string"
         },
         "data_format_config": {
           "name": "data_format_config",
@@ -119,7 +113,7 @@
           "length": null,
           "precision": null,
           "scale": null,
-          "default": "true",
+          "default": "false",
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
@@ -142,6 +136,22 @@
         },
         "credentials": {
           "name": "credentials",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "test_result": {
+          "name": "test_result",
           "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,
@@ -187,22 +197,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
-        },
-        "test_result": {
-          "name": "test_result",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
         }
       },
       "name": "data_connections",
@@ -242,17 +236,17 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "data_connections_user_id_fkey": {
+        "data_connections_user_id_foreign": {
           "columnNames": [
             "user_id"
           ],
-          "constraintName": "data_connections_user_id_fkey",
+          "constraintName": "data_connections_user_id_foreign",
           "localTableName": "public.data_connections",
           "referencedTableName": "public.users",
           "referencedColumnNames": [
             "id"
           ],
-          "updateRule": "no action",
+          "updateRule": "cascade",
           "deleteRule": "cascade"
         }
       },
@@ -405,6 +399,22 @@
           "enumItems": [],
           "mappedType": "string"
         },
+        "unas_api_endpoint": {
+          "name": "unas_api_endpoint",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": "'https://api.unas.eu/shop/'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "language_id": {
           "name": "language_id",
           "type": "int4",
@@ -452,22 +462,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
-        },
-        "unas_api_endpoint": {
-          "name": "unas_api_endpoint",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": "'https://api.unas.eu/shop/'",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
         }
       },
       "name": "user_settings",

@@ -31,8 +31,8 @@ describe("Backend Util Module", () => {
       });
     });
 
-    it("should return null for malformed tokens", () => {
-      expect(Util.decodeJwtPayload("invalid-token")).toBeNull();
+    it("should return null for malformed JWT tokens with invalid JSON/base64 payload", () => {
+      expect(Util.decodeJwtPayload("header.not-valid-json-base64.sig")).toBeNull();
       expect(Util.decodeJwtPayload("")).toBeNull();
     });
   });

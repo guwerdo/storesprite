@@ -88,6 +88,22 @@ export type SftpCredentials =
 
 export type ConnectionCredentials = HttpCredentials | SftpCredentials;
 
+export type ConnectionTestProgress = 'start' | 'download' | 'convert' | 'finish' | null;
+
+export interface ConnectionTestResult {
+  progress?: ConnectionTestProgress;
+  started_at?: string;
+  finished_at?: string;
+  duration_ms?: number;
+  success?: boolean;
+  errorMessage?: string;
+  rowCount?: number;
+  columnCount?: number;
+  fileSize?: number;
+  columns?: string[];
+  rows?: string[][];
+}
+
 export interface IDataConnection {
   id: string;
   name: string;
@@ -97,6 +113,7 @@ export interface IDataConnection {
   dataFormatConfig: DataFormatConfig;
   isActive: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -109,6 +126,7 @@ export interface ICreateConnectionPayload {
   dataFormatConfig: DataFormatConfig;
   isActive?: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
 }
 
 export interface IUpdateConnectionPayload {
@@ -119,6 +137,7 @@ export interface IUpdateConnectionPayload {
   dataFormatConfig?: DataFormatConfig;
   isActive?: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
 }
 
 export interface IConnectionsApiResponse {
@@ -134,4 +153,8 @@ export interface IConnectionMutationResponse {
   connection?: IDataConnection;
   message?: string;
   error?: string;
+}
+
+export interface IConnectionTestResultResponse {
+  testResult: ConnectionTestResult | null;
 }

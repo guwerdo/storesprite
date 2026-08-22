@@ -463,6 +463,127 @@ describe("DataConnectionService Unit Tests", () => {
       // Act & Assert
       await expect(service.updateConnection("conn-1", "user_123", { name: "  " })).rejects.toThrow("Connection name is required");
     });
+
+    it("should throw 409 Conflict if update is attempted while test is in progress", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Testing Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        false,
+        null,
+        { progress: "download", started_at: new Date().toISOString() }
+      );
+      existing.id = "conn-testing";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      // Act & Assert
+      await expect(
+        service.updateConnection("conn-testing", "user_123", { name: "Updated Name" })
+      ).rejects.toThrow("Cannot update connection while testing is in progress");
+    });
+
+    it("should reset testResult and isActive when config or channel is edited", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Old Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed1.csv" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        null,
+        { progress: "finish", success: true }
+      );
+      existing.id = "conn-edited";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      const updatedConn = new DataConnection(
+        mockUser,
+        "Old Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed2.csv" },
+        { format: "CSV", delimiter: ";" },
+        false,
+        null,
+        null
+      );
+      updatedConn.id = "conn-edited";
+      repositoryMock.update.mockResolvedValue(updatedConn);
+
+      // Act
+      const result = await service.updateConnection("conn-edited", "user_123", {
+        config: { channel: "HTTP", url: "https://example.com/feed2.csv" },
+      });
+
+      // Assert
+      expect(result?.isActive).toBe(false);
+      expect(result?.testResult).toBeNull();
+      expect(repositoryMock.update).toHaveBeenCalledWith(
+        "conn-edited",
+        "user_123",
+        expect.objectContaining({
+          isActive: false,
+          testResult: null,
+        })
+      );
+    });
+
+    it("should reject activating a connection without a successful test result", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Untested Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        false,
+        null,
+        null
+      );
+      existing.id = "conn-untested";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      // Act & Assert
+      await expect(
+        service.updateConnection("conn-untested", "user_123", { isActive: true })
+      ).rejects.toThrow("Connection cannot be activated until it was tested successfully");
+    });
+  });
+
+  describe("invalidateConnection", () => {
+    it("should set isActive false and testResult null", async () => {
+      // Arrange
+      const existing = new DataConnection(
+        mockUser,
+        "Active Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        true,
+        null,
+        { progress: "finish", success: true }
+      );
+      existing.id = "conn-inval";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      // Act
+      const result = await service.invalidateConnection("conn-inval", "user_123");
+
+      // Assert
+      expect(result).toBe(true);
+      expect(repositoryMock.update).toHaveBeenCalledWith("conn-inval", "user_123", {
+        isActive: false,
+        testResult: null,
+      });
+    });
   });
 
   describe("deleteConnection", () => {

@@ -64,15 +64,18 @@ This document outlines the non-negotiable principles, architectural invariants, 
      ```
      *(or `npm run test`)*
 
-2. **API & End-to-End Test Mandate (`npm run test-api`)**:
-   * When creating new API endpoints or modifying existing endpoint behavior in backend services, ALWAYS create or update an API test in `tests/e2e/`.
-   * API tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
-   * Run API integration tests via:
-     ```bash
-     npm run test-api
-     ```
+2. **Backend API & Container Integration Test Mandates**:
+   * **Backend REST API Tests (`npm run test:api`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an API test in `tests/e2e/`. API tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
+   * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/test-e2e/` testing the built Docker container against mock backend & datasource servers.
 
-3. **Testability & Mockability Design**:
+3. **Comprehensive Scenario Coverage Mandate (Happy Path, Edge Cases, Error Cases)**:
+   * Test suites for both unit tests and E2E API tests MUST NOT test only happy path scenarios.
+   * Every component, service, or API route test suite MUST systematically cover:
+     * **Happy Path Scenarios**: Expected primary workflows, valid data inputs, successful state mutations, and standard response formats.
+     * **Edge Cases & Boundary Conditions**: Minimum/maximum field lengths, empty arrays/strings, missing optional fields, special characters, whitespace trimming, concurrent invocations, and pagination/filter boundaries.
+     * **Error & Failure Cases**: Unauthorized/forbidden access, invalid authentication tokens, malformed JSON/schema validation failures, database constraint violations, external API downtime/timeouts, and network failure recoveries.
+
+4. **Testability & Mockability Design**:
    * Write modular, loosely coupled code that is easy to isolate, test, and mock in unit tests without complex setups.
    * **Framework Breakdown**:
      * `storesprite-fe` & `storesprite-be`: Powered by **Vitest**. Use `vitest-mock-extended` (or `vi.fn()`) for interface mocking.
@@ -138,7 +141,15 @@ This document outlines the non-negotiable principles, architectural invariants, 
    * `any` types are prohibited. Always use strict types, generics, or `unknown` with runtime type narrowing.
    * Public service methods, repository methods, and exported functions MUST declare explicit return types.
 
-8. **Error Handling & Resiliency**:
+8. **Strict JSON Schema & Runtime Payload Validation (Ajv)**:
+   * **Mandatory Schema Validation**: When working with JSON payloads (e.g. backend API request bodies, worker payloads, parsed JSON strings, or structured JSON columns stored in the database), agents MUST ALWAYS validate incoming JSON objects or parsed strings before processing or persisting them.
+   * **Static JSON Schema Definition**: JSON schemas MUST be defined statically using JSON Schema standards (e.g., draft-07/2020-12) or compiled validator singletons via **Ajv** (`ajv` / `@ajv-formats`). Avoid dynamic or ad-hoc runtime schema construction.
+   * **Boundary Enforcement**:
+     * Route handlers and endpoints MUST validate inbound HTTP payloads (body, query, params) against compiled Ajv schemas (or Fastify route schema definitions) to reject malformed or arbitrary JSON payloads before hitting domain logic.
+     * Deserialization of external or database JSONB strings/objects MUST validate against strict Ajv schemas before casting to domain TypeScript types.
+   * **Error Handling**: Schema validation failures MUST produce explicit, structured validation error messages describing the failing property and violation rule, preventing unexpected runtime exceptions or database corruption.
+
+9. **Error Handling & Resiliency**:
    * Silent exception swallowing is strictly prohibited.
    * Unhandled CSV parsing errors or UNAS API rate limits must be logged with detailed context and reported back through job state telemetry (`POST /api/worker/progress`).
 

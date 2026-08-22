@@ -8,6 +8,7 @@ import {
   UpdateDataConnectionDto,
   ConnectionConfig,
   DataFormatConfig,
+  ConnectionTestResult,
 } from "../types/DataConnectionRepository.interface.js";
 import { IDataConnectionService } from "../types/DataConnectionService.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
@@ -133,15 +134,117 @@ export class DataConnectionService implements IDataConnectionService {
       }
     }
 
+    // Check if test is currently in progress (within 15 minute timeout)
+    if (
+      existing.testResult?.progress &&
+      ["start", "download", "convert"].includes(existing.testResult.progress)
+    ) {
+      const startedAt = existing.testResult.started_at
+        ? new Date(existing.testResult.started_at).getTime()
+        : 0;
+      const isWithinTimeout = Date.now() - startedAt < 15 * 60 * 1000;
+      if (isWithinTimeout) {
+        const error = new Error("Cannot update connection while testing is in progress. Please wait for the test to complete.");
+        (error as unknown as { statusCode: number }).statusCode = 409;
+        throw error;
+      }
+    }
+
+    // Smart comparison to detect if connection-related settings changed
+    const hasConfigChanged =
+      (data.channel !== undefined && data.channel !== existing.channel) ||
+      (data.dataFormat !== undefined && data.dataFormat !== existing.dataFormat) ||
+      (data.config !== undefined && JSON.stringify(data.config) !== JSON.stringify(existing.config)) ||
+      (data.dataFormatConfig !== undefined && JSON.stringify(data.dataFormatConfig) !== JSON.stringify(existing.dataFormatConfig)) ||
+      (data.credentials !== undefined && JSON.stringify(data.credentials) !== JSON.stringify(existing.credentials));
+
+    let finalIsActive = data.isActive !== undefined ? data.isActive : existing.isActive;
+    let finalTestResult = existing.testResult ?? null;
+
+    if (hasConfigChanged) {
+      // Deactivate and clear test results
+      finalIsActive = false;
+      finalTestResult = null;
+    } else {
+      // If user tries to activate connection without a passed test result
+      if (data.isActive === true && existing.testResult?.success !== true) {
+        throw new Error("Connection cannot be activated until it was tested successfully");
+      }
+    }
+
     const updated = await this._repository.update(id, userId, {
       ...data,
       name: data.name !== undefined ? data.name.trim() : undefined,
       config: validatedConfig,
       dataFormatConfig: validatedDataFormatConfig,
       credentials: validatedCredentials,
+      isActive: finalIsActive,
+      testResult: finalTestResult,
     });
 
     return updated ? this._mapToDto(updated) : null;
+  }
+
+  public async invalidateConnection(id: string, userId: string): Promise<boolean> {
+    this._logger?.info("Service invalidating connection test result", { id, userId });
+    if (!this._repository) {
+      return false;
+    }
+
+    const existing = await this._repository.getByIdAndUserId(id, userId);
+    if (!existing) {
+      return false;
+    }
+
+    await this._repository.update(id, userId, {
+      isActive: false,
+      testResult: null,
+    });
+
+    return true;
+  }
+
+  public async saveTestResult(
+    id: string,
+    patchResult: Partial<ConnectionTestResult>
+  ): Promise<DataConnectionDto | null> {
+    this._logger?.info("Service saving connection test result", { id, progress: patchResult.progress });
+    if (!this._repository) {
+      return null;
+    }
+
+    const existing = await this._repository.getByIdAndUserId(id, (patchResult as unknown as { userId?: string }).userId ?? "");
+    // If not found by user, retrieve via entity manager or search across users
+    // For worker API, search by ID
+    const connection = existing || (await this._repository.getByIdAndUserId(id, (existing as unknown as { user: { id: string } })?.user?.id || "")) || (await (this._repository as unknown as { _em: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })._em?.findOne(DataConnection, { id }));
+    
+    if (!connection) {
+      this._logger?.warn("Connection not found for saveTestResult", { id });
+      return null;
+    }
+
+    const mergedTestResult: ConnectionTestResult = {
+      ...(connection.testResult || {}),
+      ...patchResult,
+    };
+
+    const validatedTestResult = this._validator.validateTestResult(mergedTestResult);
+
+    connection.testResult = validatedTestResult;
+    connection.updatedAt = new Date();
+    await (this._repository as unknown as { _em: { flush: () => Promise<void> } })._em?.flush();
+
+    return this._mapToDto(connection);
+  }
+
+  public async getConnectionByIdForWorker(id: string): Promise<DataConnectionDto | null> {
+    this._logger?.info("Service fetching connection for worker", { id });
+    if (!this._repository) {
+      return null;
+    }
+
+    const connection = await (this._repository as unknown as { _em: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })._em?.findOne(DataConnection, { id });
+    return connection ? this._mapToDto(connection) : null;
   }
 
   public async deleteConnection(id: string, userId: string): Promise<boolean> {
@@ -164,6 +267,7 @@ export class DataConnectionService implements IDataConnectionService {
       dataFormatConfig: entity.dataFormatConfig as unknown as DataFormatConfig,
       isActive: entity.isActive,
       credentials: entity.credentials,
+      testResult: entity.testResult ?? null,
       createdAt: entity.createdAt instanceof Date ? entity.createdAt.toISOString() : String(entity.createdAt),
       updatedAt: entity.updatedAt instanceof Date ? entity.updatedAt.toISOString() : String(entity.updatedAt),
     };

@@ -133,4 +133,103 @@ describe("DownloaderService Unit Tests", () => {
     expect(summary.results[0].status).toBe("ERROR");
     expect(summary.results[0].error).toContain("Connection timed out");
   });
+
+  it("should execute test mode, stream CSV sample rows and report stage progress and results", async () => {
+    config.testConnectionId = "test_conn_123";
+
+    const mockConn: DataConnectionDto = {
+      id: "test_conn_123",
+      name: "Supplier Feed",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
+    downloaderMock.download.mockResolvedValue({
+      destinationPath: path.join(testDir, "test_test_conn_123.raw.csv"),
+      isUnchanged: false,
+      byteCount: 1000,
+    });
+
+    converterMock.convert.mockImplementation(async (_conn, _raw, csvPath) => {
+      fs.writeFileSync(
+        csvPath,
+        "sku;title;price;stock\n101;Drill 10mm;19.99;50\n102;Hammer 500g;9.99;20\n103;Wrench 12mm;14.50;10\n104;Saw 300mm;25.00;5\n",
+        "utf-8"
+      );
+      return {
+        outputPath: csvPath,
+        rowCount: 4,
+        byteCount: 100,
+      };
+    });
+
+    const summary = await service.run();
+
+    expect(summary.successCount).toBe(1);
+    expect(summary.errorCount).toBe(0);
+
+    // Verify stage progress calls
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith("test_conn_123", {
+      progress: "download",
+    });
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith("test_conn_123", {
+      progress: "convert",
+    });
+
+    // Verify final finish result call
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith(
+      "test_conn_123",
+      expect.objectContaining({
+        progress: "finish",
+        success: true,
+        rowCount: 4,
+        columnCount: 4,
+        columns: ["sku", "title", "price", "stock"],
+        rows: [
+          ["101", "Drill 10mm", "19.99", "50"],
+          ["102", "Hammer 500g", "9.99", "20"],
+          ["103", "Wrench 12mm", "14.50", "10"],
+        ],
+      })
+    );
+  });
+
+  it("should report test failure when download throws error during test mode", async () => {
+    config.testConnectionId = "failing_conn_999";
+
+    const mockConn: DataConnectionDto = {
+      id: "failing_conn_999",
+      name: "Broken Feed",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/bad.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
+    downloaderMock.download.mockRejectedValue(new Error("SFTP authentication failed"));
+
+    const summary = await service.run();
+
+    expect(summary.successCount).toBe(0);
+    expect(summary.errorCount).toBe(1);
+
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith(
+      "failing_conn_999",
+      expect.objectContaining({
+        progress: "finish",
+        success: false,
+        errorMessage: expect.stringContaining("SFTP authentication failed"),
+      })
+    );
+  });
 });

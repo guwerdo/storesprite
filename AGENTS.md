@@ -119,12 +119,18 @@ The monorepo contains three primary services:
         *   **Clean Build & Lint**: All code MUST build cleanly with 0 ESLint errors and 0 warnings.
 4.  **Mandatory Dual-Tier Testing & Testability Design**:
     *   **Test Mandate**: When adding new code or updating existing logic, ALWAYS create or update unit tests.
-    *   **Testable & Mockable Architecture**: Write modular, loosely coupled code that is easy to test and mock in unit tests.
-    *   **API Test Mandate (`npm run test-api`)**: When creating new backend API endpoints or modifying existing route behavior, ALWAYS create or update an API test in `tests/e2e/` testing against the real test database.
+    *   **Comprehensive Scenario Coverage Mandate**: Test suites MUST cover all possible execution paths:
+        *   **Happy Path Scenarios**: Standard valid inputs, intended business workflows, and successful responses.
+        *   **Edge Cases & Boundary Conditions**: Zero/null values, empty collections, minimum/maximum lengths, special characters, and boundary limits.
+        *   **Error & Failure Cases**: Unauthorized access, invalid authentication, schema validation failures, database errors, timeouts, and network failure recovery.
+    *   **API & Integration Test Mandates**:
+        *   Backend (`storesprite-be`): When creating or modifying API endpoints, ALWAYS create/update an API test in `tests/e2e/` testing against the real test database.
+        *   Downloader (`stocksprite/downloader`): When modifying downloader container behavior, run container integration tests against mock services via `npm run test:integration`.
     *   **Execution Commands**:
         ```bash
-        npm test        # Runs pure in-memory unit tests with mocked dependencies
-        npm run test-api # Runs backend E2E API tests against isolated test database
+        npm run test             # Runs pure in-memory unit tests across all packages
+        npm run test:api         # Runs backend E2E API tests against PostgreSQL (storesprite-be)
+        npm run test:integration # Runs container integration tests against mock servers (stocksprite/downloader)
         ```
     *   **Testing Conventions**:
         *   *Test Frameworks & Mocking*:
@@ -138,7 +144,10 @@ The monorepo contains three primary services:
     *   `clientApi` routes MUST be protected via Clerk JWT authentication.
     *   `workerApi` routes MUST be protected via `INTERNAL_WORKER_TOKEN` authorization.
     *   Webhook endpoints (e.g. Clerk webhooks) MUST verify raw payloads using Svix.
-6.  **Logging & Observability Rules**:
+6.  **Strict JSON Schema Validation (Ajv)**:
+    *   All incoming JSON payloads across API boundaries (client API, worker API, webhooks), parsed JSON strings, or database JSONB objects MUST be validated against statically declared JSON schemas using **Ajv**.
+    *   Never accept or persist arbitrary JSON objects without schema validation at the boundary.
+7.  **Logging & Observability Rules**:
     *   **Unified Logging Pattern**: Both `storesprite-be` and `stocksprite` MUST use `log4js` configured with structured JSON output (`jsonWithDataFieldLayout`).
     *   **Log Payloads**: Log messages MUST pass structured context objects as the second parameter instead of string concatenation:
         ```typescript
@@ -150,7 +159,7 @@ The monorepo contains three primary services:
         *   `logger.error`: Log all caught exceptions, UNAS API rate-limit exhaustion, database failures, and worker crashes.
         *   `logger.warn`: Log non-fatal anomalies, skipped records, missing non-critical CSV fields, or retry attempts.
         *   `logger.info`: Log key lifecycle events (job triggers, container spawns, queue publishing counts, process completion).
-7.  **Domain Conventions & UNAS Integration**:
+8.  **Domain Conventions & UNAS Integration**:
     *   Respect UNAS API rate limits (maximum 6,000 requests/hour across shared callers like Dunitker & Cromwell). Batch requests whenever possible.
     *   **Stock Sync Rules**:
         *   Multi-warehouse stock mapping: Primary stock (`free_stock_hu` / Dunaharaszti), secondary stocks (`free_stock_cz` / Czech, `free_stock_wdc` / UK).
@@ -158,14 +167,14 @@ The monorepo contains three primary services:
         *   Inactivate webshop products that no longer exist in the supplier CSV feed.
     *   **Content Sync Rules**:
         *   Descriptions and product images are updated **only if missing** (initial sync). Existing detailed descriptions/images on UNAS must not be overwritten during routine stock/price updates.
-8.  **Verification Before Completion (Testing & Linting)**:
+9.  **Verification Before Completion (Testing & Linting)**:
     *   Run corresponding unit tests and linter in the specific package directory before reporting task completion:
         ```bash
         npm test
         npm run lint
         ```
     *   Never suppress failing tests or lint errors with empty try/catch blocks or unapproved type casts.
-9.  **Multi-LLM Compatibility Standard & MCP Usage**:
+10. **Multi-LLM Compatibility Standard & MCP Usage**:
     *   Whenever editing or adding instructions to `AGENTS.md`, `CONSTITUTION.md`, `ARCHITECTURE.md`, or `README.md`, ALWAYS use standardized, vendor-agnostic Markdown formatting.
     *   Do NOT use vendor-specific syntax, proprietary tags, or LLM-exclusive magic tokens.
     *   **MCP Tools & Server Usage Matrix**:

@@ -16,7 +16,7 @@ export type {
 } from "../types/DataConnectionRepository.interface.js";
 export type { IDataConnectionService } from "../types/DataConnectionService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
-export type { IConfiguration } from "@storesprite/app-config";
+export type { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
 
 export const TYPES = {
   IConfiguration: Symbol.for("IConfiguration"),
@@ -27,6 +27,7 @@ export const TYPES = {
   IDataConnectionRepository: Symbol.for("IDataConnectionRepository"),
   IDataConnectionService: Symbol.for("IDataConnectionService"),
   IJsonSchemaValidator: Symbol.for("IJsonSchemaValidator"),
+  IConnectionTestRunnerService: Symbol.for("IConnectionTestRunnerService"),
   EntityManager: Symbol.for("EntityManager"),
   MikroORM: Symbol.for("MikroORM"),
   Logger: Symbol.for("Logger"),

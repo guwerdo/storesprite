@@ -8,6 +8,7 @@ import type {
   IConnectionsApiResponse,
   IConnectionApiResponse,
   IConnectionMutationResponse,
+  IConnectionTestResultResponse,
 } from '../types/DataConnection.interface.js';
 import { TYPES } from '../di/types.js';
 
@@ -48,6 +49,24 @@ export class ConnectionService implements IConnectionService {
 
   public async deleteConnection(token: string, id: string): Promise<IConnectionMutationResponse> {
     return this._httpClient.delete<IConnectionMutationResponse>(`/client/connections/${id}`, {
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
+  public async runTest(token: string, id: string): Promise<void> {
+    await this._httpClient.post(`/client/connections/${id}/run-test`, {}, {
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
+  public async getTestResult(token: string, id: string): Promise<IConnectionTestResultResponse> {
+    return this._httpClient.get<IConnectionTestResultResponse>(`/client/connections/${id}/test-result`, {
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
+  public async invalidateConnection(token: string, id: string): Promise<void> {
+    await this._httpClient.delete(`/client/connections/${id}/test-result`, {
       Authorization: `Bearer ${token}`,
     });
   }

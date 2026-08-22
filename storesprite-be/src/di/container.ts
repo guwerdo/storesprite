@@ -10,6 +10,7 @@ import { SettingService } from "../services/SettingService.js";
 import { SettingRepository } from "../repositories/SettingRepository.js";
 import { DataConnectionService } from "../services/DataConnectionService.js";
 import { DataConnectionRepository } from "../repositories/DataConnectionRepository.js";
+import { ConnectionTestRunnerService } from "../services/ConnectionTestRunnerService.js";
 import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
 import type { MikroORM } from "@mikro-orm/postgresql";
 
@@ -27,6 +28,9 @@ export function createContainer(orm?: MikroORM): Container {
 
   // Bind Schema Validator in singleton scope
   container.bind(TYPES.IJsonSchemaValidator).to(JsonSchemaValidator).inSingletonScope();
+
+  // Bind Connection Test Runner Service
+  container.bind(TYPES.IConnectionTestRunnerService).to(ConnectionTestRunnerService).inSingletonScope();
 
   // If MikroORM is initialized, bind the EntityManager factory or instance
   if (orm) {

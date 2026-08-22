@@ -5,6 +5,7 @@ import { Container } from 'inversify';
 import { ContainerProvider } from '../di/ContainerProvider.js';
 import { TYPES } from '../di/types.js';
 import type { IConnectionService } from '../types/ConnectionService.interface.js';
+import type { ISocketService } from '../types/SocketService.interface.js';
 import StockSpriteConnectionsTab from '../features/stocksprite/tabs/StockSpriteConnectionsTab.js';
 import { I18nProvider } from '../i18n/I18nProvider.js';
 
@@ -15,6 +16,7 @@ vi.mock('@clerk/clerk-react', () => ({
     isLoaded: true,
     isSignedIn: true,
     getToken: mockGetToken,
+    userId: 'test_user_id',
   }),
 }));
 
@@ -24,14 +26,15 @@ describe('StockSpriteConnectionsTab', () => {
   let updateConnectionSpy: ReturnType<typeof vi.fn>;
   let deleteConnectionSpy: ReturnType<typeof vi.fn>;
   let mockConnectionService: IConnectionService;
+  let mockSocketService: ISocketService;
   let testContainer: Container;
 
   beforeEach(() => {
     getConnectionsSpy = vi.fn().mockResolvedValue({
       connections: [],
     });
-    createConnectionSpy = vi.fn().mockResolvedValue({ success: true });
-    updateConnectionSpy = vi.fn().mockResolvedValue({ success: true });
+    createConnectionSpy = vi.fn().mockResolvedValue({ connection: { id: 'conn_new', name: 'API Feed' }, success: true });
+    updateConnectionSpy = vi.fn().mockResolvedValue({ connection: { id: 'conn_1', name: 'API Feed' }, success: true });
     deleteConnectionSpy = vi.fn().mockResolvedValue({ success: true });
 
     mockConnectionService = {
@@ -40,10 +43,22 @@ describe('StockSpriteConnectionsTab', () => {
       createConnection: createConnectionSpy,
       updateConnection: updateConnectionSpy,
       deleteConnection: deleteConnectionSpy,
+      runTest: vi.fn().mockResolvedValue({ status: 'pending' }),
+      getTestResult: vi.fn().mockResolvedValue({ testResult: null }),
+      invalidateConnection: vi.fn().mockResolvedValue({ success: true }),
+    };
+
+    mockSocketService = {
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      joinTenant: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
     testContainer = new Container();
     testContainer.bind<IConnectionService>(TYPES.IConnectionService).toConstantValue(mockConnectionService);
+    testContainer.bind<ISocketService>(TYPES.ISocketService).toConstantValue(mockSocketService);
   });
 
   it('renders empty state text when no connections exist', async () => {

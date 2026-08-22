@@ -85,10 +85,13 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         throw new Error('Authentication token not available');
       }
 
+      let savedConnection: IDataConnection | null = null;
       if (viewMode === 'EDIT' && selectedConnection?.id) {
-        await connectionService.updateConnection(token, selectedConnection.id, payload);
+        const response = await connectionService.updateConnection(token, selectedConnection.id, payload);
+        savedConnection = response.connection ?? null;
       } else {
-        await connectionService.createConnection(token, payload);
+        const response = await connectionService.createConnection(token, payload);
+        savedConnection = response.connection ?? null;
       }
 
       setSnackbar({
@@ -96,8 +99,13 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         message: t('stocksprite.connections.form.savedSuccess'),
         severity: 'success',
       });
-      setViewMode('LIST');
-      setSelectedConnection(null);
+      if (savedConnection) {
+        setSelectedConnection(savedConnection);
+        setViewMode('EDIT');
+      } else {
+        setSelectedConnection(null);
+        setViewMode('LIST');
+      }
       await fetchConnections();
     } catch (err: unknown) {
       setSnackbar({

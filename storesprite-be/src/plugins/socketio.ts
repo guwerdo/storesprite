@@ -26,6 +26,14 @@ export default fp((fastify: FastifyInstance, _opts: unknown, done: (err?: Error)
   io.on("connection", (socket) => {
     fastify.log.info(`Client connected: ${socket.id}`);
 
+    socket.on("join_tenant", (data: { userId?: string }) => {
+      if (data?.userId) {
+        const roomName = `tenant_${data.userId}`;
+        void socket.join(roomName);
+        fastify.log.info(`Socket ${socket.id} joined room ${roomName}`);
+      }
+    });
+
     socket.on("disconnect", () => {
       fastify.log.info(`Client disconnected: ${socket.id}`);
     });

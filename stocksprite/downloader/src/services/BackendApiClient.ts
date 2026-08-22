@@ -4,7 +4,7 @@ import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
 import { AppConfig } from "../config/app.config.js";
 import { IBackendApiClient } from "../types/BackendApiClient.interface.js";
-import { DataConnectionDto } from "../types/Connection.types.js";
+import { DataConnectionDto, ConnectionTestResult } from "../types/Connection.types.js";
 import { ErrorUtil } from "../utils/error-util.js";
 
 @injectable()
@@ -45,6 +45,67 @@ export class BackendApiClient implements IBackendApiClient {
         error: errorMsg,
       });
       throw new Error(`Failed to fetch user connections for user '${userId}': ${errorMsg}`);
+    }
+  }
+
+  public async getConnectionById(connectionId: string): Promise<DataConnectionDto> {
+    const url = `${this._config.backendUrl}/api/worker/connections/${connectionId}`;
+    this._logger.info("Fetching single connection from backend", { connectionId, url });
+
+    try {
+      const response = await axios.get<{ connection: DataConnectionDto }>(url, {
+        headers: {
+          "x-worker-token": this._config.workerToken,
+        },
+        timeout: 10000,
+      });
+
+      if (!response.data?.connection) {
+        throw new Error(`Connection '${connectionId}' not found in backend response`);
+      }
+
+      return response.data.connection;
+    } catch (error) {
+      let errorMsg = ErrorUtil.stringifyError(error);
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const responseData = error.response.data as { error?: string; message?: string };
+        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
+      }
+      this._logger.error("Failed to fetch connection from backend", {
+        connectionId,
+        url,
+        error: errorMsg,
+      });
+      throw new Error(`Failed to fetch connection '${connectionId}': ${errorMsg}`);
+    }
+  }
+
+  public async reportTestResult(
+    connectionId: string,
+    result: Partial<ConnectionTestResult>
+  ): Promise<void> {
+    const url = `${this._config.backendUrl}/api/worker/connections/${connectionId}/test-result`;
+    this._logger.info("Reporting test result to backend", { connectionId, progress: result.progress });
+
+    try {
+      await axios.patch(url, result, {
+        headers: {
+          "x-worker-token": this._config.workerToken,
+        },
+        timeout: 15000,
+      });
+    } catch (error) {
+      let errorMsg = ErrorUtil.stringifyError(error);
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const responseData = error.response.data as { error?: string; message?: string };
+        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
+      }
+      this._logger.error("Failed to report test result to backend", {
+        connectionId,
+        url,
+        error: errorMsg,
+      });
+      throw new Error(`Failed to report test result for '${connectionId}': ${errorMsg}`);
     }
   }
 }

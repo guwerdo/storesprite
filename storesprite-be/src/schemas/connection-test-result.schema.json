@@ -1,0 +1,67 @@
+{
+  "$ref": "#/definitions/ConnectionTestResult",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ConnectionTestProgress": {
+      "enum": [
+        "start",
+        "download",
+        "convert",
+        "finish",
+        null
+      ],
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ConnectionTestResult": {
+      "additionalProperties": false,
+      "properties": {
+        "columnCount": {
+          "type": "number"
+        },
+        "columns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "duration_ms": {
+          "type": "number"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "fileSize": {
+          "type": "number"
+        },
+        "finished_at": {
+          "type": "string"
+        },
+        "progress": {
+          "$ref": "#/definitions/ConnectionTestProgress"
+        },
+        "rowCount": {
+          "type": "number"
+        },
+        "rows": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

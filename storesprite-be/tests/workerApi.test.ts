@@ -129,4 +129,78 @@ describe("Worker API Unit Tests (Mocked Dependencies)", () => {
     expect(body.connections).toEqual(mockConnections);
     expect(mockConnectionService.getConnections).toHaveBeenCalledWith("user_mock");
   });
+
+  it("should return single connection when GET /api/worker/connections/:id is called", async () => {
+    const mockConn = {
+      id: "conn_123",
+      name: "Feed Conn",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/data.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    (mockConnectionService.getConnectionByIdForWorker as any) = vi.fn().mockResolvedValue(mockConn);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/worker/connections/conn_123",
+      headers: {
+        "x-worker-token": "mock_worker_token",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.payload);
+    expect(body.connection).toEqual(mockConn);
+  });
+
+  it("should save test result when PATCH /api/worker/connections/:id/test-result is called", async () => {
+    const mockUpdated = {
+      id: "conn_123",
+      name: "Feed Conn",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/data.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      testResult: {
+        progress: "finish",
+        success: true,
+        rowCount: 100,
+        columnCount: 5,
+        fileSize: 2048,
+        columns: ["sku", "title", "price"],
+        rows: [["1", "Item 1", "10"]],
+        finished_at: new Date().toISOString(),
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    (mockConnectionService.saveTestResult as any) = vi.fn().mockResolvedValue(mockUpdated);
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/api/worker/connections/conn_123/test-result",
+      headers: {
+        "x-worker-token": "mock_worker_token",
+      },
+      payload: {
+        progress: "finish",
+        success: true,
+        rowCount: 100,
+        columnCount: 5,
+        fileSize: 2048,
+        columns: ["sku", "title", "price"],
+        rows: [["1", "Item 1", "10"]],
+        finished_at: new Date().toISOString(),
+      },
+    });
+
+    expect(response.statusCode).toBe(204);
+  });
 });

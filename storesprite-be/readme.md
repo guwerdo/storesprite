@@ -28,7 +28,7 @@ After launching the Docker container stack via `docker compose up -d`, enter the
 
 * **Run Real End-to-End API Tests** (Real PostgreSQL test database):
   ```bash
-  npm run test-api
+  npm run test:api
   ```
   *Runs integration tests against the isolated `storesprite_test_db` database using `vitest.e2e.config.ts`, automatically wiping/truncating test tables before each test.*
 

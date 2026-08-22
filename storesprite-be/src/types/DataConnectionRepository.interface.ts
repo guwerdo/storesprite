@@ -138,6 +138,22 @@ export type SftpCredentials =
 
 export type ConnectionCredentials = HttpCredentials | SftpCredentials;
 
+export type ConnectionTestProgress = "start" | "download" | "convert" | "finish" | null;
+
+export interface ConnectionTestResult {
+  progress?: ConnectionTestProgress;
+  started_at?: string;
+  finished_at?: string;
+  duration_ms?: number;
+  success?: boolean;
+  errorMessage?: string;
+  rowCount?: number;
+  columnCount?: number;
+  fileSize?: number;
+  columns?: string[];
+  rows?: string[][];
+}
+
 export interface DataConnectionDto {
   id: string;
   name: string;
@@ -147,6 +163,7 @@ export interface DataConnectionDto {
   dataFormatConfig: DataFormatConfig;
   isActive: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -159,6 +176,7 @@ export interface CreateDataConnectionDto {
   dataFormatConfig: DataFormatConfig;
   isActive?: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
 }
 
 export interface UpdateDataConnectionDto {
@@ -169,6 +187,7 @@ export interface UpdateDataConnectionDto {
   dataFormatConfig?: DataFormatConfig;
   isActive?: boolean;
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+  testResult?: ConnectionTestResult | null;
 }
 
 export interface IDataConnectionRepository {

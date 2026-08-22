@@ -101,7 +101,7 @@ describe("E2E Migration & Data Connections Live Test Database Tests", () => {
         expect(dbConn?.name).toBe("Magictools Supplier Feed");
         expect(dbConn?.channel).toBe("HTTP");
         expect(dbConn?.dataFormat).toBe("CSV");
-        expect(dbConn?.user.id).toBe("mock_user_dev_id");
+        expect(dbConn?.user.id).toBe("live_test_jwt_1");
       }
 
       // 3. Retrieve list from REST endpoint

@@ -56,5 +56,72 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
     }
   );
 
+  // Internal route for worker to fetch single connection configuration
+  fastify.get(
+    "/connections/:id",
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const { id } = request.params;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      const connection = await connectionService.getConnectionByIdForWorker(id);
+      if (!connection) {
+        logger.warn("Worker requested non-existent connection", { id });
+        return reply.code(404).send({ error: "Connection not found" });
+      }
+
+      return reply.send({ connection });
+    }
+  );
+
+  // Internal route for worker to report connection test progress & final result
+  fastify.patch(
+    "/connections/:id/test-result",
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const { id } = request.params;
+      const body = request.body as Record<string, unknown>;
+      const connectionService = request.server.container.get<IDataConnectionService>(TYPES.IDataConnectionService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      try {
+        const updated = await connectionService.saveTestResult(id, body);
+        if (!updated) {
+          return reply.code(404).send({ error: "Connection not found" });
+        }
+
+        // Broadcast to tenant room via Socket.IO
+        // Find user ID from connection
+        const userId = (updated as unknown as { user?: { id: string }; userId?: string }).user?.id || (updated as unknown as { userId?: string }).userId;
+        
+        if (userId) {
+          const roomName = `tenant_${userId}`;
+          if (body.progress === "finish") {
+            fastify.io.to(roomName).emit("connection_test_result", {
+              connectionId: id,
+              testResult: updated.testResult,
+            });
+          } else {
+            fastify.io.to(roomName).emit("connection_test_progress", {
+              connectionId: id,
+              progress: body.progress,
+            });
+          }
+        } else {
+          // If userId isn't top-level on DTO, emit to all or retrieve connection
+          fastify.io.emit(body.progress === "finish" ? "connection_test_result" : "connection_test_progress", {
+            connectionId: id,
+            testResult: updated.testResult,
+            progress: body.progress,
+          });
+        }
+
+        return reply.code(204).send();
+      } catch (err: unknown) {
+        logger.error("Failed to save connection test result from worker", { id, error: String(err) });
+        return reply.code(400).send({ error: (err as Error).message || "Invalid test result payload" });
+      }
+    }
+  );
+
   done();
 }

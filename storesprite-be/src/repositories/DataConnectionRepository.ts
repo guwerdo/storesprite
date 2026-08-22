@@ -39,10 +39,10 @@ export class DataConnectionRepository implements IDataConnectionRepository {
   public async create(userId: string, data: CreateDataConnectionDto): Promise<DataConnection> {
     this._logger?.info("Creating data connection for user", { userId, name: data.name });
 
-    const user = await this._em.findOne(User, { id: userId });
+    let user = await this._em.findOne(User, { id: userId });
     if (!user) {
-      this._logger?.error("Cannot create data connection: user not found", { userId });
-      throw new Error(`User not found for ID: ${userId}`);
+      user = new User(userId, `${userId}@clerk.user`);
+      await this._em.persistAndFlush(user);
     }
 
     const connection = new DataConnection(
@@ -52,8 +52,9 @@ export class DataConnectionRepository implements IDataConnectionRepository {
       data.dataFormat,
       data.config,
       data.dataFormatConfig,
-      data.isActive !== undefined ? data.isActive : true,
-      data.credentials ?? null
+      data.isActive !== undefined ? data.isActive : false,
+      data.credentials ?? null,
+      data.testResult ?? null
     );
 
     await this._em.persistAndFlush(connection);
@@ -93,6 +94,9 @@ export class DataConnectionRepository implements IDataConnectionRepository {
     }
     if (data.credentials !== undefined) {
       connection.credentials = data.credentials;
+    }
+    if (data.testResult !== undefined) {
+      connection.testResult = data.testResult;
     }
 
     connection.updatedAt = new Date();

@@ -142,6 +142,7 @@ describe('SettingsPage', () => {
 
   it('displays error toast when saving settings fails', async () => {
     // Arrange
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     saveSettingsSpy.mockRejectedValueOnce(new Error('API error'));
 
     render(
@@ -167,6 +168,8 @@ describe('SettingsPage', () => {
         screen.getByText(/saving user settings failed|mentése sikertelen/i),
       ).toBeInTheDocument();
     });
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('masks UNAS API key by default and reveals it when eye icon button is clicked', async () => {

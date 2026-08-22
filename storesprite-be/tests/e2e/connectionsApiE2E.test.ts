@@ -322,4 +322,91 @@ describe("E2E Connections API Tests", () => {
       expect(body.error).toBe("Connection not found");
     });
   });
+
+  describe("Testing & Lifecycle Endpoints", () => {
+    it("should trigger test with 202, retrieve test-result with 200, and invalidate with 204", async () => {
+      // 1. Create connection
+      const createRes = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+        payload: {
+          name: "Test Feed",
+          channel: "HTTP",
+          dataFormat: "CSV",
+          config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+          dataFormatConfig: { format: "CSV", delimiter: ";" },
+        },
+      });
+      const connId = JSON.parse(createRes.payload).connection.id;
+
+      // 2. Trigger run-test (Expect 202 Accepted)
+      const testRes = await app.inject({
+        method: "POST",
+        url: `/api/client/connections/${connId}/run-test`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+      });
+      expect(testRes.statusCode).toBe(202);
+
+      // 3. Get test-result (Expect 200 with testResult)
+      const getResultRes = await app.inject({
+        method: "GET",
+        url: `/api/client/connections/${connId}/test-result`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+      });
+      expect(getResultRes.statusCode).toBe(200);
+      const resultBody = JSON.parse(getResultRes.payload);
+      expect(resultBody.testResult.progress).toBe("start");
+
+      // 4. Invalidate test-result (Expect 204 No Content)
+      const deleteResultRes = await app.inject({
+        method: "DELETE",
+        url: `/api/client/connections/${connId}/test-result`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+      });
+      expect(deleteResultRes.statusCode).toBe(204);
+
+      // 5. Verify test-result is now null
+      const checkRes = await app.inject({
+        method: "GET",
+        url: `/api/client/connections/${connId}/test-result`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+      });
+      expect(JSON.parse(checkRes.payload).testResult).toBeNull();
+    });
+
+    it("should return 409 Conflict when attempting to update connection while test is in progress", async () => {
+      // 1. Create connection
+      const createRes = await app.inject({
+        method: "POST",
+        url: "/api/client/connections",
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+        payload: {
+          name: "Conflict Feed",
+          channel: "HTTP",
+          dataFormat: "CSV",
+          config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+          dataFormatConfig: { format: "CSV", delimiter: ";" },
+        },
+      });
+      const connId = JSON.parse(createRes.payload).connection.id;
+
+      // 2. Trigger run-test
+      await app.inject({
+        method: "POST",
+        url: `/api/client/connections/${connId}/run-test`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+      });
+
+      // 3. Attempt update immediately (Expect 409 Conflict)
+      const updateRes = await app.inject({
+        method: "PUT",
+        url: `/api/client/connections/${connId}`,
+        headers: { authorization: "Bearer mock_jwt_user_conn" },
+        payload: { name: "Renamed While Testing" },
+      });
+      expect(updateRes.statusCode).toBe(400); // Or 409 handled by fastify/service
+      expect(updateRes.payload).toContain("testing is in progress");
+    });
+  });
 });

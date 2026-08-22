@@ -113,11 +113,51 @@ export default function ConnectionList({
                     />
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      size="small"
-                      label={conn.isActive ? t('common.active') : t('common.inactive')}
-                      color={conn.isActive ? 'success' : 'default'}
-                    />
+                    {(() => {
+                      if (conn.testResult?.progress && conn.testResult.progress !== 'finish') {
+                        return (
+                          <Chip
+                            size="small"
+                            label={t('stocksprite.connections.form.statusBadges.testing')}
+                            color="warning"
+                          />
+                        );
+                      }
+                      if (conn.isActive) {
+                        return (
+                          <Chip
+                            size="small"
+                            label={t('stocksprite.connections.form.statusBadges.active')}
+                            color="success"
+                          />
+                        );
+                      }
+                      if (conn.testResult?.success === true) {
+                        return (
+                          <Chip
+                            size="small"
+                            label={t('stocksprite.connections.form.statusBadges.readyToActivate')}
+                            color="info"
+                          />
+                        );
+                      }
+                      if (conn.testResult?.success === false) {
+                        return (
+                          <Chip
+                            size="small"
+                            label={t('stocksprite.connections.form.statusBadges.failed')}
+                            color="error"
+                          />
+                        );
+                      }
+                      return (
+                        <Chip
+                          size="small"
+                          label={t('stocksprite.connections.form.statusBadges.untested')}
+                          color="default"
+                        />
+                      );
+                    })()}
                   </TableCell>
                 </TableRow>
               ))}

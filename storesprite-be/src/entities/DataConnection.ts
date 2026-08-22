@@ -4,6 +4,7 @@ import type {
   ConnectionConfig,
   DataFormatConfig,
   ConnectionCredentials,
+  ConnectionTestResult,
 } from "../types/DataConnectionRepository.interface.js";
 
 export type DataConnectionChannel = "HTTP" | "SFTP";
@@ -29,14 +30,17 @@ export class DataConnection {
   @Property({ type: "jsonb" })
   dataFormatConfig!: DataFormatConfig | Record<string, unknown>;
 
-  @Property({ type: "boolean", default: true })
-  isActive = true;
+  @Property({ type: "boolean", default: false })
+  isActive = false;
 
   @Property({ type: "jsonb" })
   config!: ConnectionConfig | Record<string, unknown>;
 
   @Property({ type: "jsonb", nullable: true })
   credentials?: ConnectionCredentials | Record<string, unknown> | null;
+
+  @Property({ type: "jsonb", nullable: true })
+  testResult?: ConnectionTestResult | null;
 
   @Property({ type: "timestamptz", defaultRaw: "CURRENT_TIMESTAMP" })
   createdAt: Date = new Date();
@@ -51,8 +55,9 @@ export class DataConnection {
     dataFormat: DataConnectionFormat,
     config: ConnectionConfig | Record<string, unknown>,
     dataFormatConfig: DataFormatConfig | Record<string, unknown>,
-    isActive = true,
-    credentials?: ConnectionCredentials | Record<string, unknown> | null
+    isActive = false,
+    credentials?: ConnectionCredentials | Record<string, unknown> | null,
+    testResult?: ConnectionTestResult | null
   ) {
     this.user = user;
     this.name = name;
@@ -62,5 +67,6 @@ export class DataConnection {
     this.dataFormatConfig = dataFormatConfig;
     this.isActive = isActive;
     this.credentials = credentials ?? null;
+    this.testResult = testResult ?? null;
   }
 }

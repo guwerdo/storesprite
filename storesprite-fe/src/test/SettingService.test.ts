@@ -1,8 +1,12 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SettingService } from '../services/SettingService.js';
+import { ConnectionService } from '../services/ConnectionService.js';
 import type { IHttpClient } from '../types/HttpClient.interface.js';
 import type { ISettingsApiResponse } from '../types/Setting.interface.js';
+import type {
+  IConnectionsApiResponse,
+} from '../types/DataConnection.interface.js';
 
 describe('SettingService', () => {
   let getSpy: ReturnType<typeof vi.fn>;
@@ -60,3 +64,112 @@ describe('SettingService', () => {
     expect(result).toEqual(saveResponse);
   });
 });
+
+describe('ConnectionService', () => {
+  let getSpy: ReturnType<typeof vi.fn>;
+  let postSpy: ReturnType<typeof vi.fn>;
+  let putSpy: ReturnType<typeof vi.fn>;
+  let deleteSpy: ReturnType<typeof vi.fn>;
+  let mockHttpClient: IHttpClient;
+  let connectionService: ConnectionService;
+
+  beforeEach(() => {
+    getSpy = vi.fn();
+    postSpy = vi.fn();
+    putSpy = vi.fn();
+    deleteSpy = vi.fn();
+    mockHttpClient = {
+      get: getSpy,
+      post: postSpy,
+      put: putSpy,
+      delete: deleteSpy,
+    };
+    connectionService = new ConnectionService(mockHttpClient);
+  });
+
+  it('calls GET /client/connections with Bearer token', async () => {
+    // Arrange
+    const responseData: IConnectionsApiResponse = {
+      connections: [
+        {
+          id: 'conn_1',
+          name: 'Supplier CSV',
+          channel: 'HTTP',
+          dataFormat: 'CSV',
+          isActive: true,
+          config: { channel: 'HTTP', url: 'https://example.com/test.csv', method: 'GET' },
+          dataFormatConfig: { format: 'CSV', delimiter: ';' },
+          credentials: { authType: 'NONE' },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    };
+    getSpy.mockResolvedValue(responseData);
+
+    // Act
+    const result = await connectionService.getConnections('jwt_token_123');
+
+    // Assert
+    expect(getSpy).toHaveBeenCalledWith('/client/connections', {
+      Authorization: 'Bearer jwt_token_123',
+    });
+    expect(result).toEqual(responseData);
+  });
+
+  it('calls POST /client/connections/:id/run-test with Bearer token', async () => {
+    // Arrange
+    postSpy.mockResolvedValue(undefined);
+
+    // Act
+    await connectionService.runTest('jwt_token_123', 'conn_test_id');
+
+    // Assert
+    expect(postSpy).toHaveBeenCalledWith(
+      '/client/connections/conn_test_id/run-test',
+      {},
+      { Authorization: 'Bearer jwt_token_123' },
+    );
+  });
+
+  it('calls GET /client/connections/:id/test-result with Bearer token', async () => {
+    // Arrange
+    const resultPayload = {
+      testResult: {
+        success: true,
+        progress: 'finish' as const,
+        duration_ms: 1250,
+        rowCount: 50,
+        columnCount: 4,
+        columns: ['sku', 'name', 'price', 'stock'],
+        rows: [['A1', 'Prod 1', '100', '10']],
+      },
+    };
+    getSpy.mockResolvedValue(resultPayload);
+
+    // Act
+    const result = await connectionService.getTestResult('jwt_token_123', 'conn_test_id');
+
+    // Assert
+    expect(getSpy).toHaveBeenCalledWith('/client/connections/conn_test_id/test-result', {
+      Authorization: 'Bearer jwt_token_123',
+    });
+    expect(result).toEqual(resultPayload);
+  });
+
+  it('calls DELETE /client/connections/:id/test-result with Bearer token', async () => {
+    // Arrange
+    deleteSpy.mockResolvedValue(undefined);
+
+    // Act
+    await connectionService.invalidateConnection('jwt_token_123', 'conn_test_id');
+
+    // Assert
+    expect(deleteSpy).toHaveBeenCalledWith(
+      '/client/connections/conn_test_id/test-result',
+      { Authorization: 'Bearer jwt_token_123' },
+    );
+  });
+});
+
+
