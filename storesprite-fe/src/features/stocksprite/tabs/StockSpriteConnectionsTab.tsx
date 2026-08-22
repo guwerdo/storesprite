@@ -106,7 +106,19 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         setSelectedConnection(null);
         setViewMode('LIST');
       }
-      await fetchConnections();
+      // Refresh connections list in the background without triggering full tab loading spinner
+      try {
+        const listResponse = await connectionService.getConnections(token);
+        setConnections(listResponse.connections || []);
+        if (savedConnection) {
+          const fresh = (listResponse.connections || []).find((c) => c.id === savedConnection?.id);
+          if (fresh) {
+            setSelectedConnection(fresh);
+          }
+        }
+      } catch {
+        // Silently ignore background list refresh error if save succeeded
+      }
     } catch (err: unknown) {
       setSnackbar({
         open: true,

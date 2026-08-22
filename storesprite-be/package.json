@@ -35,6 +35,7 @@
     "fastify-plugin": "^4.5.1",
     "inversify": "^6.0.2",
     "log4js": "^6.9.1",
+    "microdiff": "^1.6.0",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.7.5",
     "svix": "^1.24.0"

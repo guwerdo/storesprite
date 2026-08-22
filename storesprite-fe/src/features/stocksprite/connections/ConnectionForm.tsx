@@ -53,7 +53,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useAuth } from '@clerk/clerk-react';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
@@ -122,6 +122,70 @@ export default function ConnectionForm({
   );
   const [hasEditedSinceTest, setHasEditedSinceTest] = useState<boolean>(false);
   const [testError, setTestError] = useState<string | null>(null);
+
+  // Synchronize internal state whenever initialConnection prop changes (e.g. after save)
+  useEffect(() => {
+    if (!initialConnection) return;
+    setName(initialConnection.name || '');
+    setChannel(initialConnection.channel || 'HTTP');
+    setDataFormat(initialConnection.dataFormat || 'CSV');
+    setIsActive(initialConnection.isActive !== undefined ? initialConnection.isActive : false);
+    setTestResult(initialConnection.testResult ?? null);
+    setTestingProgress(initialConnection.testResult?.progress ?? null);
+    setIsTestingRunning(
+      Boolean(
+        initialConnection.testResult?.progress &&
+          initialConnection.testResult.progress !== 'finish'
+      )
+    );
+    setHasEditedSinceTest(false);
+
+    // Transport configs
+    if (initialConnection.channel === 'HTTP') {
+      const cfg = (initialConnection.config || {}) as HttpConnectionConfig;
+      setHttpUrl(cfg.url || '');
+      setHttpMethod(cfg.method || 'GET');
+      setHttpInsecureSsl(Boolean(cfg.insecureIgnoreSsl));
+      setHttpTimeout(cfg.timeoutSeconds ? String(cfg.timeoutSeconds) : '30');
+    } else if (initialConnection.channel === 'SFTP') {
+      const cfg = (initialConnection.config || {}) as SftpConnectionConfig;
+      setSftpHost(cfg.host || '');
+      setSftpPort(cfg.port ? String(cfg.port) : '22');
+      setSftpRemoteDir(cfg.remoteDir || '/');
+      setSftpFileStrategy(cfg.fileSelectionStrategy || 'LATEST_ALPHABETICAL');
+    }
+
+    // Parser configs
+    if (initialConnection.dataFormat === 'CSV') {
+      const pCfg = (initialConnection.dataFormatConfig || {}) as CsvDataFormatConfig;
+      setCsvDelimiter(pCfg.delimiter || ';');
+      setCsvEncoding(pCfg.encoding || 'UTF-8');
+      setCsvHasHeaders(pCfg.hasHeaders !== undefined ? Boolean(pCfg.hasHeaders) : true);
+    } else if (initialConnection.dataFormat === 'XML') {
+      const pCfg = (initialConnection.dataFormatConfig || {}) as XmlDataFormatConfig;
+      setXmlRowPath(pCfg.rowPath || './/product');
+      setXmlIncludeAttributes(Boolean(pCfg.includeAttributes));
+      setXmlAttributePrefix(pCfg.attributePrefix || '');
+    }
+
+    // Credentials
+    const creds = initialConnection.credentials as Record<string, unknown> | undefined;
+    if (initialConnection.channel === 'HTTP') {
+      setHttpAuthType(typeof creds?.authType === 'string' ? (creds.authType as HttpAuthType) : 'NONE');
+      setHttpBasicUsername(typeof creds?.username === 'string' ? creds.username : '');
+      setHttpBasicPassword(typeof creds?.password === 'string' ? creds.password : '');
+      setHttpBearerToken(typeof creds?.token === 'string' ? creds.token : '');
+      setHttpApiKeyHeaderName(typeof creds?.headerName === 'string' ? creds.headerName : 'X-Api-Key');
+      setHttpApiKeyHeaderValue(typeof creds?.headerValue === 'string' ? creds.headerValue : '');
+    } else if (initialConnection.channel === 'SFTP') {
+      setSftpAuthType(typeof creds?.authType === 'string' ? (creds.authType as SftpAuthType) : 'PASSWORD');
+      setSftpPasswordUsername(typeof creds?.username === 'string' ? creds.username : '');
+      setSftpPasswordPassword(typeof creds?.password === 'string' ? creds.password : '');
+      setSftpKeyUsername(typeof creds?.username === 'string' ? creds.username : '');
+      setSftpPrivateKey(typeof creds?.privateKey === 'string' ? creds.privateKey : '');
+      setSftpKeyPassphrase(typeof creds?.passphrase === 'string' ? creds.passphrase : '');
+    }
+  }, [initialConnection]);
 
   // Socket.IO real-time progress subscription
   useEffect(() => {
@@ -290,6 +354,7 @@ export default function ConnectionForm({
   // UI / Modal / Validation State
   const [touched, setTouched] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [activationWarningModalOpen, setActivationWarningModalOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Channel switch handler with isolation
@@ -565,7 +630,7 @@ export default function ConnectionForm({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pb: 4 }}>
       {/* Top Header & Back Button */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -586,48 +651,6 @@ export default function ConnectionForm({
               {t('stocksprite.connections.form.subtitle')}
             </Typography>
           </Box>
-        </Box>
-
-        {/* Action Buttons in Top Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {isEditing && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              disabled={isTestingRunning || !isEditing}
-              onClick={() => setDeleteModalOpen(true)}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              {t('stocksprite.connections.form.buttons.delete')}
-            </Button>
-          )}
-
-          {isEditing && (
-            <Button
-              variant="outlined"
-              color="secondary"
-              startIcon={isTestingRunning ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-              disabled={!isFormValid || !isEditing || isTestingRunning}
-              onClick={() => void handleRunTest()}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              {isTestingRunning
-                ? t('stocksprite.connections.form.buttons.testing')
-                : t('stocksprite.connections.form.buttons.test')}
-            </Button>
-          )}
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            disabled={saving || isTestingRunning}
-            onClick={() => void handleSave()}
-            sx={{ textTransform: 'none', fontWeight: 600, px: 3 }}
-          >
-            {saving ? t('stocksprite.connections.form.buttons.saving') : t('stocksprite.connections.form.buttons.save')}
-          </Button>
         </Box>
       </Box>
 
@@ -655,189 +678,6 @@ export default function ConnectionForm({
           </Typography>
         </Alert>
       )}
-
-      {/* Warning if user tries to activate untested / failed connection */}
-      {isActive && (!testResult || testResult.success !== true) && (
-        <Alert severity="warning">
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            {t('stocksprite.connections.form.testing.activationWarningTitle')}
-          </Typography>
-          <Typography variant="body2">
-            {t('stocksprite.connections.form.testing.activationWarningMessage')}
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Test Running Banner */}
-      {isTestingRunning && (
-        <Alert
-          severity="info"
-          icon={<CircularProgress size={20} />}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {t('stocksprite.connections.form.testing.inProgress')}
-            </Typography>
-            <Typography variant="body2">{getProgressStatusText()}</Typography>
-          </Box>
-        </Alert>
-      )}
-
-      {/* Test Results Display Card (Only if testResult exists and test not currently running) */}
-      {testResult && !isTestingRunning && (
-        <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: 'background.paper' }}>
-          <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {testResult.success ? (
-                  <CheckCircleIcon color="success" sx={{ fontSize: 28 }} />
-                ) : (
-                  <ErrorIcon color="error" sx={{ fontSize: 28 }} />
-                )}
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {testResult.success
-                    ? t('stocksprite.connections.form.testing.success')
-                    : t('stocksprite.connections.form.testing.failed')}
-                </Typography>
-              </Box>
-              {testResult.finished_at && (
-                <Typography variant="caption" color="text.secondary">
-                  {t('stocksprite.connections.form.testing.testedAt')}: {new Date(testResult.finished_at).toLocaleString()}
-                </Typography>
-              )}
-            </Box>
-
-            {/* Error Message with Technical Details Accordion */}
-            {testResult.success === false && testResult.errorMessage && (
-              <Box sx={{ mt: 1 }}>
-                <Alert severity="error" sx={{ mb: 1 }}>
-                  {testResult.errorMessage.split('\n')[0]}
-                </Alert>
-                {testResult.errorMessage.includes('\n') && (
-                  <Accordion variant="outlined" sx={{ borderRadius: 1 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('stocksprite.connections.form.testing.showDetails')}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Typography
-                        component="pre"
-                        sx={{
-                          fontFamily: 'Consolas, Monaco, "Lucida Console", monospace',
-                          fontSize: '0.8rem',
-                          whiteSpace: 'pre-wrap',
-                          overflowX: 'auto',
-                          p: 1,
-                          bgcolor: 'action.hover',
-                          borderRadius: 1,
-                        }}
-                      >
-                        {testResult.errorMessage}
-                      </Typography>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-              </Box>
-            )}
-
-            {/* Successful Result Metrics Grid */}
-            {testResult.success === true && (
-              <>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('stocksprite.connections.form.testing.duration')}
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {testResult.duration_ms !== undefined ? `${(testResult.duration_ms / 1000).toFixed(1)}s` : '-'}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('stocksprite.connections.form.testing.rowCount')}
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {testResult.rowCount ?? 0}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('stocksprite.connections.form.testing.columnCount')}
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {testResult.columnCount ?? testResult.columns?.length ?? 0}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('stocksprite.connections.form.testing.fileSize')}
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {testResult.fileSize ? `${(testResult.fileSize / 1024).toFixed(1)} KB` : '-'}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
-
-                {/* 3 Sample Data Rows Preview Table */}
-                {testResult.columns && testResult.columns.length > 0 && testResult.rows && testResult.rows.length > 0 ? (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                      {t('stocksprite.connections.form.testing.samplePreview')}
-                    </Typography>
-                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, maxHeight: 300 }}>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow sx={{ bgcolor: 'action.hover' }}>
-                            {testResult.columns.map((col, idx) => (
-                              <TableCell key={idx} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {col}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {testResult.rows.slice(0, 3).map((row, rIdx) => (
-                            <TableRow key={rIdx}>
-                              {row.map((cell, cIdx) => (
-                                <TableCell key={cIdx} sx={{ whiteSpace: 'nowrap' }}>
-                                  {cell}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {t('stocksprite.connections.form.testing.noDataRows')}
-                  </Typography>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Untested Notification */}
-      {isEditing && !testResult && !isTestingRunning && (
-        <Alert severity="info" icon={<HourglassEmptyIcon />}>
-          {t('stocksprite.connections.form.testing.notTested')}
-        </Alert>
-      )}
-
-      <Divider />
 
       {/* Main Base Settings Card */}
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -869,7 +709,15 @@ export default function ConnectionForm({
                 control={
                   <Switch
                     checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
+                    onChange={(e) => {
+                      const nextValue = e.target.checked;
+                      if (nextValue && (!testResult || testResult.success !== true)) {
+                        setActivationWarningModalOpen(true);
+                        setIsActive(false);
+                        return;
+                      }
+                      setIsActive(nextValue);
+                    }}
                     color="primary"
                   />
                 }
@@ -1515,6 +1363,219 @@ export default function ConnectionForm({
         </CardContent>
       </Card>
 
+      <Divider sx={{ my: 1 }} />
+
+      {/* Action Buttons Section at the End of the Form */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 2, pt: 1 }}>
+        {isEditing && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            disabled={isTestingRunning || !isEditing}
+            onClick={() => setDeleteModalOpen(true)}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {t('stocksprite.connections.form.buttons.delete')}
+          </Button>
+        )}
+
+        {isEditing && (
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={isTestingRunning ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+            disabled={!isFormValid || !isEditing || isTestingRunning}
+            onClick={() => void handleRunTest()}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {isTestingRunning
+              ? t('stocksprite.connections.form.buttons.testing')
+              : t('stocksprite.connections.form.buttons.test')}
+          </Button>
+        )}
+
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SaveIcon />}
+          disabled={saving || isTestingRunning}
+          onClick={() => void handleSave()}
+          sx={{ textTransform: 'none', fontWeight: 600, px: 3 }}
+        >
+          {saving ? t('stocksprite.connections.form.buttons.saving') : t('stocksprite.connections.form.buttons.save')}
+        </Button>
+      </Box>
+
+      {/* Test Running Banner */}
+      {isTestingRunning && (
+        <Alert
+          severity="info"
+          icon={<CircularProgress size={20} />}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {t('stocksprite.connections.form.testing.inProgress')}
+            </Typography>
+            <Typography variant="body2">{getProgressStatusText()}</Typography>
+          </Box>
+        </Alert>
+      )}
+
+      {/* Test Results Display Card below buttons */}
+      {testResult && !isTestingRunning && (
+        <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: 'background.paper' }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {testResult.success ? (
+                  <CheckCircleIcon color="success" sx={{ fontSize: 28 }} />
+                ) : (
+                  <ErrorIcon color="error" sx={{ fontSize: 28 }} />
+                )}
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  {testResult.success
+                    ? t('stocksprite.connections.form.testing.success')
+                    : t('stocksprite.connections.form.testing.failed')}
+                </Typography>
+              </Box>
+              {testResult.finished_at && (
+                <Typography variant="caption" color="text.secondary">
+                  {t('stocksprite.connections.form.testing.testedAt')}: {new Date(testResult.finished_at).toLocaleString()}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Error Message with Technical Details Accordion */}
+            {testResult.success === false && testResult.errorMessage && (
+              <Box sx={{ mt: 1 }}>
+                <Alert severity="error" sx={{ mb: 1 }}>
+                  {testResult.errorMessage.split('\n')[0]}
+                </Alert>
+                {testResult.errorMessage.includes('\n') && (
+                  <Accordion variant="outlined" sx={{ borderRadius: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('stocksprite.connections.form.testing.showDetails')}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography
+                        component="pre"
+                        sx={{
+                          fontFamily: 'Consolas, Monaco, "Lucida Console", monospace',
+                          fontSize: '0.8rem',
+                          whiteSpace: 'pre-wrap',
+                          overflowX: 'auto',
+                          p: 1,
+                          bgcolor: 'action.hover',
+                          borderRadius: 1,
+                        }}
+                      >
+                        {testResult.errorMessage}
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                )}
+              </Box>
+            )}
+
+            {/* Successful Result Metrics Grid */}
+            {testResult.success === true && (
+              <>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('stocksprite.connections.form.testing.duration')}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {testResult.duration_ms !== undefined ? `${(testResult.duration_ms / 1000).toFixed(1)}s` : '-'}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('stocksprite.connections.form.testing.rowCount')}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {testResult.rowCount ?? 0}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('stocksprite.connections.form.testing.columnCount')}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {testResult.columnCount ?? testResult.columns?.length ?? 0}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 1.5, textAlign: 'center', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('stocksprite.connections.form.testing.fileSize')}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {testResult.fileSize ? `${(testResult.fileSize / 1024).toFixed(1)} KB` : '-'}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+
+                {/* 3 Sample Data Rows Preview Table */}
+                {testResult.columns && testResult.columns.length > 0 && testResult.rows && testResult.rows.length > 0 ? (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                      {t('stocksprite.connections.form.testing.samplePreview')}
+                    </Typography>
+                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, maxHeight: 300 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: 'action.hover' }}>
+                            {testResult.columns.map((col, idx) => (
+                              <TableCell key={idx} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                {col}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {testResult.rows.slice(0, 3).map((row, rIdx) => (
+                            <TableRow key={rIdx}>
+                              {row.map((cell, cIdx) => (
+                                <TableCell key={cIdx} sx={{ whiteSpace: 'nowrap' }}>
+                                  {cell}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {t('stocksprite.connections.form.testing.noDataRows')}
+                  </Typography>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Untested Notification */}
+      {isEditing && !testResult && !isTestingRunning && (
+        <Alert severity="warning" icon={<WarningAmberIcon />}>
+          {t('stocksprite.connections.form.testing.notTested')}
+        </Alert>
+      )}
+
       {/* Delete Confirmation Modal Dialog */}
       <Dialog
         open={deleteModalOpen}
@@ -1542,6 +1603,35 @@ export default function ConnectionForm({
             sx={{ textTransform: 'none' }}
           >
             {t('stocksprite.connections.form.deleteModal.yes')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Cannot Activate Untested Connection Warning Dialog */}
+      <Dialog
+        open={activationWarningModalOpen}
+        onClose={() => setActivationWarningModalOpen(false)}
+        aria-labelledby="activation-warning-dialog-title"
+        aria-describedby="activation-warning-dialog-description"
+      >
+        <DialogTitle id="activation-warning-dialog-title" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningAmberIcon color="warning" />
+          {t('stocksprite.connections.form.testing.activationWarningTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="activation-warning-dialog-description">
+            {t('stocksprite.connections.form.testing.activationWarningMessage')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setActivationWarningModalOpen(false)}
+            color="primary"
+            variant="contained"
+            autoFocus
+            sx={{ textTransform: 'none', px: 3 }}
+          >
+            {t('common.ok') || 'OK'}
           </Button>
         </DialogActions>
       </Dialog>

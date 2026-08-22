@@ -94,7 +94,7 @@ describe("E2E Connections API Tests", () => {
             authType: "BEARER",
             token: "secret-bearer-token-xyz",
           },
-          isActive: true,
+          isActive: false,
         },
       });
 

@@ -24,6 +24,7 @@ export const en = {
     warning: 'Warning',
     info: 'Info',
     none: 'None',
+    ok: 'OK',
   },
   languages: {
     en: 'English',
@@ -233,7 +234,7 @@ export const en = {
           showDetails: 'Show technical details',
           hideDetails: 'Hide technical details',
           testedAt: 'Tested At',
-          duration: 'Duration',
+          duration: 'Test Duration',
           rowCount: 'Total Rows',
           columnCount: 'Total Columns',
           fileSize: 'File Size',

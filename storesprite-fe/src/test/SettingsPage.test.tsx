@@ -142,7 +142,7 @@ describe('SettingsPage', () => {
 
   it('displays error toast when saving settings fails', async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     saveSettingsSpy.mockRejectedValueOnce(new Error('API error'));
 
     render(

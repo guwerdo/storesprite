@@ -14,6 +14,7 @@ import { IDataConnectionService } from "../types/DataConnectionService.interface
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 import { TYPES } from "../di/types.js";
 import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
+import { Util } from "../utils/index.js";
 
 @injectable()
 export class DataConnectionService implements IDataConnectionService {
@@ -52,31 +53,31 @@ export class DataConnectionService implements IDataConnectionService {
     return connection ? this._mapToDto(connection) : null;
   }
 
-  public async createConnection(userId: string, data: CreateDataConnectionDto): Promise<DataConnectionDto> {
-    this._logger?.info("Service creating data connection", { userId, name: data.name });
+  public async createConnection(userId: string, connectionDto: CreateDataConnectionDto): Promise<DataConnectionDto> {
+    this._logger?.info("Service creating data connection", { userId, name: connectionDto.name });
     if (!this._repository) {
       this._logger?.warn("DataConnectionRepository unavailable");
       throw new Error("DataConnectionRepository unavailable");
     }
 
     // Validate inputs
-    if (!data.name || typeof data.name !== "string" || data.name.trim().length === 0) {
+    if (!connectionDto.name || typeof connectionDto.name !== "string" || connectionDto.name.trim().length === 0) {
       throw new Error("Connection name is required");
     }
-    if (data.name.length > 255) {
+    if (connectionDto.name.length > 255) {
       throw new Error("Connection name cannot exceed 255 characters");
     }
 
-    const validatedConfig = this._validator.validateConfig(data.channel, data.config);
+    const validatedConfig = this._validator.validateConfig(connectionDto.channel, connectionDto.config);
     const validatedDataFormatConfig = this._validator.validateDataFormatConfig(
-      data.dataFormat,
-      data.dataFormatConfig
+      connectionDto.dataFormat,
+      connectionDto.dataFormatConfig
     );
-    const validatedCredentials = this._validator.validateCredentials(data.channel, data.credentials);
+    const validatedCredentials = this._validator.validateCredentials(connectionDto.channel, connectionDto.credentials);
 
     const created = await this._repository.create(userId, {
-      ...data,
-      name: data.name.trim(),
+      ...connectionDto,
+      name: connectionDto.name.trim(),
       config: validatedConfig,
       dataFormatConfig: validatedDataFormatConfig,
       credentials: validatedCredentials,
@@ -88,7 +89,7 @@ export class DataConnectionService implements IDataConnectionService {
   public async updateConnection(
     id: string,
     userId: string,
-    data: UpdateDataConnectionDto
+    connectionDto: UpdateDataConnectionDto
   ): Promise<DataConnectionDto | null> {
     this._logger?.info("Service updating data connection", { id, userId });
     if (!this._repository) {
@@ -101,35 +102,35 @@ export class DataConnectionService implements IDataConnectionService {
       return null;
     }
 
-    const channel = data.channel ?? existing.channel;
-    const dataFormat = data.dataFormat ?? existing.dataFormat;
+    const channel = connectionDto.channel ?? existing.channel;
+    const dataFormat = connectionDto.dataFormat ?? existing.dataFormat;
 
-    let validatedConfig = data.config;
-    if (data.config !== undefined || data.channel !== undefined) {
+    let validatedConfig = connectionDto.config;
+    if (connectionDto.config !== undefined || connectionDto.channel !== undefined) {
       validatedConfig = this._validator.validateConfig(
         channel,
-        data.config !== undefined ? data.config : existing.config
+        connectionDto.config !== undefined ? connectionDto.config : existing.config
       );
     }
 
-    let validatedDataFormatConfig = data.dataFormatConfig;
-    if (data.dataFormatConfig !== undefined || data.dataFormat !== undefined) {
+    let validatedDataFormatConfig = connectionDto.dataFormatConfig;
+    if (connectionDto.dataFormatConfig !== undefined || connectionDto.dataFormat !== undefined) {
       validatedDataFormatConfig = this._validator.validateDataFormatConfig(
         dataFormat,
-        data.dataFormatConfig !== undefined ? data.dataFormatConfig : existing.dataFormatConfig
+        connectionDto.dataFormatConfig !== undefined ? connectionDto.dataFormatConfig : existing.dataFormatConfig
       );
     }
 
-    let validatedCredentials = data.credentials;
-    if (data.credentials !== undefined) {
-      validatedCredentials = this._validator.validateCredentials(channel, data.credentials);
+    let validatedCredentials = connectionDto.credentials;
+    if (connectionDto.credentials !== undefined) {
+      validatedCredentials = this._validator.validateCredentials(channel, connectionDto.credentials);
     }
 
-    if (data.name !== undefined) {
-      if (typeof data.name !== "string" || data.name.trim().length === 0) {
+    if (connectionDto.name !== undefined) {
+      if (typeof connectionDto.name !== "string" || connectionDto.name.trim().length === 0) {
         throw new Error("Connection name is required");
       }
-      if (data.name.length > 255) {
+      if (connectionDto.name.length > 255) {
         throw new Error("Connection name cannot exceed 255 characters");
       }
     }
@@ -150,31 +151,39 @@ export class DataConnectionService implements IDataConnectionService {
       }
     }
 
-    // Smart comparison to detect if connection-related settings changed
-    const hasConfigChanged =
-      (data.channel !== undefined && data.channel !== existing.channel) ||
-      (data.dataFormat !== undefined && data.dataFormat !== existing.dataFormat) ||
-      (data.config !== undefined && JSON.stringify(data.config) !== JSON.stringify(existing.config)) ||
-      (data.dataFormatConfig !== undefined && JSON.stringify(data.dataFormatConfig) !== JSON.stringify(existing.dataFormatConfig)) ||
-      (data.credentials !== undefined && JSON.stringify(data.credentials) !== JSON.stringify(existing.credentials));
+    // Smart comparison to detect if connection-related settings (channel config, data format config, credentials) changed
+    const hasChannelConfigChanged =
+      (connectionDto.channel !== undefined && connectionDto.channel !== existing.channel) ||
+      (connectionDto.config !== undefined && !Util.deepEqual(validatedConfig, existing.config));
 
-    let finalIsActive = data.isActive !== undefined ? data.isActive : existing.isActive;
+    const hasDataFormatConfigChanged =
+      (connectionDto.dataFormat !== undefined && connectionDto.dataFormat !== existing.dataFormat) ||
+      (connectionDto.dataFormatConfig !== undefined && !Util.deepEqual(validatedDataFormatConfig, existing.dataFormatConfig));
+
+    const hasCredentialsChanged =
+      connectionDto.credentials !== undefined && !Util.deepEqual(validatedCredentials, existing.credentials);
+
+    const hasConnectionSettingsChanged =
+      hasChannelConfigChanged || hasDataFormatConfigChanged || hasCredentialsChanged;
+
+    let finalIsActive = connectionDto.isActive !== undefined ? connectionDto.isActive : existing.isActive;
     let finalTestResult = existing.testResult ?? null;
 
-    if (hasConfigChanged) {
+    if (hasConnectionSettingsChanged) {
+      this._logger?.info("Connection settings changed, invalidating test result and active status", { id, userId });
       // Deactivate and clear test results
       finalIsActive = false;
       finalTestResult = null;
     } else {
       // If user tries to activate connection without a passed test result
-      if (data.isActive === true && existing.testResult?.success !== true) {
+      if (connectionDto.isActive === true && existing.testResult?.success !== true) {
         throw new Error("Connection cannot be activated until it was tested successfully");
       }
     }
 
     const updated = await this._repository.update(id, userId, {
-      ...data,
-      name: data.name !== undefined ? data.name.trim() : undefined,
+      ...connectionDto,
+      name: connectionDto.name !== undefined ? connectionDto.name.trim() : undefined,
       config: validatedConfig,
       dataFormatConfig: validatedDataFormatConfig,
       credentials: validatedCredentials,

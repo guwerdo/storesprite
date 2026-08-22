@@ -26,6 +26,7 @@ export const hu: Translations = {
     warning: 'Figyelmeztetés',
     info: 'Információ',
     none: 'Nincs',
+    ok: 'Rendben',
   },
   languages: {
     en: 'Angol (English)',
@@ -235,7 +236,7 @@ export const hu: Translations = {
           showDetails: 'Technikai részletek megjelenítése',
           hideDetails: 'Technikai részletek elrejtése',
           testedAt: 'Tesztelve',
-          duration: 'Időtartam',
+          duration: 'Tesztelés időtartama',
           rowCount: 'Összes sor',
           columnCount: 'Összes oszlop',
           fileSize: 'Fájlméret',
