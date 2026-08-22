@@ -25,6 +25,7 @@ describe("Worker API Unit Tests (Mocked Dependencies)", () => {
   };
 
   beforeAll(async () => {
+    process.env.INTERNAL_WORKER_TOKEN = "mock_worker_token";
     app = buildApp({ logger: false });
     await app.ready();
     app.container.rebind(TYPES.IUserService).toConstantValue(mockUserService);

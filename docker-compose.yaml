@@ -27,6 +27,7 @@ services:
       - ./packages:/workspace/packages
       - /workspace/storesprite-be/node_modules
       - /workspace/packages/app-config/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - opensearch
       - postgres
@@ -40,6 +41,8 @@ services:
       - CLERK_SECRET_KEY=sk_test_betoW7FNs6IwHbjTgibXzIPyU7e2VzHWcyGsS8NhV0
       - NODE_ENV=dev
       - WORKER_DRIVER=docker
+      - INTERNAL_WORKER_TOKEN=storesprite-internal-worker-secret-token
+      - INTERNAL_BACKEND_URL=http://storesprite-be:3000
     networks:
       - storesprite-net
 

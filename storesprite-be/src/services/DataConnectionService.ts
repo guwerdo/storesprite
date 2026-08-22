@@ -260,6 +260,7 @@ export class DataConnectionService implements IDataConnectionService {
   private _mapToDto(entity: DataConnection): DataConnectionDto {
     return {
       id: entity.id,
+      userId: entity.user?.id,
       name: entity.name,
       channel: entity.channel,
       dataFormat: entity.dataFormat,

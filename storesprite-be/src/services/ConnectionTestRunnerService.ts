@@ -72,14 +72,41 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     });
 
     try {
-      const child = spawn("docker", args, { stdio: "ignore", detached: true });
+      const child = spawn("docker", args, { stdio: ["ignore", "pipe", "pipe"], detached: false });
+      
+      let stdout = "";
+      let stderr = "";
+      
+      child.stdout?.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString();
+      });
+
+      child.stderr?.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
       child.on("error", (err) => {
-        this._logger?.warn("Docker spawn error (possibly running in container without docker daemon)", {
+        this._logger?.error("Docker spawn error", {
           error: String(err),
           connectionId,
         });
       });
-      child.unref();
+
+      child.on("close", (code) => {
+        if (code !== 0) {
+          this._logger?.error("Docker run failed to launch container", {
+            code,
+            stderr: stderr.trim(),
+            stdout: stdout.trim(),
+            connectionId,
+          });
+        } else {
+          this._logger?.info("Docker worker container launched successfully", {
+            containerId: stdout.trim(),
+            connectionId,
+          });
+        }
+      });
     } catch (error) {
       this._logger?.error("Failed to spawn docker container for connection test", {
         error: String(error),

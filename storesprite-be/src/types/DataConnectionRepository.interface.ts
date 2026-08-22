@@ -156,6 +156,7 @@ export interface ConnectionTestResult {
 
 export interface DataConnectionDto {
   id: string;
+  userId?: string;
   name: string;
   channel: DataConnectionChannel;
   dataFormat: DataConnectionFormat;

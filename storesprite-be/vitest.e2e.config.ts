@@ -8,6 +8,8 @@ export default defineConfig({
     env: {
       DATABASE_URL: "postgresql://storesprite:storesprite_secure_pass@postgres:5432/storesprite_test_db",
       PGDATABASE: "storesprite_test_db",
+      INTERNAL_WORKER_TOKEN: "mock_worker_token",
+      INTERNAL_BACKEND_URL: "http://storesprite-be:3000",
     },
   },
 });

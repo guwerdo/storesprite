@@ -6,9 +6,9 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
   // Check X-Worker-Token header before executing routes in this plugin
   fastify.addHook("preHandler", (request: FastifyRequest, reply: FastifyReply, hookDone: (err?: Error) => void) => {
     const workerToken = request.headers["x-worker-token"];
-    const validToken = process.env.WORKER_TOKEN || "mock_worker_token";
+    const validToken = process.env.INTERNAL_WORKER_TOKEN;
 
-    if (!workerToken || workerToken !== validToken) {
+    if (!workerToken || !validToken || workerToken !== validToken) {
       const logger = request.server.container.get<Logger>(TYPES.Logger);
       logger.warn("Unauthorized worker API access attempt", { path: request.url });
       void reply.code(403).send({ error: "Forbidden: Invalid worker token" });
