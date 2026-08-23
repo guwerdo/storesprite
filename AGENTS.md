@@ -248,6 +248,10 @@ The monorepo contains three primary services:
         *   **Material UI (`mui-mcp`)**: Use `@mui/mcp@latest` to fetch MUI component documentation via `useMuiDocs` and `fetchDocs`.
         *   **PostgreSQL (`postgres-local`)**: Use `@modelcontextprotocol/server-postgres` to inspect multi-tenant database schemas, migrations, and test raw SQL queries against PostgreSQL.
         *   **Documentation Fetcher (`fetch-docs`)**: Use `mcp-server-fetch` to retrieve up-to-date documentation for Fastify, InversifyJS, Vitest, Jest, and BullMQ directly from official sites.
+11. **Frontend Internationalization (i18n) & Localization Mandate**:
+    *   **No Hardcoded Text**: When adding or updating user-facing components, labels, buttons, helpers, error messages, or placeholders in `storesprite-fe`, NEVER hardcode string literals. Always use `useTranslation()` (`t('logical.path.key')`).
+    *   **Synchronous Dictionary Updates**: Every logical string key added or modified MUST be registered in both `storesprite-fe/src/locales/en.ts` (English) and `storesprite-fe/src/locales/hu.ts` (Hungarian) with matching schema hierarchies.
+    *   **Zero Raw Key Leakage**: Ensure that missing keys never render logical key names (e.g. `stocksprite.connections.form.xxx`) to the user. Always verify with unit tests (`i18n.test.ts` / component tests).
 
 ---
 

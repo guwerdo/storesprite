@@ -55,6 +55,11 @@ This document outlines the non-negotiable principles, architectural invariants, 
    * **Host vs Container Boundary**: Source code is authored on the host filesystem (bind-mounted), but all compilers, linters, Node.js scripts, migration tools, and test runners MUST execute inside their respective Docker containers (`storesprite-fe`, `storesprite-be`, `stocksprite-app`).
    * **No Host Runtime Dependencies**: Never rely on or execute commands against host-installed Node/npm/PostgreSQL runtimes. Always execute verification steps via `docker exec -it <container> <cmd>`.
 
+6. **Frontend Internationalization (i18n) & Localization Invariant**:
+   * **No Hardcoded UI Strings**: All user-facing text, labels, button captions, placeholders, tooltips, validation messages, and helper texts in `storesprite-fe` MUST use `react-i18next` (`t('namespace.key')`). Hardcoded strings in TSX components are strictly forbidden.
+   * **Mandatory Dictionary Synchronization**: Whenever new text or UI elements are added to `storesprite-fe`, corresponding logical keys MUST be defined in both [`src/locales/en.ts`](file:///C:/my-git/storesprite/storesprite-fe/src/locales/en.ts) and [`src/locales/hu.ts`](file:///C:/my-git/storesprite/storesprite-fe/src/locales/hu.ts) with identical dictionary structures.
+   * **No Raw Key Leakage**: Logical string keys must always resolve to localized strings in both English and Hungarian, with 0 missing keys falling back to raw path strings.
+
 ---
 
 ## 2. Testing Mandate & Dual-Tier Strategy
