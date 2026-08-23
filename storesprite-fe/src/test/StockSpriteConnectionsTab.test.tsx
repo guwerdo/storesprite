@@ -268,4 +268,81 @@ describe('StockSpriteConnectionsTab', () => {
       expect(screen.queryByLabelText(/Username|Felhasználónév/i)).not.toBeInTheDocument();
     });
   });
+
+  it('renders all localized strings in edit mode with completed test result without raw i18n keys', async () => {
+    getConnectionsSpy.mockResolvedValueOnce({
+      connections: [
+        {
+          id: 'conn-sftp-1',
+          name: 'SFTP Connection Tested',
+          channel: 'SFTP',
+          dataFormat: 'CSV',
+          config: {
+            channel: 'SFTP',
+            host: 'sftp.example.com',
+            port: 22,
+            remoteDir: '/exports',
+            fileSelectionStrategy: 'LATEST_ALPHABETICAL',
+          },
+          dataFormatConfig: { format: 'CSV', delimiter: ';' },
+          isActive: false,
+          credentials: { authType: 'PASSWORD', username: 'sftp_user', password: 'sftp_password' },
+          testResult: {
+            success: true,
+            started_at: '2026-08-22T21:29:12.000Z',
+            durationMs: 1250,
+            rowCount: 100,
+            columnCount: 5,
+            fileSize: 20480,
+            columns: ['sku', 'name', 'price'],
+            rows: [['SKU1', 'Product 1', '100']],
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    });
+
+    renderTab();
+
+    await waitFor(() => {
+      expect(screen.getByText('SFTP Connection Tested')).toBeInTheDocument();
+    });
+
+    // Open edit form
+    fireEvent.click(screen.getByText('SFTP Connection Tested'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Edit Data Connection|Adatkapcsolat szerkesztése/i)).toBeInTheDocument();
+    });
+
+    // Verify localized elements are visible
+    expect(screen.getByText(/Connection Test Successful|Kapcsolat tesztelése sikeres/i)).toBeInTheDocument();
+    expect(screen.getByText(/Last tested:|Utoljára tesztelve:/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Test Connection|Kapcsolat tesztelése/i })).toBeInTheDocument();
+    expect(screen.getByText(/Directory path containing supplier inventory files|A beszállítói készletfájlokat tartalmazó mappa elérési útja/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rule to select the target file if multiple files exist in directory|Szabály a célfájl kiválasztására, ha több fájl található a mappában/i)).toBeInTheDocument();
+    expect(screen.getByText(/Single character separating columns|Oszlopokat elválasztó karakter/i)).toBeInTheDocument();
+
+    // Verify raw logical string names do not leak into DOM
+    const rawKeys = [
+      'stocksprite.connections.form.testing.successTitle',
+      'stocksprite.connections.form.http.urlHelper',
+      'stocksprite.connections.form.http.timeoutHelper',
+      'stocksprite.connections.form.csv.delimiterHelper',
+      'stocksprite.connections.form.sftp.remoteDirHelper',
+      'stocksprite.connections.form.sftp.strategyHelper',
+      'stocksprite.connections.form.sftp.strategy',
+      'stocksprite.connections.form.sftp.passwordField',
+      'stocksprite.connections.form.credentials.sftp.privateKeyHelper',
+      'stocksprite.connections.form.credentials.sftp.privateKeyField',
+      'stocksprite.connections.form.credentials.sftp.uploadKey',
+      'stocksprite.connections.form.testing.lastTested',
+    ];
+
+    for (const key of rawKeys) {
+      expect(screen.queryByText(key)).not.toBeInTheDocument();
+    }
+  });
 });
+

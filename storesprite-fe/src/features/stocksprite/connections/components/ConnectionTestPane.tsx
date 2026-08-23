@@ -78,7 +78,9 @@ export function ConnectionTestPane({
                 </Typography>
               </Box>
               <Typography variant="caption" color="text.secondary">
-                {testResult.started_at ? new Date(testResult.started_at).toLocaleString() : ''}
+                {testResult.started_at
+                  ? `${t('stocksprite.connections.form.testing.lastTested')} ${new Date(testResult.started_at).toLocaleString()}`
+                  : ''}
               </Typography>
             </Box>
 
