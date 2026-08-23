@@ -47,3 +47,35 @@ StoreSprite uses a decoupled, multi-tenant architecture divided into three core 
 | **Worker Container** | `sync_id` / `user_id` | `INTERNAL_WORKER_TOKEN` | Worker config fetch, progress emission |
 | **Clerk Webhooks** | `svix_id` | Svix Signature Verification | User provisioning & billing synchronization |
 | **Log Observability** | Tenant metadata tags | Node API Proxy / OpenSearch Multi-Tenancy | Isolated log views per tenant |
+
+---
+
+## Local Development & Docker Container Environment
+
+StoreSprite uses a Docker-first local development setup. Source code is edited on the host filesystem and bind-mounted into active containers, while all runtime execution, tests, builds, and linting occur inside the containers.
+
+```
++-------------------------------------------------------------------------------+
+| HOST MACHINE (Windows / macOS / Linux Editor)                                 |
+| - Edit files in ./storesprite-fe, ./storesprite-be, ./stocksprite             |
++---------------------------------------+---------------------------------------+
+                                        |  (Bind Mounts)
+                                        v
++-------------------------------------------------------------------------------+
+| DOCKER COMPOSE NETWORK (storesprite-shared-net)                               |
+|                                                                               |
+|  +------------------------+  +------------------------+  +-----------------+  |
+|  |     storesprite-fe     |  |     storesprite-be     |  | stocksprite-app |  |
+|  | - React / Vite dev     |  | - Fastify API          |  | - BullMQ Worker |  |
+|  | - Port 5173            |  | - Port 3000            |  | - On-demand     |  |
+|  +-----------+------------+  +-----------+------------+  +--------+--------+  |
+|              |                           |                        |           |
+|              +-------------------+-------+                        |           |
+|                                  v                                v           |
+|                     +-------------------------+      +---------------------+  |
+|                     |        postgres         |      |     redis-stack     |  |
+|                     | - Port 5432             |      | - Port 6379 / 8001  |  |
+|                     +-------------------------+      +---------------------+  |
++-------------------------------------------------------------------------------+
+```
+

@@ -44,6 +44,72 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
 
 ---
 
+## 🐳 Dockerized Development & In-Container Execution Mandate
+
+> [!IMPORTANT]
+> **ALL Node.js execution, tests, linter runs, builds, package installations, and database migrations MUST run inside the respective Docker containers, NEVER directly on the host machine.**
+
+### Host vs. Container Division of Labor
+* **Host Machine**: You edit code files on the host filesystem (e.g. Windows / macOS / Linux). The source folders (`storesprite-fe`, `storesprite-be`, `stocksprite`) are bind-mounted directly into active Docker containers.
+* **Docker Container Runtime**: The Node.js runtime, compilers, TypeScript, linters, test runners, and database connections live **exclusively inside Docker containers**. Never run `npm test`, `npm run lint`, or `npm install` on the host OS when verifying code changes.
+
+### Service-to-Container Mapping & Execution Cheat Sheet
+
+| Service Folder | Docker Container Name | In-Container Working Dir | Purpose & Execution Context |
+| :--- | :--- | :--- | :--- |
+| **`storesprite-fe/`** | `storesprite-fe` | `/workspace` | Frontend React UI & Vite dev server |
+| **`storesprite-be/`** | `storesprite-be` | `/workspace/storesprite-be` | Fastify API, MikroORM & PostgreSQL connections |
+| **`stocksprite/`** | `stocksprite-app` / `app` | `/app` | Worker CLI, BullMQ queues & Redis connections |
+| **Database** | `postgres` | `/` | PostgreSQL 16 server |
+
+### Common Agent Commands (Run Inside Container)
+
+```bash
+# ==============================================================================
+# FRONTEND SERVICE (storesprite-fe)
+# ==============================================================================
+# Run Unit & Component Tests
+docker exec -it storesprite-fe npm test
+
+# Run ESLint
+docker exec -it storesprite-fe npm run lint
+
+# Install New npm Dependencies
+docker exec -it storesprite-fe npm install <package-name>
+
+# ==============================================================================
+# BACKEND SERVICE (storesprite-be)
+# ==============================================================================
+# Run Unit Tests (In-Memory Mocks)
+docker exec -it storesprite-be npm test
+
+# Run E2E API Integration Tests (Against Live Docker PostgreSQL)
+docker exec -it storesprite-be npm run test:api
+
+# Run ESLint
+docker exec -it storesprite-be npm run lint
+
+# Run Database Migrations
+docker exec -it storesprite-be npm run migration:up
+
+# Install New npm Dependencies
+docker exec -it storesprite-be npm install <package-name>
+
+# ==============================================================================
+# WORKER ENGINE (stocksprite)
+# ==============================================================================
+# Run Unit Tests
+docker exec -it stocksprite-app npm test
+
+# Run Integration Tests
+docker exec -it stocksprite-app npm run test:integration
+
+# Run ESLint
+docker exec -it stocksprite-app npm run lint
+```
+
+---
+
 ## 1. Monorepo Overview & Service Boundaries
 
 StoreSprite is designed as a multi-tenant platform where multiple users can log in, configure their own UNAS webshop API keys, and run on-demand CSV stock synchronization jobs.
@@ -197,25 +263,23 @@ The monorepo contains three primary services:
 
 ## 5. Developer & Agent Reference Commands
 
+All test runs, linter checks, database migrations, and package installations should be executed inside the running Docker containers:
+
 ```bash
+# Monorepo Docker Orchestration (Root)
+docker compose up -d --build
+
 # Backend (storesprite-be)
-cd storesprite-be
-npm install
-npm test
-npm run dev
+docker exec -it storesprite-be npm test             # In-memory unit tests
+docker exec -it storesprite-be npm run test:api     # E2E API tests against live Postgres
+docker exec -it storesprite-be npm run lint         # ESLint checks
+docker exec -it storesprite-be npm run migration:up # Apply database migrations
 
 # Frontend (storesprite-fe)
-cd storesprite-fe
-npm install
-npm test
-npm run dev
+docker exec -it storesprite-fe npm test             # Vitest unit & component tests
+docker exec -it storesprite-fe npm run lint         # ESLint checks
 
 # Worker Engine (stocksprite)
-cd stocksprite
-npm run cache:rel    # Cache webshop snapshot
-npm run pub:rel      # Publish datasource items to queue
-npm run sub:rel      # Consume queue and sync to UNAS
-
-# Monorepo Docker Orchestration (Root)
-docker compose up --build
+docker exec -it stocksprite-app npm test            # Unit tests
+docker exec -it stocksprite-app npm run lint        # ESLint checks
 ```

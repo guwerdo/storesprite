@@ -51,6 +51,10 @@ This document outlines the non-negotiable principles, architectural invariants, 
    * **Database Migrations Mandate**:
      * When creating or updating database tables/entities, ALWAYS use MikroORM CLI migration tools (`npm run migration:create` / `npm run migration:up`) to generate and apply deterministic migration scripts. Never modify live database schemas manually.
 
+5. **Containerized Runtime Environment Invariant**:
+   * **Host vs Container Boundary**: Source code is authored on the host filesystem (bind-mounted), but all compilers, linters, Node.js scripts, migration tools, and test runners MUST execute inside their respective Docker containers (`storesprite-fe`, `storesprite-be`, `stocksprite-app`).
+   * **No Host Runtime Dependencies**: Never rely on or execute commands against host-installed Node/npm/PostgreSQL runtimes. Always execute verification steps via `docker exec -it <container> <cmd>`.
+
 ---
 
 ## 2. Testing Mandate & Dual-Tier Strategy
