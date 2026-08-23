@@ -92,7 +92,7 @@ export default function ConnectionForm({
     handleSubmit,
     control,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, dirtyFields },
   } = methods;
 
   // Testing & TestResult State
@@ -178,8 +178,13 @@ export default function ConnectionForm({
     };
   }, [isTestingRunning, t]);
 
-  // Derived Invariant Rule: Form edited since last test
-  const hasEditedSinceTest = Boolean(isDirty && testResult);
+  // Only connection-setting edits (channel, config, format, credentials) invalidate the last
+  // test result; editing the name or toggling isActive does not.
+  const hasConnectionSettingsChanged = Object.keys(dirtyFields).some(
+    (field) => field !== 'name' && field !== 'isActive'
+  );
+
+  const hasEditedSinceTest = Boolean(hasConnectionSettingsChanged && testResult);
 
   const onSubmit = async (values: ConnectionFormValues): Promise<void> => {
     setSubmitError(null);
