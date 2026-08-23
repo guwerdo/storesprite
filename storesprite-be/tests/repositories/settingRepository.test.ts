@@ -29,7 +29,7 @@ describe("SettingRepository", () => {
       expect(mockEm.findOne).toHaveBeenCalledWith(
         UserSetting,
         { user: { id: "user_abc" } },
-        { populate: ["language", "user"] }
+        { populate: ["language"] }
       );
       expect(result).toBe(setting);
     });

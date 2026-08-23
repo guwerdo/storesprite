@@ -20,7 +20,7 @@ export class SettingRepository implements ISettingRepository {
     return this._em.findOne(
       UserSetting,
       { user: { id: userId } },
-      { populate: ["language", "user"] }
+      { populate: ["language"] }
     );
   }
 

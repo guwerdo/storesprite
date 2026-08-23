@@ -194,6 +194,7 @@ export interface UpdateDataConnectionDto {
 export interface IDataConnectionRepository {
   getAllByUserId(userId: string): Promise<DataConnection[]>;
   getByIdAndUserId(id: string, userId: string): Promise<DataConnection | null>;
+  getById(id: string): Promise<DataConnection | null>;
   create(userId: string, data: CreateDataConnectionDto): Promise<DataConnection>;
   update(id: string, userId: string, data: UpdateDataConnectionDto): Promise<DataConnection | null>;
   delete(id: string, userId: string): Promise<boolean>;

@@ -36,6 +36,11 @@ export class DataConnectionRepository implements IDataConnectionRepository {
     });
   }
 
+  public async getById(id: string): Promise<DataConnection | null> {
+    this._logger?.info("Fetching data connection by ID", { id });
+    return this._em.findOne(DataConnection, { id });
+  }
+
   public async create(userId: string, data: CreateDataConnectionDto): Promise<DataConnection> {
     this._logger?.info("Creating data connection for user", { userId, name: data.name });
 

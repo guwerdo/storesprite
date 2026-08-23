@@ -9,6 +9,7 @@ import {
 } from "../../src/types/DataConnectionRepository.interface.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
 import { User } from "../../src/entities/User.js";
+import { JsonSchemaValidator } from "../../src/utils/JsonSchemaValidator.js";
 
 describe("DataConnectionService Unit Tests", () => {
   let repositoryMock: ReturnType<typeof mock<IDataConnectionRepository>>;
@@ -17,7 +18,7 @@ describe("DataConnectionService Unit Tests", () => {
 
   beforeEach(() => {
     repositoryMock = mock<IDataConnectionRepository>();
-    service = new DataConnectionService(repositoryMock);
+    service = new DataConnectionService(repositoryMock, new JsonSchemaValidator());
   });
 
   describe("getConnections", () => {
@@ -47,16 +48,6 @@ describe("DataConnectionService Unit Tests", () => {
       expect(result[0].isActive).toBe(true);
     });
 
-    it("should return empty array if repository is not initialized", async () => {
-      // Arrange
-      const uninitService = new DataConnectionService(undefined);
-
-      // Act
-      const result = await uninitService.getConnections("user_123");
-
-      // Assert
-      expect(result).toEqual([]);
-    });
   });
 
   describe("getConnectionById", () => {
@@ -597,6 +588,100 @@ describe("DataConnectionService Unit Tests", () => {
       // Assert
       expect(result).toBe(true);
       expect(repositoryMock.delete).toHaveBeenCalledWith("conn-123", "user_123");
+    });
+  });
+
+  describe("saveTestResult", () => {
+    it("should merge, validate, and persist a partial test result", async () => {
+      // Arrange
+      const conn = new DataConnection(
+        mockUser,
+        "Test Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        false,
+        null,
+        { progress: "start" }
+      );
+      conn.id = "conn-test";
+      repositoryMock.getById.mockResolvedValue(conn);
+
+      const updatedConn = new DataConnection(
+        mockUser,
+        "Test Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" },
+        false,
+        null,
+        { progress: "finish", success: true }
+      );
+      updatedConn.id = "conn-test";
+      repositoryMock.update.mockResolvedValue(updatedConn);
+
+      // Act
+      const result = await service.saveTestResult("conn-test", { progress: "finish", success: true });
+
+      // Assert
+      expect(repositoryMock.getById).toHaveBeenCalledWith("conn-test");
+      expect(repositoryMock.update).toHaveBeenCalledWith(
+        "conn-test",
+        "user_123",
+        expect.objectContaining({
+          testResult: expect.objectContaining({ progress: "finish", success: true }),
+        })
+      );
+      expect(result?.testResult).toEqual(expect.objectContaining({ progress: "finish", success: true }));
+    });
+
+    it("should return null when the connection is not found", async () => {
+      // Arrange
+      repositoryMock.getById.mockResolvedValue(null);
+
+      // Act
+      const result = await service.saveTestResult("missing", { progress: "start" });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(repositoryMock.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getConnectionByIdForWorker", () => {
+    it("should fetch by id and map to DTO", async () => {
+      // Arrange
+      const conn = new DataConnection(
+        mockUser,
+        "Worker Conn",
+        "HTTP",
+        "CSV",
+        { channel: "HTTP", url: "https://example.com/feed.csv" },
+        { format: "CSV", delimiter: ";" }
+      );
+      conn.id = "conn-worker";
+      repositoryMock.getById.mockResolvedValue(conn);
+
+      // Act
+      const result = await service.getConnectionByIdForWorker("conn-worker");
+
+      // Assert
+      expect(repositoryMock.getById).toHaveBeenCalledWith("conn-worker");
+      expect(result?.id).toBe("conn-worker");
+      expect(result?.name).toBe("Worker Conn");
+    });
+
+    it("should return null when the connection is not found", async () => {
+      // Arrange
+      repositoryMock.getById.mockResolvedValue(null);
+
+      // Act
+      const result = await service.getConnectionByIdForWorker("missing");
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 });

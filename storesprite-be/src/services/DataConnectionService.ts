@@ -13,52 +13,33 @@ import {
 import { IDataConnectionService } from "../types/DataConnectionService.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 import { TYPES } from "../di/types.js";
-import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
 import { Util } from "../utils/index.js";
 
 @injectable()
 export class DataConnectionService implements IDataConnectionService {
-  private readonly _validator: IJsonSchemaValidator;
-
   constructor(
     @inject(TYPES.IDataConnectionRepository)
-    private readonly _repository?: IDataConnectionRepository,
+    private readonly _repository: IDataConnectionRepository,
     @inject(TYPES.IJsonSchemaValidator)
-    validator?: IJsonSchemaValidator,
+    private readonly _validator: IJsonSchemaValidator,
     @inject(TYPES.Logger)
     private readonly _logger?: Logger
-  ) {
-    this._validator = validator || new JsonSchemaValidator();
-  }
+  ) {}
 
   public async getConnections(userId: string): Promise<DataConnectionDto[]> {
     this._logger?.info("Service fetching all data connections", { userId });
-    if (!this._repository) {
-      this._logger?.warn("DataConnectionRepository unavailable");
-      return [];
-    }
-
     const connections = await this._repository.getAllByUserId(userId);
     return connections.map((conn) => this._mapToDto(conn));
   }
 
   public async getConnectionById(id: string, userId: string): Promise<DataConnectionDto | null> {
     this._logger?.info("Service fetching connection by ID", { id, userId });
-    if (!this._repository) {
-      this._logger?.warn("DataConnectionRepository unavailable");
-      return null;
-    }
-
     const connection = await this._repository.getByIdAndUserId(id, userId);
     return connection ? this._mapToDto(connection) : null;
   }
 
   public async createConnection(userId: string, connectionDto: CreateDataConnectionDto): Promise<DataConnectionDto> {
     this._logger?.info("Service creating data connection", { userId, name: connectionDto.name });
-    if (!this._repository) {
-      this._logger?.warn("DataConnectionRepository unavailable");
-      throw new Error("DataConnectionRepository unavailable");
-    }
 
     // Validate inputs
     this._assertValidName(connectionDto.name);
@@ -87,11 +68,6 @@ export class DataConnectionService implements IDataConnectionService {
     connectionDto: UpdateDataConnectionDto
   ): Promise<DataConnectionDto | null> {
     this._logger?.info("Service updating data connection", { id, userId });
-    if (!this._repository) {
-      this._logger?.warn("DataConnectionRepository unavailable");
-      throw new Error("DataConnectionRepository unavailable");
-    }
-
     const existing = await this._repository.getByIdAndUserId(id, userId);
     if (!existing) {
       return null;
@@ -186,10 +162,6 @@ export class DataConnectionService implements IDataConnectionService {
 
   public async invalidateConnection(id: string, userId: string): Promise<boolean> {
     this._logger?.info("Service invalidating connection test result", { id, userId });
-    if (!this._repository) {
-      return false;
-    }
-
     const existing = await this._repository.getByIdAndUserId(id, userId);
     if (!existing) {
       return false;
@@ -208,12 +180,7 @@ export class DataConnectionService implements IDataConnectionService {
     patchResult: Partial<ConnectionTestResult>
   ): Promise<DataConnectionDto | null> {
     this._logger?.info("Service saving connection test result", { id, progress: patchResult.progress });
-    if (!this._repository) {
-      return null;
-    }
-
-    const connection = await this._findConnectionById(id);
-
+    const connection = await this._repository.getById(id);
     if (!connection) {
       this._logger?.warn("Connection not found for saveTestResult", { id });
       return null;
@@ -226,30 +193,18 @@ export class DataConnectionService implements IDataConnectionService {
 
     const validatedTestResult = this._validator.validateTestResult(mergedTestResult);
 
-    connection.testResult = validatedTestResult;
-    connection.updatedAt = new Date();
-    await (this._repository as unknown as { _em: { flush: () => Promise<void> } })._em?.flush();
-
-    return this._mapToDto(connection);
+    const updated = await this._repository.update(id, connection.user.id, { testResult: validatedTestResult });
+    return updated ? this._mapToDto(updated) : null;
   }
 
   public async getConnectionByIdForWorker(id: string): Promise<DataConnectionDto | null> {
     this._logger?.info("Service fetching connection for worker", { id });
-    if (!this._repository) {
-      return null;
-    }
-
-    const connection = await this._findConnectionById(id);
+    const connection = await this._repository.getById(id);
     return connection ? this._mapToDto(connection) : null;
   }
 
   public async deleteConnection(id: string, userId: string): Promise<boolean> {
     this._logger?.info("Service deleting data connection", { id, userId });
-    if (!this._repository) {
-      this._logger?.warn("DataConnectionRepository unavailable");
-      return false;
-    }
-
     return this._repository.delete(id, userId);
   }
 
@@ -277,10 +232,5 @@ export class DataConnectionService implements IDataConnectionService {
     if (name.length > 255) {
       throw new Error("Connection name cannot exceed 255 characters");
     }
-  }
-
-  private async _findConnectionById(id: string): Promise<DataConnection | null> {
-    const em = (this._repository as unknown as { _em?: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })?._em;
-    return em ? em.findOne(DataConnection, { id }) : null;
   }
 }

@@ -35,5 +35,14 @@ describe("Backend Util Module", () => {
       expect(Util.decodeJwtPayload("header.not-valid-json-base64.sig")).toBeNull();
       expect(Util.decodeJwtPayload("")).toBeNull();
     });
+
+    it("should fall back to a dev-token identity for opaque non-JWT tokens", () => {
+      const claims = Util.decodeJwtPayload("mock_jwt_user_123");
+      expect(claims).toEqual({
+        sub: "mock_jwt_user_123",
+        email: "mock_jwt_user_123@dev.test",
+        name: "mock_jwt_user_123",
+      });
+    });
   });
 });
