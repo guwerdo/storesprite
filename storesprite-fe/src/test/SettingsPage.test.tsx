@@ -48,8 +48,7 @@ describe('SettingsPage', () => {
     testContainer.bind<ISettingService>(TYPES.ISettingService).toConstantValue(mockSettingService);
   });
 
-  it('renders loaded user settings and language options', async () => {
-    // Act
+  const renderSettingsPage = () =>
     render(
       <I18nProvider>
         <ContainerProvider container={testContainer}>
@@ -57,6 +56,10 @@ describe('SettingsPage', () => {
         </ContainerProvider>
       </I18nProvider>,
     );
+
+  it('renders loaded user settings and language options', async () => {
+    // Act
+    renderSettingsPage();
 
     // Assert
     await waitFor(() => {
@@ -68,13 +71,7 @@ describe('SettingsPage', () => {
 
   it('saves settings and displays success toast', async () => {
     // Arrange
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <SettingsPage />
-        </ContainerProvider>
-      </I18nProvider>,
-    );
+    renderSettingsPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();
@@ -106,13 +103,7 @@ describe('SettingsPage', () => {
 
   it('validates UNAS API endpoint URL and prevents saving when invalid', async () => {
     // Arrange
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <SettingsPage />
-        </ContainerProvider>
-      </I18nProvider>,
-    );
+    renderSettingsPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('https://api.unas.eu/shop/')).toBeInTheDocument();
@@ -145,13 +136,7 @@ describe('SettingsPage', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     saveSettingsSpy.mockRejectedValueOnce(new Error('API error'));
 
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <SettingsPage />
-        </ContainerProvider>
-      </I18nProvider>,
-    );
+    renderSettingsPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();
@@ -174,13 +159,7 @@ describe('SettingsPage', () => {
 
   it('masks UNAS API key by default and reveals it when eye icon button is clicked', async () => {
     // Arrange
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <SettingsPage />
-        </ContainerProvider>
-      </I18nProvider>,
-    );
+    renderSettingsPage();
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();

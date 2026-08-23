@@ -76,7 +76,6 @@ export function DataFormatConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="csv_delimiter"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.csv.delimiter')}
                   placeholder=";"
@@ -141,7 +140,6 @@ export function DataFormatConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="xml_row_path"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.xml.rowPath')}
                   placeholder=".//product"
@@ -154,7 +152,6 @@ export function DataFormatConfigSection(): React.JSX.Element {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  name="xml_attribute_prefix"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.xml.attributePrefix')}
                   placeholder="@"

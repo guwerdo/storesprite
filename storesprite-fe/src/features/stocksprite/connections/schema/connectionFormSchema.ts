@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { TFunction } from 'i18next';
 import type {
   DataConnectionChannel,
   DataConnectionFormat,
@@ -91,7 +90,7 @@ export const defaultConnectionFormValues: ConnectionFormValues = {
   sftpKeyPassphrase: '',
 };
 
-export function createConnectionFormSchema(t: TFunction) {
+export function createConnectionFormSchema(t: (key: string) => string) {
   return z
     .object({
       name: z
@@ -141,15 +140,18 @@ export function createConnectionFormSchema(t: TFunction) {
       sftpKeyPassphrase: z.string(),
     })
     .superRefine((data, ctx) => {
-      // Channel specific validations
+      const required = (path: string, value: string, message: string, trim = true): void => {
+        const normalized = trim ? value.trim() : value;
+        if (!normalized) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+        }
+      };
+
+      // Channel-specific validations
       if (data.channel === 'HTTP') {
-        if (!data.httpUrl || data.httpUrl.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['httpUrl'],
-            message: t('stocksprite.connections.form.http.urlRequired'),
-          });
-        } else if (!data.httpUrl.startsWith('http://') && !data.httpUrl.startsWith('https://')) {
+        required('httpUrl', data.httpUrl, t('stocksprite.connections.form.http.urlRequired'));
+        const url = data.httpUrl.trim();
+        if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['httpUrl'],
@@ -157,113 +159,35 @@ export function createConnectionFormSchema(t: TFunction) {
           });
         }
 
-        // HTTP Credentials
+        // HTTP credentials
         if (data.httpAuthType === 'BASIC') {
-          if (!data.httpBasicUsername || data.httpBasicUsername.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['httpBasicUsername'],
-              message: t('stocksprite.connections.form.credentials.http.usernameRequired'),
-            });
-          }
-          if (!data.httpBasicPassword || data.httpBasicPassword.length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['httpBasicPassword'],
-              message: t('stocksprite.connections.form.credentials.http.passwordRequired'),
-            });
-          }
+          required('httpBasicUsername', data.httpBasicUsername, t('stocksprite.connections.form.credentials.http.usernameRequired'));
+          required('httpBasicPassword', data.httpBasicPassword, t('stocksprite.connections.form.credentials.http.passwordRequired'), false);
         } else if (data.httpAuthType === 'BEARER') {
-          if (!data.httpBearerToken || data.httpBearerToken.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['httpBearerToken'],
-              message: t('stocksprite.connections.form.credentials.http.tokenRequired'),
-            });
-          }
+          required('httpBearerToken', data.httpBearerToken, t('stocksprite.connections.form.credentials.http.tokenRequired'));
         } else if (data.httpAuthType === 'API_KEY') {
-          if (!data.httpApiKeyHeaderName || data.httpApiKeyHeaderName.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['httpApiKeyHeaderName'],
-              message: t('stocksprite.connections.form.credentials.http.headerNameRequired'),
-            });
-          }
-          if (!data.httpApiKeyHeaderValue || data.httpApiKeyHeaderValue.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['httpApiKeyHeaderValue'],
-              message: t('stocksprite.connections.form.credentials.http.headerValueRequired'),
-            });
-          }
+          required('httpApiKeyHeaderName', data.httpApiKeyHeaderName, t('stocksprite.connections.form.credentials.http.headerNameRequired'));
+          required('httpApiKeyHeaderValue', data.httpApiKeyHeaderValue, t('stocksprite.connections.form.credentials.http.headerValueRequired'));
         }
       } else if (data.channel === 'SFTP') {
-        if (!data.sftpHost || data.sftpHost.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['sftpHost'],
-            message: t('stocksprite.connections.form.sftp.hostRequired'),
-          });
-        }
-        if (!data.sftpRemoteDir || data.sftpRemoteDir.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['sftpRemoteDir'],
-            message: t('stocksprite.connections.form.sftp.remoteDirRequired'),
-          });
-        }
+        required('sftpHost', data.sftpHost, t('stocksprite.connections.form.sftp.hostRequired'));
+        required('sftpRemoteDir', data.sftpRemoteDir, t('stocksprite.connections.form.sftp.remoteDirRequired'));
 
-        // SFTP Credentials
+        // SFTP credentials
         if (data.sftpAuthType === 'PASSWORD') {
-          if (!data.sftpPasswordUsername || data.sftpPasswordUsername.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['sftpPasswordUsername'],
-              message: t('stocksprite.connections.form.credentials.sftp.usernameRequired'),
-            });
-          }
-          if (!data.sftpPasswordPassword || data.sftpPasswordPassword.length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['sftpPasswordPassword'],
-              message: t('stocksprite.connections.form.credentials.sftp.passwordRequired'),
-            });
-          }
+          required('sftpPasswordUsername', data.sftpPasswordUsername, t('stocksprite.connections.form.credentials.sftp.usernameRequired'));
+          required('sftpPasswordPassword', data.sftpPasswordPassword, t('stocksprite.connections.form.credentials.sftp.passwordRequired'), false);
         } else if (data.sftpAuthType === 'PRIVATE_KEY') {
-          if (!data.sftpKeyUsername || data.sftpKeyUsername.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['sftpKeyUsername'],
-              message: t('stocksprite.connections.form.credentials.sftp.usernameRequired'),
-            });
-          }
-          if (!data.sftpPrivateKey || data.sftpPrivateKey.trim().length === 0) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['sftpPrivateKey'],
-              message: t('stocksprite.connections.form.credentials.sftp.privateKeyRequired'),
-            });
-          }
+          required('sftpKeyUsername', data.sftpKeyUsername, t('stocksprite.connections.form.credentials.sftp.usernameRequired'));
+          required('sftpPrivateKey', data.sftpPrivateKey, t('stocksprite.connections.form.credentials.sftp.privateKeyRequired'));
         }
       }
 
-      // Parser specific validations
+      // Parser-specific validations
       if (data.dataFormat === 'CSV') {
-        if (!data.csvDelimiter || data.csvDelimiter.length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['csvDelimiter'],
-            message: t('stocksprite.connections.form.csv.delimiterRequired'),
-          });
-        }
+        required('csvDelimiter', data.csvDelimiter, t('stocksprite.connections.form.csv.delimiterRequired'), false);
       } else if (data.dataFormat === 'XML') {
-        if (!data.xmlRowPath || data.xmlRowPath.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['xmlRowPath'],
-            message: t('stocksprite.connections.form.xml.rowPathRequired'),
-          });
-        }
+        required('xmlRowPath', data.xmlRowPath, t('stocksprite.connections.form.xml.rowPathRequired'));
       }
     });
 }

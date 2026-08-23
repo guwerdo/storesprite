@@ -14,6 +14,35 @@ import {
   defaultConnectionFormValues,
 } from './connectionFormSchema.js';
 
+const asString = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback;
+
+function buildCredentials(values: ConnectionFormValues): ConnectionCredentials {
+  if (values.channel === 'HTTP') {
+    switch (values.httpAuthType) {
+      case 'NONE':
+        return { authType: 'NONE' };
+      case 'BASIC':
+        return { authType: 'BASIC', username: values.httpBasicUsername.trim(), password: values.httpBasicPassword };
+      case 'BEARER':
+        return { authType: 'BEARER', token: values.httpBearerToken.trim() };
+      case 'API_KEY':
+        return { authType: 'API_KEY', headerName: values.httpApiKeyHeaderName.trim(), headerValue: values.httpApiKeyHeaderValue.trim() };
+    }
+  }
+
+  if (values.sftpAuthType === 'PASSWORD') {
+    return { authType: 'PASSWORD', username: values.sftpPasswordUsername.trim(), password: values.sftpPasswordPassword };
+  }
+
+  return {
+    authType: 'PRIVATE_KEY',
+    username: values.sftpKeyUsername.trim(),
+    privateKey: values.sftpPrivateKey.trim(),
+    ...(values.sftpKeyPassphrase ? { passphrase: values.sftpKeyPassphrase } : {}),
+  };
+}
+
 export function toFormValues(connection?: IDataConnection | null): ConnectionFormValues {
   if (!connection) {
     return { ...defaultConnectionFormValues };
@@ -64,16 +93,11 @@ export function toFormValues(connection?: IDataConnection | null): ConnectionFor
       isHttp && typeof creds?.authType === 'string'
         ? (creds.authType as HttpAuthType)
         : 'NONE',
-    httpBasicUsername:
-      isHttp && typeof creds?.username === 'string' ? creds.username : '',
-    httpBasicPassword:
-      isHttp && typeof creds?.password === 'string' ? creds.password : '',
-    httpBearerToken:
-      isHttp && typeof creds?.token === 'string' ? creds.token : '',
-    httpApiKeyHeaderName:
-      isHttp && typeof creds?.headerName === 'string' ? creds.headerName : 'X-Api-Key',
-    httpApiKeyHeaderValue:
-      isHttp && typeof creds?.headerValue === 'string' ? creds.headerValue : '',
+    httpBasicUsername: isHttp ? asString(creds?.username) : '',
+    httpBasicPassword: isHttp ? asString(creds?.password) : '',
+    httpBearerToken: isHttp ? asString(creds?.token) : '',
+    httpApiKeyHeaderName: isHttp ? asString(creds?.headerName, 'X-Api-Key') : 'X-Api-Key',
+    httpApiKeyHeaderValue: isHttp ? asString(creds?.headerValue) : '',
 
     // SFTP Credentials
     sftpAuthType:
@@ -81,25 +105,15 @@ export function toFormValues(connection?: IDataConnection | null): ConnectionFor
         ? (creds.authType as SftpAuthType)
         : 'PASSWORD',
     sftpPasswordUsername:
-      isSftp && creds?.authType === 'PASSWORD' && typeof creds?.username === 'string'
-        ? creds.username
-        : '',
+      isSftp && creds?.authType === 'PASSWORD' ? asString(creds?.username) : '',
     sftpPasswordPassword:
-      isSftp && creds?.authType === 'PASSWORD' && typeof creds?.password === 'string'
-        ? creds.password
-        : '',
+      isSftp && creds?.authType === 'PASSWORD' ? asString(creds?.password) : '',
     sftpKeyUsername:
-      isSftp && creds?.authType === 'PRIVATE_KEY' && typeof creds?.username === 'string'
-        ? creds.username
-        : '',
+      isSftp && creds?.authType === 'PRIVATE_KEY' ? asString(creds?.username) : '',
     sftpPrivateKey:
-      isSftp && creds?.authType === 'PRIVATE_KEY' && typeof creds?.privateKey === 'string'
-        ? creds.privateKey
-        : '',
+      isSftp && creds?.authType === 'PRIVATE_KEY' ? asString(creds?.privateKey) : '',
     sftpKeyPassphrase:
-      isSftp && creds?.authType === 'PRIVATE_KEY' && typeof creds?.passphrase === 'string'
-        ? creds.passphrase
-        : '',
+      isSftp && creds?.authType === 'PRIVATE_KEY' ? asString(creds?.passphrase) : '',
   };
 }
 
@@ -136,45 +150,6 @@ export function toApiPayload(values: ConnectionFormValues): ICreateConnectionPay
           attributePrefix: values.xmlAttributePrefix || '',
         } as XmlDataFormatConfig);
 
-  let credentialsPayload: ConnectionCredentials;
-  if (values.channel === 'HTTP') {
-    if (values.httpAuthType === 'NONE') {
-      credentialsPayload = { authType: 'NONE' };
-    } else if (values.httpAuthType === 'BASIC') {
-      credentialsPayload = {
-        authType: 'BASIC',
-        username: values.httpBasicUsername.trim(),
-        password: values.httpBasicPassword,
-      };
-    } else if (values.httpAuthType === 'BEARER') {
-      credentialsPayload = {
-        authType: 'BEARER',
-        token: values.httpBearerToken.trim(),
-      };
-    } else {
-      credentialsPayload = {
-        authType: 'API_KEY',
-        headerName: values.httpApiKeyHeaderName.trim(),
-        headerValue: values.httpApiKeyHeaderValue.trim(),
-      };
-    }
-  } else {
-    if (values.sftpAuthType === 'PASSWORD') {
-      credentialsPayload = {
-        authType: 'PASSWORD',
-        username: values.sftpPasswordUsername.trim(),
-        password: values.sftpPasswordPassword,
-      };
-    } else {
-      credentialsPayload = {
-        authType: 'PRIVATE_KEY',
-        username: values.sftpKeyUsername.trim(),
-        privateKey: values.sftpPrivateKey.trim(),
-        ...(values.sftpKeyPassphrase ? { passphrase: values.sftpKeyPassphrase } : {}),
-      };
-    }
-  }
-
   return {
     name: values.name.trim(),
     channel: values.channel,
@@ -182,6 +157,6 @@ export function toApiPayload(values: ConnectionFormValues): ICreateConnectionPay
     isActive: values.isActive,
     config: configPayload,
     dataFormatConfig: dataFormatPayload,
-    credentials: credentialsPayload,
+    credentials: buildCredentials(values),
   };
 }

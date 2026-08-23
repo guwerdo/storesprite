@@ -34,6 +34,24 @@ export default function ConnectionList({
 }: ConnectionListProps): React.JSX.Element {
   const { t } = useAppTranslation();
 
+  const getStatusBadge = (
+    conn: IDataConnection
+  ): { label: string; color: 'warning' | 'success' | 'info' | 'error' | 'default' } => {
+    if (conn.testResult?.progress && conn.testResult.progress !== 'finish') {
+      return { label: t('stocksprite.connections.form.statusBadges.testing'), color: 'warning' };
+    }
+    if (conn.isActive) {
+      return { label: t('stocksprite.connections.form.statusBadges.active'), color: 'success' };
+    }
+    if (conn.testResult?.success === true) {
+      return { label: t('stocksprite.connections.form.statusBadges.readyToActivate'), color: 'info' };
+    }
+    if (conn.testResult?.success === false) {
+      return { label: t('stocksprite.connections.form.statusBadges.failed'), color: 'error' };
+    }
+    return { label: t('stocksprite.connections.form.statusBadges.untested'), color: 'default' };
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Top Action Bar */}
@@ -114,49 +132,8 @@ export default function ConnectionList({
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      if (conn.testResult?.progress && conn.testResult.progress !== 'finish') {
-                        return (
-                          <Chip
-                            size="small"
-                            label={t('stocksprite.connections.form.statusBadges.testing')}
-                            color="warning"
-                          />
-                        );
-                      }
-                      if (conn.isActive) {
-                        return (
-                          <Chip
-                            size="small"
-                            label={t('stocksprite.connections.form.statusBadges.active')}
-                            color="success"
-                          />
-                        );
-                      }
-                      if (conn.testResult?.success === true) {
-                        return (
-                          <Chip
-                            size="small"
-                            label={t('stocksprite.connections.form.statusBadges.readyToActivate')}
-                            color="info"
-                          />
-                        );
-                      }
-                      if (conn.testResult?.success === false) {
-                        return (
-                          <Chip
-                            size="small"
-                            label={t('stocksprite.connections.form.statusBadges.failed')}
-                            color="error"
-                          />
-                        );
-                      }
-                      return (
-                        <Chip
-                          size="small"
-                          label={t('stocksprite.connections.form.statusBadges.untested')}
-                          color="default"
-                        />
-                      );
+                      const badge = getStatusBadge(conn);
+                      return <Chip size="small" label={badge.label} color={badge.color} />;
                     })()}
                   </TableCell>
                 </TableRow>

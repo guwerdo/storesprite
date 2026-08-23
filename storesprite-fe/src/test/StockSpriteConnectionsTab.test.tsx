@@ -61,7 +61,7 @@ describe('StockSpriteConnectionsTab', () => {
     testContainer.bind<ISocketService>(TYPES.ISocketService).toConstantValue(mockSocketService);
   });
 
-  it('renders empty state text when no connections exist', async () => {
+  const renderTab = () =>
     render(
       <I18nProvider>
         <ContainerProvider container={testContainer}>
@@ -69,6 +69,21 @@ describe('StockSpriteConnectionsTab', () => {
         </ContainerProvider>
       </I18nProvider>
     );
+
+  const openAddForm = async () => {
+    await waitFor(() => {
+      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
+    });
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i })[0]
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/Create New Data Connection|Új adatkapcsolat létrehozása/i)).toBeInTheDocument();
+    });
+  };
+
+  it('renders empty state text when no connections exist', async () => {
+    renderTab();
 
     await waitFor(() => {
       expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
@@ -76,24 +91,9 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('switches to add form when "Add New Connection" is clicked', async () => {
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <StockSpriteConnectionsTab />
-        </ContainerProvider>
-      </I18nProvider>
-    );
+    renderTab();
 
-    await waitFor(() => {
-      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
-    });
-
-    const addButtons = screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
-    fireEvent.click(addButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Create New Data Connection|Új adatkapcsolat létrehozása/i)).toBeInTheDocument();
-    });
+    await openAddForm();
   });
 
   it('renders existing connections in table and opens edit form with credentials on row click', async () => {
@@ -114,13 +114,7 @@ describe('StockSpriteConnectionsTab', () => {
       ],
     });
 
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <StockSpriteConnectionsTab />
-        </ContainerProvider>
-      </I18nProvider>
-    );
+    renderTab();
 
     await waitFor(() => {
       expect(screen.getByText('Magictools Feed')).toBeInTheDocument();
@@ -140,24 +134,9 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('creates HTTP connection with Bearer token credentials', async () => {
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <StockSpriteConnectionsTab />
-        </ContainerProvider>
-      </I18nProvider>
-    );
+    renderTab();
 
-    await waitFor(() => {
-      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
-    });
-
-    const addButtons = screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
-    fireEvent.click(addButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Create New Data Connection|Új adatkapcsolat létrehozása/i)).toBeInTheDocument();
-    });
+    await openAddForm();
 
     // Fill base fields
     fireEvent.change(screen.getByLabelText(/Connection Name|Kapcsolat neve/i), {
@@ -198,20 +177,9 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('creates SFTP connection with SSH Private Key credentials and optional passphrase', async () => {
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <StockSpriteConnectionsTab />
-        </ContainerProvider>
-      </I18nProvider>
-    );
+    renderTab();
 
-    await waitFor(() => {
-      expect(screen.getByText(/No connections created yet/i)).toBeInTheDocument();
-    });
-
-    const addButtons = screen.getAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
-    fireEvent.click(addButtons[0]);
+    await openAddForm();
 
     // Switch Channel to SFTP
     const channelCombobox = screen.getByRole('combobox', { name: /^Channel$|^Csatorna$/i });
@@ -269,13 +237,7 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('resets credentials state when switching channel from HTTP to SFTP and back', async () => {
-    render(
-      <I18nProvider>
-        <ContainerProvider container={testContainer}>
-          <StockSpriteConnectionsTab />
-        </ContainerProvider>
-      </I18nProvider>
-    );
+    renderTab();
 
     const addButtons = await screen.findAllByRole('button', { name: /Add New Connection|Új kapcsolat hozzáadása/i });
     fireEvent.click(addButtons[0]);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Alert,
   Box,
@@ -58,6 +58,11 @@ export interface ConnectionFormProps {
   saving?: boolean;
 }
 
+function isTestRunning(connection: IDataConnection | null | undefined): boolean {
+  const progress = connection?.testResult?.progress;
+  return Boolean(progress && progress !== 'finish');
+}
+
 export default function ConnectionForm({
   initialConnection,
   onSave,
@@ -71,12 +76,15 @@ export default function ConnectionForm({
   const socketService = useInjection<ISocketService>(TYPES.ISocketService);
 
   const isEditing = Boolean(initialConnection?.id);
+  const connectionId = initialConnection?.id;
 
   // Form State via React Hook Form & Zod
+  const schema = useMemo(() => createConnectionFormSchema(t), [t]);
+  const defaultValues = useMemo(() => toFormValues(initialConnection), [initialConnection]);
   const methods = useForm<ConnectionFormValues>({
-    resolver: zodResolver(createConnectionFormSchema(t)),
+    resolver: zodResolver(schema),
     mode: 'onChange',
-    defaultValues: toFormValues(initialConnection),
+    defaultValues,
   });
 
   const {
@@ -94,11 +102,8 @@ export default function ConnectionForm({
   const [testingProgress, setTestingProgress] = useState<ConnectionTestProgress>(
     initialConnection?.testResult?.progress ?? null
   );
-  const [isTestingRunning, setIsTestingRunning] = useState<boolean>(
-    Boolean(
-      initialConnection?.testResult?.progress &&
-        initialConnection.testResult.progress !== 'finish'
-    )
+  const [isTestingRunning, setIsTestingRunning] = useState<boolean>(() =>
+    isTestRunning(initialConnection)
   );
   const [testError, setTestError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -113,12 +118,7 @@ export default function ConnectionForm({
     reset(toFormValues(initialConnection));
     setTestResult(initialConnection.testResult ?? null);
     setTestingProgress(initialConnection.testResult?.progress ?? null);
-    setIsTestingRunning(
-      Boolean(
-        initialConnection.testResult?.progress &&
-          initialConnection.testResult.progress !== 'finish'
-      )
-    );
+    setIsTestingRunning(isTestRunning(initialConnection));
   }, [initialConnection, reset]);
 
   // Socket.IO real-time progress subscription
@@ -128,7 +128,7 @@ export default function ConnectionForm({
     }
 
     const onProgress = (data: { connectionId: string; progress: ConnectionTestProgress }): void => {
-      if (initialConnection?.id && data.connectionId === initialConnection.id) {
+      if (connectionId && data.connectionId === connectionId) {
         setTestingProgress(data.progress);
         if (data.progress === 'start' || data.progress === 'download' || data.progress === 'convert') {
           setIsTestingRunning(true);
@@ -137,7 +137,7 @@ export default function ConnectionForm({
     };
 
     const onResult = (data: { connectionId: string; testResult: ConnectionTestResult }): void => {
-      if (initialConnection?.id && data.connectionId === initialConnection.id) {
+      if (connectionId && data.connectionId === connectionId) {
         setTestResult(data.testResult);
         setTestingProgress(data.testResult.progress ?? null);
         setIsTestingRunning(false);
@@ -145,7 +145,7 @@ export default function ConnectionForm({
     };
 
     const onInvalidated = (data: { connectionId: string }): void => {
-      if (initialConnection?.id && data.connectionId === initialConnection.id) {
+      if (connectionId && data.connectionId === connectionId) {
         setTestResult(null);
         setTestingProgress(null);
         setIsTestingRunning(false);
@@ -161,7 +161,7 @@ export default function ConnectionForm({
       socketService.off('connection_test_result', onResult);
       socketService.off('connection_test_invalidated', onInvalidated);
     };
-  }, [clerkUserId, initialConnection?.id, socketService]);
+  }, [clerkUserId, connectionId, socketService]);
 
   // 15-minute fallback timeout for running test
   useEffect(() => {
@@ -297,7 +297,6 @@ export default function ConnectionForm({
                 <TextField
                   fullWidth
                   required
-                  name="connection_name"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.name')}
                   placeholder={t('stocksprite.connections.form.namePlaceholder')}
@@ -399,7 +398,6 @@ export default function ConnectionForm({
         {/* Connection Testing Pane (Placed below Action Buttons) */}
         {isEditing && (
           <ConnectionTestPane
-            isEditing={isEditing}
             testResult={testResult}
             testingProgress={testingProgress}
             isTestingRunning={isTestingRunning}

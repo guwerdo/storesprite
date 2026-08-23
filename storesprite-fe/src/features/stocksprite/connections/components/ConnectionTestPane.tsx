@@ -26,14 +26,12 @@ import type {
 } from '../../../../types/DataConnection.interface.js';
 
 export interface ConnectionTestPaneProps {
-  isEditing: boolean;
   testResult: ConnectionTestResult | null;
   testingProgress: ConnectionTestProgress;
   isTestingRunning: boolean;
 }
 
 export function ConnectionTestPane({
-  isEditing,
   testResult,
   testingProgress,
   isTestingRunning,
@@ -105,7 +103,7 @@ export function ConnectionTestPane({
                         {t('stocksprite.connections.form.testing.duration')}
                       </Typography>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {testResult.durationMs ? `${(testResult.durationMs / 1000).toFixed(2)}s` : '-'}
+                        {testResult.duration_ms ? `${(testResult.duration_ms / 1000).toFixed(2)}s` : '-'}
                       </Typography>
                     </Paper>
                   </Grid>
@@ -184,7 +182,7 @@ export function ConnectionTestPane({
       )}
 
       {/* Untested Notification */}
-      {isEditing && !testResult && !isTestingRunning && (
+      {!testResult && !isTestingRunning && (
         <Alert severity="warning" icon={<WarningAmberIcon />}>
           {t('stocksprite.connections.form.testing.notTested')}
         </Alert>

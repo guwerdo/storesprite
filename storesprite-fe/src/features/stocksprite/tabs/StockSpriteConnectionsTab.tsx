@@ -111,7 +111,7 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         const listResponse = await connectionService.getConnections(token);
         setConnections(listResponse.connections || []);
         if (savedConnection) {
-          const fresh = (listResponse.connections || []).find((c) => c.id === savedConnection?.id);
+          const fresh = (listResponse.connections || []).find((c) => c.id === savedConnection.id);
           if (fresh) {
             setSelectedConnection(fresh);
           }

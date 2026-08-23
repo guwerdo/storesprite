@@ -92,7 +92,6 @@ export function ChannelConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="http_url"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.http.url')}
                   placeholder={t('stocksprite.connections.form.http.urlPlaceholder')}
@@ -127,7 +126,6 @@ export function ChannelConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   type="number"
-                  name="http_timeout"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.http.timeout')}
                   {...register('httpTimeoutSeconds')}
@@ -167,7 +165,6 @@ export function ChannelConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="sftp_host"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.sftp.host')}
                   placeholder={t('stocksprite.connections.form.sftp.hostPlaceholder')}
@@ -181,7 +178,6 @@ export function ChannelConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   type="number"
-                  name="sftp_port"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.sftp.port')}
                   {...register('sftpPort')}
@@ -193,7 +189,6 @@ export function ChannelConfigSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="sftp_remote_dir"
                   autoComplete="off"
                   label={t('stocksprite.connections.form.sftp.remoteDir')}
                   placeholder={t('stocksprite.connections.form.sftp.remoteDirPlaceholder')}

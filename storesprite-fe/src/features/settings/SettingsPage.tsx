@@ -212,12 +212,7 @@ export default function SettingsPage(): React.JSX.Element {
                 label={t('settings.unasApiEndpoint')}
                 placeholder={t('settings.unasApiEndpointPlaceholder')}
                 value={unasApiEndpoint}
-                onChange={(e) => {
-                  setUnasApiEndpoint(e.target.value);
-                  if (unasApiEndpointTouched) {
-                    setUnasApiEndpointTouched(true);
-                  }
-                }}
+                onChange={(e) => setUnasApiEndpoint(e.target.value)}
                 onBlur={() => setUnasApiEndpointTouched(true)}
                 error={Boolean(endpointError)}
                 helperText={endpointError || t('settings.unasApiEndpointHelper')}

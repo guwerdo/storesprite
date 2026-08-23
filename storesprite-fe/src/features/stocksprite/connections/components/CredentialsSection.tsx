@@ -6,8 +6,6 @@ import {
   CardContent,
   FormControl,
   Grid,
-  IconButton,
-  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
@@ -15,11 +13,10 @@ import {
   Typography,
 } from '@mui/material';
 import KeyIcon from '@mui/icons-material/Key';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFormContext, Controller } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
+import { PasswordVisibilityToggle } from '../../../../components/PasswordVisibilityToggle.js';
 import type { ConnectionFormValues } from '../schema/connectionFormSchema.js';
 
 export function CredentialsSection(): React.JSX.Element {
@@ -112,7 +109,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="http_basic_username"
                     autoComplete="off"
                     label={t('stocksprite.connections.form.credentials.http.username')}
                     {...register('httpBasicUsername')}
@@ -124,7 +120,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="http_basic_password"
                     autoComplete="off"
                     type={showBasicPassword ? 'text' : 'password'}
                     label={t('stocksprite.connections.form.credentials.http.password')}
@@ -133,15 +128,11 @@ export function CredentialsSection(): React.JSX.Element {
                     helperText={errors.httpBasicPassword?.message}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowBasicPassword(!showBasicPassword)}
-                            edge="end"
-                            aria-label="toggle basic password visibility"
-                          >
-                            {showBasicPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
+                        <PasswordVisibilityToggle
+                          show={showBasicPassword}
+                          onToggle={() => setShowBasicPassword(!showBasicPassword)}
+                          ariaLabel="toggle basic password visibility"
+                        />
                       ),
                     }}
                   />
@@ -155,7 +146,6 @@ export function CredentialsSection(): React.JSX.Element {
                 <TextField
                   fullWidth
                   required
-                  name="http_bearer_token"
                   autoComplete="off"
                   type={showBearerToken ? 'text' : 'password'}
                   label={t('stocksprite.connections.form.credentials.http.token')}
@@ -165,15 +155,11 @@ export function CredentialsSection(): React.JSX.Element {
                   helperText={errors.httpBearerToken?.message || t('stocksprite.connections.form.credentials.http.tokenHelper')}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowBearerToken(!showBearerToken)}
-                          edge="end"
-                          aria-label="toggle bearer token visibility"
-                        >
-                          {showBearerToken ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
+                      <PasswordVisibilityToggle
+                        show={showBearerToken}
+                        onToggle={() => setShowBearerToken(!showBearerToken)}
+                        ariaLabel="toggle bearer token visibility"
+                      />
                     ),
                   }}
                 />
@@ -187,7 +173,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="http_api_key_header"
                     autoComplete="off"
                     label={t('stocksprite.connections.form.credentials.http.headerName')}
                     placeholder="X-Api-Key"
@@ -200,7 +185,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="http_api_key_value"
                     autoComplete="off"
                     type={showApiKeyValue ? 'text' : 'password'}
                     label={t('stocksprite.connections.form.credentials.http.headerValue')}
@@ -210,15 +194,11 @@ export function CredentialsSection(): React.JSX.Element {
                     helperText={errors.httpApiKeyHeaderValue?.message}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowApiKeyValue(!showApiKeyValue)}
-                            edge="end"
-                            aria-label="toggle api key visibility"
-                          >
-                            {showApiKeyValue ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
+                        <PasswordVisibilityToggle
+                          show={showApiKeyValue}
+                          onToggle={() => setShowApiKeyValue(!showApiKeyValue)}
+                          ariaLabel="toggle api key visibility"
+                        />
                       ),
                     }}
                   />
@@ -266,7 +246,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="sftp_password_username"
                     autoComplete="off"
                     label={t('stocksprite.connections.form.credentials.sftp.username')}
                     {...register('sftpPasswordUsername')}
@@ -278,7 +257,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="sftp_password_password"
                     autoComplete="off"
                     type={showSftpPassword ? 'text' : 'password'}
                     label={t('stocksprite.connections.form.credentials.sftp.passwordField')}
@@ -287,15 +265,11 @@ export function CredentialsSection(): React.JSX.Element {
                     helperText={errors.sftpPasswordPassword?.message}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowSftpPassword(!showSftpPassword)}
-                            edge="end"
-                            aria-label="toggle sftp password visibility"
-                          >
-                            {showSftpPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
+                        <PasswordVisibilityToggle
+                          show={showSftpPassword}
+                          onToggle={() => setShowSftpPassword(!showSftpPassword)}
+                          ariaLabel="toggle sftp password visibility"
+                        />
                       ),
                     }}
                   />
@@ -310,7 +284,6 @@ export function CredentialsSection(): React.JSX.Element {
                   <TextField
                     fullWidth
                     required
-                    name="sftp_key_username"
                     autoComplete="off"
                     label={t('stocksprite.connections.form.credentials.sftp.username')}
                     {...register('sftpKeyUsername')}
@@ -345,7 +318,6 @@ export function CredentialsSection(): React.JSX.Element {
                     required
                     multiline
                     rows={4}
-                    name="sftp_private_key"
                     autoComplete="off"
                     placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
                     {...register('sftpPrivateKey')}
@@ -357,7 +329,6 @@ export function CredentialsSection(): React.JSX.Element {
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    name="sftp_key_passphrase"
                     autoComplete="off"
                     type={showSftpPassphrase ? 'text' : 'password'}
                     label={t('stocksprite.connections.form.credentials.sftp.passphrase')}
@@ -365,15 +336,11 @@ export function CredentialsSection(): React.JSX.Element {
                     helperText={t('stocksprite.connections.form.credentials.sftp.passphraseHelper')}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowSftpPassphrase(!showSftpPassphrase)}
-                            edge="end"
-                            aria-label="toggle passphrase visibility"
-                          >
-                            {showSftpPassphrase ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
+                        <PasswordVisibilityToggle
+                          show={showSftpPassphrase}
+                          onToggle={() => setShowSftpPassphrase(!showSftpPassphrase)}
+                          ariaLabel="toggle passphrase visibility"
+                        />
                       ),
                     }}
                   />
