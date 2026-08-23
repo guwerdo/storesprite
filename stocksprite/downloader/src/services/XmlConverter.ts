@@ -7,6 +7,7 @@ import { TYPES } from "../di/types.js";
 import { IDataConverter, ConvertResult } from "../types/DataConverter.interface.js";
 import { DataConnectionDto, XmlDataFormatConfig } from "../types/Connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
+import { EncodingUtil } from "../utils/encoding-util.js";
 
 @injectable()
 export class XmlConverter implements IDataConverter {
@@ -30,10 +31,10 @@ export class XmlConverter implements IDataConverter {
       encoding,
     });
 
-    FileUtil.ensureDirExists(outputCsvPath.substring(0, outputCsvPath.lastIndexOf("\\") > -1 ? outputCsvPath.lastIndexOf("\\") : outputCsvPath.lastIndexOf("/")));
+    FileUtil.ensureDirForFile(outputCsvPath);
 
     return new Promise<ConvertResult>((resolve, reject) => {
-      const normalizedEncoding = this._normalizeEncoding(encoding);
+      const normalizedEncoding = EncodingUtil.normalizeEncoding(encoding);
       const readStream = fs.createReadStream(inputRawPath);
       const decodedStream = readStream.pipe(iconv.decodeStream(normalizedEncoding, { stripBOM: true }));
       const writeStream = fs.createWriteStream(outputCsvPath, { encoding: "utf-8" });
@@ -186,12 +187,4 @@ export class XmlConverter implements IDataConverter {
     });
   }
 
-  private _normalizeEncoding(encoding?: string): string {
-    if (!encoding) return "utf-8";
-    const lower = encoding.trim().toLowerCase();
-    if (lower === "utf-8-bom" || lower === "utf8-bom" || lower === "utf-8 with bom") {
-      return "utf-8";
-    }
-    return lower;
-  }
 }

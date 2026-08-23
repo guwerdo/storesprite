@@ -2,6 +2,11 @@ import path from "node:path";
 import fs from "node:fs";
 import log4js from "log4js";
 
+const layout = {
+  type: "pattern",
+  pattern: "%d{yyyy-MM-dd hh:mm:ss.SSS} [%p] %c - %m",
+} as const;
+
 export function configureLogger(outputDir: string): log4js.Logger {
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -13,10 +18,7 @@ export function configureLogger(outputDir: string): log4js.Logger {
     appenders: {
       stdout: {
         type: "stdout",
-        layout: {
-          type: "pattern",
-          pattern: "%d{yyyy-MM-dd hh:mm:ss.SSS} [%p] %c - %m",
-        },
+        layout,
       },
       file: {
         type: "file",
@@ -24,10 +26,7 @@ export function configureLogger(outputDir: string): log4js.Logger {
         maxLogSize: 10 * 1024 * 1024,
         backups: 3,
         compress: false,
-        layout: {
-          type: "pattern",
-          pattern: "%d{yyyy-MM-dd hh:mm:ss.SSS} [%p] %c - %m",
-        },
+        layout,
       },
     },
     categories: {

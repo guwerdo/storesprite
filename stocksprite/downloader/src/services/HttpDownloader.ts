@@ -66,7 +66,7 @@ export class HttpDownloader implements IDownloader {
     }
 
     const tempFilePath = `${destinationPath}.tmp`;
-    FileUtil.ensureDirExists(destinationPath.substring(0, destinationPath.lastIndexOf("\\") > -1 ? destinationPath.lastIndexOf("\\") : destinationPath.lastIndexOf("/")));
+    FileUtil.ensureDirForFile(destinationPath);
 
     try {
       const response = await axios(requestConfig);
@@ -111,15 +111,12 @@ export class HttpDownloader implements IDownloader {
       });
 
       if (totalBytes === 0) {
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+        FileUtil.deleteFileIfExists(tempFilePath);
         throw new Error(`HTTP download for '${connection.name}' received empty response (0 bytes).`);
       }
 
-      // Check if file is unchanged compared to existing file on disk
-      let isUnchanged = false;
-      if (fs.existsSync(destinationPath)) {
-        isUnchanged = await StreamUtil.compareFileHash(destinationPath, tempFilePath);
-      }
+      // Replace target destination with new file, reporting whether content is unchanged
+      const isUnchanged = await StreamUtil.commitDownloadedFile(tempFilePath, destinationPath);
 
       if (isUnchanged) {
         this._logger.info("Downloaded content is identical to existing file on disk (unchanged)", {
@@ -127,12 +124,6 @@ export class HttpDownloader implements IDownloader {
           name: connection.name,
         });
       }
-
-      // Replace target destination with new file
-      if (fs.existsSync(destinationPath)) {
-        fs.unlinkSync(destinationPath);
-      }
-      fs.renameSync(tempFilePath, destinationPath);
 
       this._logger.info("HTTP download completed successfully", {
         connectionId: connection.id,
@@ -148,13 +139,7 @@ export class HttpDownloader implements IDownloader {
         byteCount: totalBytes,
       };
     } catch (error) {
-      if (fs.existsSync(tempFilePath)) {
-        try {
-          fs.unlinkSync(tempFilePath);
-        } catch {
-          // Ignored
-        }
-      }
+      FileUtil.deleteFileIfExists(tempFilePath);
       const errorMsg = ErrorUtil.stringifyError(error);
       this._logger.error("HTTP download failed", {
         connectionId: connection.id,

@@ -1,8 +1,10 @@
+import { DataConnectionChannel, DataConnectionFormat } from "./Connection.types.js";
+
 export interface ConnectionProcessResult {
   connectionId: string;
   name: string;
-  channel: string;
-  dataFormat: string;
+  channel: DataConnectionChannel;
+  dataFormat: DataConnectionFormat;
   status: "OK" | "ERROR" | "SKIPPED";
   isUnchanged?: boolean;
   error?: string;

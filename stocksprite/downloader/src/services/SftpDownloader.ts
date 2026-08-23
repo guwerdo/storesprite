@@ -31,7 +31,7 @@ export class SftpDownloader implements IDownloader {
 
     const sftp = new SftpClient();
     const tempFilePath = `${destinationPath}.tmp`;
-    FileUtil.ensureDirExists(path.dirname(destinationPath));
+    FileUtil.ensureDirForFile(destinationPath);
 
     try {
       const connectOptions: SftpClient.ConnectOptions = {
@@ -66,17 +66,12 @@ export class SftpDownloader implements IDownloader {
         throw new Error(`No files found on SFTP server at '${remoteDir}'.`);
       }
 
-      let selectedFile = validFiles[0];
       const strategy = config.fileSelectionStrategy || "LATEST_ALPHABETICAL";
-
-      if (strategy === "LATEST_MODIFIED") {
-        validFiles.sort((a, b) => b.modifyTime - a.modifyTime);
-        selectedFile = validFiles[0];
-      } else {
-        // LATEST_ALPHABETICAL
-        validFiles.sort((a, b) => a.name.localeCompare(b.name));
-        selectedFile = validFiles[validFiles.length - 1];
-      }
+      const selectedFile =
+        strategy === "LATEST_MODIFIED"
+          ? validFiles.reduce((best, f) => (f.modifyTime > best.modifyTime ? f : best), validFiles[0])
+          : // LATEST_ALPHABETICAL
+            validFiles.reduce((best, f) => (f.name.localeCompare(best.name) > 0 ? f : best), validFiles[0]);
 
       const remoteFilePath = path.posix.join(remoteDir, selectedFile.name);
       this._logger.info("Selected remote SFTP file for download", {
@@ -89,14 +84,11 @@ export class SftpDownloader implements IDownloader {
 
       const byteCount = FileUtil.getFileSize(tempFilePath);
       if (byteCount === 0) {
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+        FileUtil.deleteFileIfExists(tempFilePath);
         throw new Error(`SFTP download for '${connection.name}' received empty file (0 bytes).`);
       }
 
-      let isUnchanged = false;
-      if (fs.existsSync(destinationPath)) {
-        isUnchanged = await StreamUtil.compareFileHash(destinationPath, tempFilePath);
-      }
+      const isUnchanged = await StreamUtil.commitDownloadedFile(tempFilePath, destinationPath);
 
       if (isUnchanged) {
         this._logger.info("SFTP downloaded content is identical to existing file on disk (unchanged)", {
@@ -104,11 +96,6 @@ export class SftpDownloader implements IDownloader {
           name: connection.name,
         });
       }
-
-      if (fs.existsSync(destinationPath)) {
-        fs.unlinkSync(destinationPath);
-      }
-      fs.renameSync(tempFilePath, destinationPath);
 
       this._logger.info("SFTP download completed successfully", {
         connectionId: connection.id,
@@ -124,13 +111,7 @@ export class SftpDownloader implements IDownloader {
         byteCount,
       };
     } catch (error) {
-      if (fs.existsSync(tempFilePath)) {
-        try {
-          fs.unlinkSync(tempFilePath);
-        } catch {
-          // Ignored
-        }
-      }
+      FileUtil.deleteFileIfExists(tempFilePath);
       const errorMsg = ErrorUtil.stringifyError(error);
       this._logger.error("SFTP download failed", {
         connectionId: connection.id,

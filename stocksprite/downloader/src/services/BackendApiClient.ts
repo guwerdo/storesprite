@@ -14,6 +14,15 @@ export class BackendApiClient implements IBackendApiClient {
     @inject(TYPES.Logger) private readonly _logger: Logger
   ) {}
 
+  private _extractErrorMessage(error: unknown): string {
+    const base = ErrorUtil.stringifyError(error);
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const responseData = error.response.data as { error?: string; message?: string };
+      return responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
+    }
+    return base;
+  }
+
   public async getUserConnections(userId: string): Promise<DataConnectionDto[]> {
     const url = `${this._config.backendUrl}/api/worker/users/${userId}/connections`;
     this._logger.info("Fetching user connections from backend", { userId, url });
@@ -34,11 +43,7 @@ export class BackendApiClient implements IBackendApiClient {
 
       return connections;
     } catch (error) {
-      let errorMsg = ErrorUtil.stringifyError(error);
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const responseData = error.response.data as { error?: string; message?: string };
-        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
-      }
+      const errorMsg = this._extractErrorMessage(error);
       this._logger.error("Failed to fetch user connections from backend", {
         userId,
         url,
@@ -66,11 +71,7 @@ export class BackendApiClient implements IBackendApiClient {
 
       return response.data.connection;
     } catch (error) {
-      let errorMsg = ErrorUtil.stringifyError(error);
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const responseData = error.response.data as { error?: string; message?: string };
-        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
-      }
+      const errorMsg = this._extractErrorMessage(error);
       this._logger.error("Failed to fetch connection from backend", {
         connectionId,
         url,
@@ -95,11 +96,7 @@ export class BackendApiClient implements IBackendApiClient {
         timeout: 15000,
       });
     } catch (error) {
-      let errorMsg = ErrorUtil.stringifyError(error);
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const responseData = error.response.data as { error?: string; message?: string };
-        errorMsg = responseData.error || responseData.message || `HTTP ${error.response.status}: ${error.message}`;
-      }
+      const errorMsg = this._extractErrorMessage(error);
       this._logger.error("Failed to report test result to backend", {
         connectionId,
         url,

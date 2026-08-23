@@ -12,8 +12,10 @@ import {
   DownloaderExecutionSummary,
   ConnectionProcessResult,
 } from "../types/DownloaderService.interface.js";
+import { DataConnectionChannel, DataConnectionFormat } from "../types/Connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
 import { ErrorUtil } from "../utils/error-util.js";
+import { CsvUtil } from "../utils/csv-util.js";
 
 @injectable()
 export class DownloaderService implements IDownloaderService {
@@ -145,12 +147,12 @@ export class DownloaderService implements IDownloaderService {
 
     this._logger.info("Executing single connection test mode", { connectionId, userId });
 
-    const rawFilePath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, "CSV");
     const csvFilePath = FileUtil.getCsvFilePath(outputDir, `test_${connectionId}`);
+    let rawFilePath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, "CSV");
 
     let connectionName = "Unknown";
-    let channelType = "HTTP";
-    let formatType = "CSV";
+    let channelType: DataConnectionChannel = "HTTP";
+    let formatType: DataConnectionFormat = "CSV";
 
     try {
       // 1. Fetch connection details
@@ -158,8 +160,7 @@ export class DownloaderService implements IDownloaderService {
       connectionName = connection.name;
       channelType = connection.channel;
       formatType = connection.dataFormat;
-
-      const actualRawPath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, connection.dataFormat);
+      rawFilePath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, connection.dataFormat);
 
       // 2. Report progress: download
       await this._apiClient.reportTestResult(connectionId, {
@@ -168,7 +169,7 @@ export class DownloaderService implements IDownloaderService {
 
       // 3. Download data
       const downloader = this._downloaderFactory.getDownloader(connection.channel);
-      await downloader.download(connection, actualRawPath);
+      await downloader.download(connection, rawFilePath);
 
       // 4. Report progress: convert
       await this._apiClient.reportTestResult(connectionId, {
@@ -177,7 +178,7 @@ export class DownloaderService implements IDownloaderService {
 
       // 5. Convert data to standardized CSV
       const converter = this._converterFactory.getConverter(connection.dataFormat);
-      await converter.convert(connection, actualRawPath, csvFilePath);
+      await converter.convert(connection, rawFilePath, csvFilePath);
 
       // 6. Analyze converted CSV (streaming extraction)
       const sample = await this._analyzeCsv(csvFilePath);
@@ -214,10 +215,10 @@ export class DownloaderService implements IDownloaderService {
           {
             connectionId,
             name: connectionName,
-            channel: channelType as any,
-            dataFormat: formatType as any,
+            channel: channelType,
+            dataFormat: formatType,
             status: "OK",
-            rawFilePath: actualRawPath,
+            rawFilePath,
             csvFilePath,
           },
         ],
@@ -254,8 +255,8 @@ export class DownloaderService implements IDownloaderService {
           {
             connectionId,
             name: connectionName,
-            channel: channelType as any,
-            dataFormat: formatType as any,
+            channel: channelType,
+            dataFormat: formatType,
             status: "ERROR",
             error: errorMsg,
             rawFilePath,
@@ -265,12 +266,8 @@ export class DownloaderService implements IDownloaderService {
       };
     } finally {
       // Clean up temporary test files
-      try {
-        if (fs.existsSync(csvFilePath)) fs.unlinkSync(csvFilePath);
-        if (fs.existsSync(rawFilePath)) fs.unlinkSync(rawFilePath);
-      } catch {
-        // Ignored
-      }
+      FileUtil.deleteFileIfExists(csvFilePath);
+      FileUtil.deleteFileIfExists(rawFilePath);
     }
   }
 
@@ -295,18 +292,20 @@ export class DownloaderService implements IDownloaderService {
         crlfDelay: Infinity,
       });
 
+      const parseRow = (line: string): string[] =>
+        CsvUtil.splitCsvRow(line, ";").map((cell) => cell.trim());
+
       rl.on("line", (line) => {
         const trimmed = line.trim();
         if (!trimmed) return;
 
         if (isFirstLine) {
           isFirstLine = false;
-          columns = line.split(";").map((c) => c.replace(/^["']|["']$/g, "").trim());
+          columns = parseRow(line);
         } else {
           rowCount++;
           if (rows.length < 3) {
-            const cells = line.split(";").map((c) => c.replace(/^["']|["']$/g, "").trim());
-            rows.push(cells);
+            rows.push(parseRow(line));
           }
         }
       });
@@ -322,7 +321,7 @@ export class DownloaderService implements IDownloaderService {
       });
 
       rl.on("error", (err) => {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(String(err)));
       });
     });
   }

@@ -232,4 +232,52 @@ describe("DownloaderService Unit Tests", () => {
       })
     );
   });
+
+  it("should keep a quoted cell containing a semicolon as a single preview column", async () => {
+    config.testConnectionId = "test_conn_semicolon";
+
+    const mockConn: DataConnectionDto = {
+      id: "test_conn_semicolon",
+      name: "Semicolon Feed",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/feed.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
+    downloaderMock.download.mockResolvedValue({
+      destinationPath: path.join(testDir, "test_test_conn_semicolon.raw.csv"),
+      isUnchanged: false,
+      byteCount: 1000,
+    });
+
+    converterMock.convert.mockImplementation(async (_conn, _raw, csvPath) => {
+      fs.writeFileSync(
+        csvPath,
+        'sku;description;stock\n"SKU;001";Drill;50\n"SKU;002";Hammer;20\n',
+        "utf-8"
+      );
+      return { outputPath: csvPath, rowCount: 2, byteCount: 100 };
+    });
+
+    await service.run();
+
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith(
+      "test_conn_semicolon",
+      expect.objectContaining({
+        progress: "finish",
+        success: true,
+        columnCount: 3,
+        columns: ["sku", "description", "stock"],
+        rows: [
+          ["SKU;001", "Drill", "50"],
+          ["SKU;002", "Hammer", "20"],
+        ],
+      })
+    );
+  });
 });

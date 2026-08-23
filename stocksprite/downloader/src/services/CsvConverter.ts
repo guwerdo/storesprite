@@ -9,6 +9,8 @@ import { DataConnectionDto, CsvDataFormatConfig } from "../types/Connection.type
 import { CliUtil } from "../utils/cli-util.js";
 import { FileUtil } from "../utils/file-util.js";
 import { ErrorUtil } from "../utils/error-util.js";
+import { EncodingUtil } from "../utils/encoding-util.js";
+import { CsvUtil } from "../utils/csv-util.js";
 
 @injectable()
 export class CsvConverter implements IDataConverter {
@@ -32,7 +34,7 @@ export class CsvConverter implements IDataConverter {
       targetDelimiter: ";",
     });
 
-    FileUtil.ensureDirExists(outputCsvPath.substring(0, outputCsvPath.lastIndexOf("\\") > -1 ? outputCsvPath.lastIndexOf("\\") : outputCsvPath.lastIndexOf("/")));
+    FileUtil.ensureDirForFile(outputCsvPath);
 
     // Try converting using CLI tool 'csvformat'
     try {
@@ -42,21 +44,7 @@ export class CsvConverter implements IDataConverter {
         outputFilePath: outputCsvPath,
       });
 
-      const byteCount = FileUtil.getFileSize(outputCsvPath);
-      if (byteCount === 0) {
-        throw new Error(`Converted CSV output file '${outputCsvPath}' is empty (0 bytes).`);
-      }
-
-      this._logger.info("CSV conversion finished via csvformat CLI", {
-        connectionId: connection.id,
-        outputCsvPath,
-        byteCount,
-      });
-
-      return {
-        outputPath: outputCsvPath,
-        byteCount,
-      };
+      return this._finalize(outputCsvPath, connection.id, "csvformat CLI");
     } catch (cliError) {
       this._logger.warn(
         "csvformat CLI conversion failed or tool not found, falling back to streaming CSV converter",
@@ -69,22 +57,26 @@ export class CsvConverter implements IDataConverter {
       // Fallback streaming conversion for pure portability (constant O(1) memory)
       await this._streamConvertCsv(inputRawPath, outputCsvPath, inputDelimiter, encoding);
 
-      const byteCount = FileUtil.getFileSize(outputCsvPath);
-      if (byteCount === 0) {
-        throw new Error(`Converted CSV output file '${outputCsvPath}' is empty (0 bytes).`);
-      }
-
-      this._logger.info("CSV conversion finished via stream fallback", {
-        connectionId: connection.id,
-        outputCsvPath,
-        byteCount,
-      });
-
-      return {
-        outputPath: outputCsvPath,
-        byteCount,
-      };
+      return this._finalize(outputCsvPath, connection.id, "stream fallback");
     }
+  }
+
+  private _finalize(outputCsvPath: string, connectionId: string, mode: string): ConvertResult {
+    const byteCount = FileUtil.getFileSize(outputCsvPath);
+    if (byteCount === 0) {
+      throw new Error(`Converted CSV output file '${outputCsvPath}' is empty (0 bytes).`);
+    }
+
+    this._logger.info(`CSV conversion finished via ${mode}`, {
+      connectionId,
+      outputCsvPath,
+      byteCount,
+    });
+
+    return {
+      outputPath: outputCsvPath,
+      byteCount,
+    };
   }
 
   /**
@@ -98,7 +90,7 @@ export class CsvConverter implements IDataConverter {
     encoding: string
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const normalizedEncoding = this._normalizeEncoding(encoding);
+      const normalizedEncoding = EncodingUtil.normalizeEncoding(encoding);
       const inputStream = fs.createReadStream(inputRawPath);
       const decodedStream = inputStream.pipe(iconv.decodeStream(normalizedEncoding, { stripBOM: true }));
       const outputStream = fs.createWriteStream(outputCsvPath, { encoding: "utf-8" });
@@ -122,7 +114,7 @@ export class CsvConverter implements IDataConverter {
         if (inputDelimiter === ";") {
           outputStream.write(line + "\n");
         } else {
-          const cells = this._splitCsvRow(line, inputDelimiter);
+          const cells = CsvUtil.splitCsvRow(line, inputDelimiter);
           const escapedCells = cells.map((cell) => {
             if (cell.includes(";") || cell.includes('"') || cell.includes("\n")) {
               return `"${cell.replace(/"/g, '""')}"`;
@@ -154,39 +146,4 @@ export class CsvConverter implements IDataConverter {
     });
   }
 
-  private _normalizeEncoding(encoding?: string): string {
-    if (!encoding) return "utf-8";
-    const lower = encoding.trim().toLowerCase();
-    if (lower === "utf-8-bom" || lower === "utf8-bom" || lower === "utf-8 with bom") {
-      return "utf-8";
-    }
-    return lower;
-  }
-
-  private _splitCsvRow(row: string, delimiter: string): string[] {
-    const cells: string[] = [];
-    let insideQuotes = false;
-    let currentCell = "";
-
-    for (let i = 0; i < row.length; i++) {
-      const char = row[i];
-
-      if (char === '"') {
-        if (insideQuotes && i + 1 < row.length && row[i + 1] === '"') {
-          currentCell += '"';
-          i++; // Skip escaped quote
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char === delimiter && !insideQuotes) {
-        cells.push(currentCell);
-        currentCell = "";
-      } else {
-        currentCell += char;
-      }
-    }
-    cells.push(currentCell);
-
-    return cells;
-  }
 }
