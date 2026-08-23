@@ -27,13 +27,9 @@ export function decodeJwtPayload(token: string): ClerkSessionClaims | null {
   }
 
   // 2. Fallback for test/dev tokens
-  if (token && typeof token === "string") {
-    return {
-      sub: token,
-      email: `${token}@dev.test`,
-      name: token,
-    };
-  }
-
-  return null;
+  return {
+    sub: token,
+    email: `${token}@dev.test`,
+    name: token,
+  };
 }

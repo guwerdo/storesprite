@@ -60,71 +60,31 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   }
 
   public validateTestResult(testResult: unknown): ConnectionTestResult {
-    if (!testResult || typeof testResult !== "object") {
-      throw new SchemaValidationError("Test result must be a non-null object");
-    }
-
-    const valid = this._validateTestResult(testResult);
-    if (!valid) {
-      const errorText = this._formatErrors(this._validateTestResult);
-      this._logger?.warn("Invalid connection test result", { errors: errorText, testResult });
-      throw new SchemaValidationError(`Invalid connection test result: ${errorText}`);
-    }
-
-    return testResult;
+    this._requireObject(testResult, "Test result");
+    return this._assertValid(this._validateTestResult, testResult, "connection test result", { testResult });
   }
 
   public validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig {
-    if (!config || typeof config !== "object") {
-      throw new SchemaValidationError("Transport config must be a non-null object");
-    }
+    this._requireObject(config, "Transport config");
 
     if (channel === "HTTP") {
-      const valid = this._validateHttpConfig(config);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateHttpConfig);
-        this._logger?.warn("Invalid HTTP connection config", { errors: errorText, config });
-        throw new SchemaValidationError(`Invalid HTTP connection config: ${errorText}`);
-      }
-      return config;
+      return this._assertValid(this._validateHttpConfig, config, "HTTP connection config", { config });
     }
-
     if (channel === "SFTP") {
-      const valid = this._validateSftpConfig(config);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateSftpConfig);
-        this._logger?.warn("Invalid SFTP connection config", { errors: errorText, config });
-        throw new SchemaValidationError(`Invalid SFTP connection config: ${errorText}`);
-      }
-      return config;
+      return this._assertValid(this._validateSftpConfig, config, "SFTP connection config", { config });
     }
 
     throw new SchemaValidationError(`Unsupported channel: ${String(channel)}`);
   }
 
   public validateDataFormatConfig(format: DataConnectionFormat, dataFormatConfig: unknown): DataFormatConfig {
-    if (!dataFormatConfig || typeof dataFormatConfig !== "object") {
-      throw new SchemaValidationError("Data format config must be a non-null object");
-    }
+    this._requireObject(dataFormatConfig, "Data format config");
 
     if (format === "CSV") {
-      const valid = this._validateCsvFormatConfig(dataFormatConfig);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateCsvFormatConfig);
-        this._logger?.warn("Invalid CSV format config", { errors: errorText, dataFormatConfig });
-        throw new SchemaValidationError(`Invalid CSV format config: ${errorText}`);
-      }
-      return dataFormatConfig;
+      return this._assertValid(this._validateCsvFormatConfig, dataFormatConfig, "CSV format config", { dataFormatConfig });
     }
-
     if (format === "XML") {
-      const valid = this._validateXmlFormatConfig(dataFormatConfig);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateXmlFormatConfig);
-        this._logger?.warn("Invalid XML format config", { errors: errorText, dataFormatConfig });
-        throw new SchemaValidationError(`Invalid XML format config: ${errorText}`);
-      }
-      return dataFormatConfig;
+      return this._assertValid(this._validateXmlFormatConfig, dataFormatConfig, "XML format config", { dataFormatConfig });
     }
 
     throw new SchemaValidationError(`Unsupported data format: ${String(format)}`);
@@ -135,28 +95,13 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
       return null;
     }
 
-    if (typeof credentials !== "object") {
-      throw new SchemaValidationError("Credentials must be a non-null object");
-    }
+    this._requireObject(credentials, "Credentials");
 
     if (channel === "HTTP") {
-      const valid = this._validateHttpCredentials(credentials);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateHttpCredentials);
-        this._logger?.warn("Invalid HTTP credentials", { errors: errorText });
-        throw new SchemaValidationError(`Invalid HTTP credentials: ${errorText}`);
-      }
-      return credentials;
+      return this._assertValid(this._validateHttpCredentials, credentials, "HTTP credentials");
     }
-
     if (channel === "SFTP") {
-      const valid = this._validateSftpCredentials(credentials);
-      if (!valid) {
-        const errorText = this._formatErrors(this._validateSftpCredentials);
-        this._logger?.warn("Invalid SFTP credentials", { errors: errorText });
-        throw new SchemaValidationError(`Invalid SFTP credentials: ${errorText}`);
-      }
-      return credentials;
+      return this._assertValid(this._validateSftpCredentials, credentials, "SFTP credentials");
     }
 
     throw new SchemaValidationError(`Unsupported channel for credentials: ${String(channel)}`);
@@ -195,5 +140,25 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
         return `${pathStr}${err.message || "is invalid"}`;
       })
       .join("; ");
+  }
+
+  private _requireObject(value: unknown, label: string): asserts value is object {
+    if (!value || typeof value !== "object") {
+      throw new SchemaValidationError(`${label} must be a non-null object`);
+    }
+  }
+
+  private _assertValid<T>(
+    validator: ValidateFunction<T>,
+    value: object,
+    label: string,
+    context?: Record<string, unknown>
+  ): T {
+    if (!validator(value)) {
+      const errorText = this._formatErrors(validator);
+      this._logger?.warn(`Invalid ${label}`, context ? { errors: errorText, ...context } : { errors: errorText });
+      throw new SchemaValidationError(`Invalid ${label}: ${errorText}`);
+    }
+    return value;
   }
 }

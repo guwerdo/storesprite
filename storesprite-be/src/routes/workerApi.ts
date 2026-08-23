@@ -1,12 +1,14 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Logger } from "log4js";
 import { TYPES, IUserService, IDataConnectionService } from "../di/index.js";
+import { Util } from "../utils/index.js";
 
 export default function workerApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
+  const validToken = process.env.INTERNAL_WORKER_TOKEN;
+
   // Check X-Worker-Token header before executing routes in this plugin
   fastify.addHook("preHandler", (request: FastifyRequest, reply: FastifyReply, hookDone: (err?: Error) => void) => {
     const workerToken = request.headers["x-worker-token"];
-    const validToken = process.env.INTERNAL_WORKER_TOKEN;
 
     if (!workerToken || !validToken || workerToken !== validToken) {
       const logger = request.server.container.get<Logger>(TYPES.Logger);
@@ -91,8 +93,8 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
         // Broadcast to tenant room via Socket.IO
         // Find user ID from connection
-        const userId = (updated as unknown as { user?: { id: string }; userId?: string }).user?.id || (updated as unknown as { userId?: string }).userId;
-        
+        const userId = updated.userId;
+
         if (userId) {
           const roomName = `tenant_${userId}`;
           if (body.progress === "finish") {
@@ -117,7 +119,7 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
         return reply.code(204).send();
       } catch (err: unknown) {
-        logger.error("Failed to save connection test result from worker", { id, error: String(err) });
+        logger.error("Failed to save connection test result from worker", { id, error: Util.stringifyError(err) });
         return reply.code(400).send({ error: (err as Error).message || "Invalid test result payload" });
       }
     }

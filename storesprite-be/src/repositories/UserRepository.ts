@@ -27,11 +27,7 @@ export class UserRepository implements IUserRepository {
     this._logger?.info("Adding or updating user in database", { userId: userData.id, email: userData.email });
     const existing = await this.getById(userData.id);
     if (existing) {
-      if (userData.email) existing.email = userData.email;
-      if (userData.name !== undefined) existing.name = userData.name;
-      existing.updatedAt = new Date();
-      await this._em.flush();
-      this._logger?.info("Existing user updated", { userId: existing.id });
+      await this.update(existing.id, { email: userData.email, name: userData.name });
       return existing;
     }
 

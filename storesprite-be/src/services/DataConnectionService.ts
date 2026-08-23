@@ -61,12 +61,7 @@ export class DataConnectionService implements IDataConnectionService {
     }
 
     // Validate inputs
-    if (!connectionDto.name || typeof connectionDto.name !== "string" || connectionDto.name.trim().length === 0) {
-      throw new Error("Connection name is required");
-    }
-    if (connectionDto.name.length > 255) {
-      throw new Error("Connection name cannot exceed 255 characters");
-    }
+    this._assertValidName(connectionDto.name);
 
     const validatedConfig = this._validator.validateConfig(connectionDto.channel, connectionDto.config);
     const validatedDataFormatConfig = this._validator.validateDataFormatConfig(
@@ -127,12 +122,7 @@ export class DataConnectionService implements IDataConnectionService {
     }
 
     if (connectionDto.name !== undefined) {
-      if (typeof connectionDto.name !== "string" || connectionDto.name.trim().length === 0) {
-        throw new Error("Connection name is required");
-      }
-      if (connectionDto.name.length > 255) {
-        throw new Error("Connection name cannot exceed 255 characters");
-      }
+      this._assertValidName(connectionDto.name);
     }
 
     // Check if test is currently in progress (within 15 minute timeout)
@@ -222,11 +212,8 @@ export class DataConnectionService implements IDataConnectionService {
       return null;
     }
 
-    const existing = await this._repository.getByIdAndUserId(id, (patchResult as unknown as { userId?: string }).userId ?? "");
-    // If not found by user, retrieve via entity manager or search across users
-    // For worker API, search by ID
-    const connection = existing || (await this._repository.getByIdAndUserId(id, (existing as unknown as { user: { id: string } })?.user?.id || "")) || (await (this._repository as unknown as { _em: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })._em?.findOne(DataConnection, { id }));
-    
+    const connection = await this._findConnectionById(id);
+
     if (!connection) {
       this._logger?.warn("Connection not found for saveTestResult", { id });
       return null;
@@ -252,7 +239,7 @@ export class DataConnectionService implements IDataConnectionService {
       return null;
     }
 
-    const connection = await (this._repository as unknown as { _em: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })._em?.findOne(DataConnection, { id });
+    const connection = await this._findConnectionById(id);
     return connection ? this._mapToDto(connection) : null;
   }
 
@@ -278,8 +265,22 @@ export class DataConnectionService implements IDataConnectionService {
       isActive: entity.isActive,
       credentials: entity.credentials,
       testResult: entity.testResult ?? null,
-      createdAt: entity.createdAt instanceof Date ? entity.createdAt.toISOString() : String(entity.createdAt),
-      updatedAt: entity.updatedAt instanceof Date ? entity.updatedAt.toISOString() : String(entity.updatedAt),
+      createdAt: entity.createdAt.toISOString(),
+      updatedAt: entity.updatedAt.toISOString(),
     };
+  }
+
+  private _assertValidName(name: string): void {
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      throw new Error("Connection name is required");
+    }
+    if (name.length > 255) {
+      throw new Error("Connection name cannot exceed 255 characters");
+    }
+  }
+
+  private async _findConnectionById(id: string): Promise<DataConnection | null> {
+    const em = (this._repository as unknown as { _em?: { findOne: (cls: unknown, filter: unknown) => Promise<DataConnection | null> } })?._em;
+    return em ? em.findOne(DataConnection, { id }) : null;
   }
 }
