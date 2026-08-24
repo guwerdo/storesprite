@@ -274,10 +274,11 @@ export const en = {
         },
         statusBadges: {
           active: 'Active',
-          readyToActivate: 'Tested (Ready to Activate)',
-          failed: 'Test Failed',
-          untested: 'Untested',
-          testing: 'Testing...',
+          activeTesting: 'Active (testing...)',
+          inactive: 'Inactive',
+          inactiveTesting: 'Inactive (testing...)',
+          inactiveUntested: 'Inactive (not tested)',
+          inactiveError: 'Inactive (test error)',
         },
         deleteModal: {
           title: 'Confirm Deletion',

@@ -49,6 +49,7 @@ import { DataFormatConfigSection } from './components/DataFormatConfigSection.js
 import { CredentialsSection } from './components/CredentialsSection.js';
 import { ConnectionTestPane } from './components/ConnectionTestPane.js';
 import { CannotActivateDialog } from './components/CannotActivateDialog.js';
+import { isInProgress, TEST_RUN_TIMEOUT_MS } from './connectionStatus.js';
 
 export interface ConnectionFormProps {
   initialConnection?: IDataConnection | null;
@@ -56,13 +57,6 @@ export interface ConnectionFormProps {
   onDelete?: (id: string) => Promise<void>;
   onCancel: () => void;
   saving?: boolean;
-}
-
-const TEST_RUN_TIMEOUT_MS = 15 * 60 * 1000;
-const IN_PROGRESS_STAGES: readonly ConnectionTestProgress[] = ['start', 'download', 'convert'];
-
-function isInProgress(progress: ConnectionTestProgress | null | undefined): boolean {
-  return progress !== null && progress !== undefined && IN_PROGRESS_STAGES.includes(progress);
 }
 
 function isTestRunning(connection: IDataConnection | null | undefined): boolean {

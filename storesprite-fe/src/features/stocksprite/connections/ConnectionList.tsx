@@ -20,6 +20,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import StorageIcon from '@mui/icons-material/Storage';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import type { IDataConnection } from '../../../types/DataConnection.interface.js';
+import { getConnectionStatus } from './connectionStatus.js';
 
 export interface ConnectionListProps {
   connections: IDataConnection[];
@@ -37,19 +38,20 @@ export default function ConnectionList({
   const getStatusBadge = (
     conn: IDataConnection
   ): { label: string; color: 'warning' | 'success' | 'info' | 'error' | 'default' } => {
-    if (conn.testResult?.progress && conn.testResult.progress !== 'finish') {
-      return { label: t('stocksprite.connections.form.statusBadges.testing'), color: 'warning' };
+    switch (getConnectionStatus(conn)) {
+      case 'active':
+        return { label: t('stocksprite.connections.form.statusBadges.active'), color: 'success' };
+      case 'activeTesting':
+        return { label: t('stocksprite.connections.form.statusBadges.activeTesting'), color: 'warning' };
+      case 'inactiveTesting':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveTesting'), color: 'warning' };
+      case 'inactive':
+        return { label: t('stocksprite.connections.form.statusBadges.inactive'), color: 'info' };
+      case 'error':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveError'), color: 'error' };
+      case 'untested':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveUntested'), color: 'default' };
     }
-    if (conn.isActive) {
-      return { label: t('stocksprite.connections.form.statusBadges.active'), color: 'success' };
-    }
-    if (conn.testResult?.success === true) {
-      return { label: t('stocksprite.connections.form.statusBadges.readyToActivate'), color: 'info' };
-    }
-    if (conn.testResult?.success === false) {
-      return { label: t('stocksprite.connections.form.statusBadges.failed'), color: 'error' };
-    }
-    return { label: t('stocksprite.connections.form.statusBadges.untested'), color: 'default' };
   };
 
   return (

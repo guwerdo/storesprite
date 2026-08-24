@@ -276,10 +276,11 @@ export const hu: Translations = {
         },
         statusBadges: {
           active: 'Aktív',
-          readyToActivate: 'Tesztelve (Aktiválható)',
-          failed: 'Teszt sikertelen',
-          untested: 'Nem tesztelt',
-          testing: 'Tesztelés...',
+          activeTesting: 'Aktív (tesztelés...)',
+          inactive: 'Inaktív',
+          inactiveTesting: 'Inaktív (tesztelés...)',
+          inactiveUntested: 'Inaktív (nem tesztelt)',
+          inactiveError: 'Inaktív (teszt hiba)',
         },
         deleteModal: {
           title: 'Törlés megerősítése',
