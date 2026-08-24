@@ -346,11 +346,11 @@ export default function ConnectionForm({
         {/* Transport Channel Config Section */}
         <ChannelConfigSection />
 
+        {/* Credentials Config Section (Authentication & Credentials directly below Transport Configuration) */}
+        <CredentialsSection />
+
         {/* Data Format Parser Config Section */}
         <DataFormatConfigSection />
-
-        {/* Credentials Config Section */}
-        <CredentialsSection />
 
         {/* Bottom Actions Bar */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, pt: 1 }}>

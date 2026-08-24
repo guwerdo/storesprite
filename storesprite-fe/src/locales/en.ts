@@ -270,6 +270,7 @@ export const en = {
           activationWarningMessage: 'The connection cannot be activated until it was tested successfully, press the test connection button to start testing it',
           editedWarningTitle: 'Connection Settings Modified',
           editedWarningMessage: 'You edited the connection, the active state was automatically turned off, please test the edited connection by pressing the test connection button',
+          unknownError: 'Unknown error occurred during connection testing. Please check logs.',
         },
         statusBadges: {
           active: 'Active',

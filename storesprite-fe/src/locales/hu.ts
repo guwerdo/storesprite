@@ -272,6 +272,7 @@ export const hu: Translations = {
           activationWarningMessage: 'A kapcsolat nem aktiválható, amíg a tesztelés sikeresen le nem zárul. Kérjük, nyomja meg a Kapcsolat tesztelése gombot a teszt elindításához.',
           editedWarningTitle: 'Kapcsolat beállításai módosultak',
           editedWarningMessage: 'Módosította a kapcsolatot, ezért az aktív állapot automatikusan kikapcsolásra került. Kérjük, tesztelje a szerkesztett kapcsolatot a Kapcsolat tesztelése gomb megnyomásával.',
+          unknownError: 'Ismeretlen hiba történt a kapcsolat tesztelése során. Kérjük, ellenőrizze a naplófájlokat.',
         },
         statusBadges: {
           active: 'Aktív',
