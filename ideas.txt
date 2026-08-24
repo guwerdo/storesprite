@@ -1,0 +1,5 @@
+- add "beta" to the storesprite brand and title of the page
+- when processing csv, validate product sku against unas sku pattern 
+  and let the user know if the sku has invalid characters 
+  and wont get aupdad in usas unless a new rule is added 
+  to convert the ku to unas format. or automatically convert the csv sku to unas format

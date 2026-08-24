@@ -29,7 +29,7 @@ A dedicated **`.devcontainer/`** and **`Dockerfile.dev`** setup is provided to d
 2. Select **"Dev Containers: Reopen in Container"**.
 3. Once the container is running, open the integrated terminal and start the downloader:
    ```bash
-   npm run dev
+   npm run start:dev
    ```
 4. The devcontainer is pre-configured with the development environment variables:
    - `USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"`
@@ -112,7 +112,7 @@ npm run test:e2e
 cd stocksprite/downloader
 
 # Run downloader script
-npm run dev
+npm run start:dev
 # or
 npm run download
 

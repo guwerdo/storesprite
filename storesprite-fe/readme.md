@@ -10,7 +10,7 @@ After launching the Docker container stack via `docker compose up -d`, enter the
 
 * **Start Development Server** (Hot Reloading):
   ```bash
-  npm run dev
+  npm run start:dev
   ```
   *Binds to `http://0.0.0.0:5173` so Vite is accessible from your host browser at `http://localhost:5173/`.*
 

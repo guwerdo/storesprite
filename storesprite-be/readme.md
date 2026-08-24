@@ -10,7 +10,7 @@ After launching the Docker container stack via `docker compose up -d`, enter the
 
 * **Start Development Server** (Live TS Hot-Reloading via `tsx`):
   ```bash
-  npm run dev
+  npm run start:dev
   ```
   *Binds to `http://0.0.0.0:3000` so Fastify is accessible from your host browser at `http://localhost:3000/`.*
 
