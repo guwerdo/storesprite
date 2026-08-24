@@ -74,11 +74,11 @@ cd stocksprite/downloader
 npm test
 ```
 
-### End-to-End (E2E) Test Suite (`npm run test:e2e`)
-The E2E test suite spins up a real test environment via `test-e2e/docker-compose-test-e2e.yaml`:
+### Container Integration Test Suite (`npm run test:integration`)
+The integration test suite spins up a real test environment on the host via `test-integration/docker-compose-test-integration.yaml`:
 * **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/worker/users/:userId/connections`).
 * **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
-* **Downloader Container (`storesprite-downloader:test-e2e`)**: Runs the production multi-stage image against the test network.
+* **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the built production multi-stage image against the test network.
 
 #### Scenarios Covered:
 1. **Happy Path (9 Protocols/Auth Combinations)**:
@@ -98,10 +98,11 @@ The E2E test suite spins up a real test environment via `test-e2e/docker-compose
 4. **Negative Test: 404 User Not Found**:
    - Asserts downloader terminates immediately with exit code 1 when backend returns 404.
 
-#### Running E2E Tests:
+#### Running Integration Tests:
+Run the integration test from your host machine (where Docker is running):
 ```bash
 cd stocksprite/downloader
-npm run test:e2e
+npm run test:integration
 ```
 
 ---
@@ -111,7 +112,7 @@ npm run test:e2e
 ```bash
 cd stocksprite/downloader
 
-# Run downloader script
+# Run downloader script in dev mode
 npm run start:dev
 # or
 npm run download
@@ -119,8 +120,8 @@ npm run download
 # Run fast unit tests (Vitest)
 npm test
 
-# Run full Docker E2E test suite (WireMock + Real Nginx/SFTP Supplier)
-npm run test:e2e
+# Run Docker container integration test suite (WireMock + Real Nginx/SFTP Supplier)
+npm run test:integration
 
 # Build TypeScript to dist/
 npm run build

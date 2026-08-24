@@ -3,9 +3,9 @@ import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const COMPOSE_FILE = path.resolve(__dirname, "docker-compose-test-e2e.yaml");
+const COMPOSE_FILE = path.resolve(__dirname, "docker-compose-test-integration.yaml");
 const ROOT_DIR = path.resolve(__dirname, "..");
-const TEST_E2E_DIR = __dirname;
+const TEST_INTEGRATION_DIR = __dirname;
 const TEMP_DIR = path.resolve(__dirname, "temp");
 
 function cleanTempDir(): void {
@@ -22,7 +22,7 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
       "run",
       "--rm",
       "--network",
-      "storesprite-e2e-net",
+      "storesprite-integration-net",
       "-e",
       `USER_ID=${userId}`,
       "-e",
@@ -33,7 +33,7 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
       "OUTPUT_DIR=/app/temp",
       "-v",
       `${TEMP_DIR}:/app/temp`,
-      "storesprite-downloader:test-e2e",
+      "storesprite-downloader:test-integration",
     ],
     {
       encoding: "utf-8",
@@ -48,26 +48,26 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
   };
 }
 
-describe("StoreSprite Downloader Container E2E Test Suite", () => {
+describe("StoreSprite Downloader Container Integration Test Suite", () => {
   beforeAll(async () => {
     cleanTempDir();
 
     // 1. Build production image for test
-    console.log("[E2E] Building production storesprite-downloader image...");
-    execSync("docker build -t storesprite-downloader:test-e2e .", {
+    console.log("[Integration Test] Building production storesprite-downloader image...");
+    execSync("docker build -t storesprite-downloader:test-integration .", {
       cwd: ROOT_DIR,
       stdio: "inherit",
     });
 
     // 2. Start mock-backend and mock-datasource-server services
-    console.log("[E2E] Starting mock-backend and mock-datasource-server services via docker-compose...");
+    console.log("[Integration Test] Starting mock-backend and mock-datasource-server services via docker-compose...");
     execSync(`docker compose -f "${COMPOSE_FILE}" up -d --build mock-backend mock-datasource-server`, {
-      cwd: TEST_E2E_DIR,
+      cwd: TEST_INTEGRATION_DIR,
       stdio: "inherit",
     });
 
     // 3. Poll for mock-backend and mock-datasource-server readiness
-    console.log("[E2E] Waiting for mock services to be ready...");
+    console.log("[Integration Test] Waiting for mock services to be ready...");
     let ready = false;
     for (let i = 0; i < 30; i++) {
       try {
@@ -88,14 +88,14 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
     if (!ready) {
       throw new Error("Mock services (WireMock or Nginx) failed to become ready within timeout.");
     }
-    console.log("[E2E] Mock services are healthy and responding.");
+    console.log("[Integration Test] Mock services are healthy and responding.");
   }, 120000);
 
   afterAll(() => {
-    console.log("[E2E] Tearing down mock services...");
+    console.log("[Integration Test] Tearing down mock services...");
     try {
       execSync(`docker compose -f "${COMPOSE_FILE}" down`, {
-        cwd: TEST_E2E_DIR,
+        cwd: TEST_INTEGRATION_DIR,
         stdio: "inherit",
       });
     } catch {
@@ -108,13 +108,13 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
 
     const { exitCode, stdout } = runDownloaderContainer("test_user_all_protocols");
 
-    console.log("[E2E Output - Happy Path]:\n" + stdout);
+    console.log("[Integration Test Output - Happy Path]:\n" + stdout);
     expect(exitCode).toBe(0);
     expect(stdout).toContain("Downloader completed successfully without errors");
 
     // Verify all 12 converted CSV files exist in temp/
     const files = fs.readdirSync(TEMP_DIR);
-    console.log("[E2E Downloaded Files]:", files);
+    console.log("[Integration Test Downloaded Files]:", files);
     const convertedCsvFiles = files.filter((f) => f.endsWith(".csv") && !f.endsWith(".raw.csv"));
     expect(convertedCsvFiles.length).toBe(12);
 
@@ -202,7 +202,7 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
 
     const { exitCode, stdout } = runDownloaderContainer("test_user_malformed");
 
-    console.log("[E2E Output - Malformed XML]:\n" + stdout);
+    console.log("[Integration Test Output - Malformed XML]:\n" + stdout);
     expect(exitCode).toBe(1);
     expect(stdout).toContain("Error processing connection");
     expect(stdout).toContain("Downloader finished with errors");
@@ -213,7 +213,7 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
 
     const { exitCode, stdout } = runDownloaderContainer("test_user_bad_auth");
 
-    console.log("[E2E Output - Bad Auth]:\n" + stdout);
+    console.log("[Integration Test Output - Bad Auth]:\n" + stdout);
     expect(exitCode).toBe(1);
     expect(stdout).toContain("Error processing connection");
     expect(stdout).toContain("Downloader finished with errors");
@@ -224,7 +224,7 @@ describe("StoreSprite Downloader Container E2E Test Suite", () => {
 
     const { exitCode, stdout } = runDownloaderContainer("non_existing_user");
 
-    console.log("[E2E Output - 404 User]:\n" + stdout);
+    console.log("[Integration Test Output - 404 User]:\n" + stdout);
     expect(exitCode).toBe(1);
     expect(stdout).toContain("Fatal exception during downloader execution");
   }, 30000);
