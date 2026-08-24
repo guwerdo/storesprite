@@ -58,9 +58,19 @@ export interface ConnectionFormProps {
   saving?: boolean;
 }
 
+const TEST_RUN_TIMEOUT_MS = 15 * 60 * 1000;
+const IN_PROGRESS_STAGES: readonly ConnectionTestProgress[] = ['start', 'download', 'convert'];
+
+function isInProgress(progress: ConnectionTestProgress | null | undefined): boolean {
+  return progress !== null && progress !== undefined && IN_PROGRESS_STAGES.includes(progress);
+}
+
 function isTestRunning(connection: IDataConnection | null | undefined): boolean {
-  const progress = connection?.testResult?.progress;
-  return Boolean(progress && progress !== 'finish');
+  const testResult = connection?.testResult;
+  if (!isInProgress(testResult?.progress)) return false;
+  const startedAt = testResult.started_at ? new Date(testResult.started_at).getTime() : 0;
+  // If more than 15 minutes have passed since started_at, consider it timed out / not running
+  return startedAt === 0 || Date.now() - startedAt <= TEST_RUN_TIMEOUT_MS;
 }
 
 export default function ConnectionForm({
@@ -130,7 +140,7 @@ export default function ConnectionForm({
     const onProgress = (data: { connectionId: string; progress: ConnectionTestProgress }): void => {
       if (connectionId && data.connectionId === connectionId) {
         setTestingProgress(data.progress);
-        if (data.progress === 'start' || data.progress === 'download' || data.progress === 'convert') {
+        if (isInProgress(data.progress)) {
           setIsTestingRunning(true);
         }
       }
@@ -171,7 +181,7 @@ export default function ConnectionForm({
         setIsTestingRunning(false);
         setTestingProgress('finish');
         setTestError(t('stocksprite.connections.form.testing.timeout'));
-      }, 15 * 60 * 1000);
+      }, TEST_RUN_TIMEOUT_MS);
     }
     return () => {
       if (timer) clearTimeout(timer);

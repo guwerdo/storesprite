@@ -25,6 +25,7 @@ services:
     volumes:
       - ./storesprite-be:/workspace/storesprite-be
       - ./packages:/workspace/packages
+      - ./stocksprite:/workspace/stocksprite
       - /workspace/storesprite-be/node_modules
       - /workspace/packages/app-config/node_modules
       - /var/run/docker.sock:/var/run/docker.sock

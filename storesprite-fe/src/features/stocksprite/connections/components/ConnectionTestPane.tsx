@@ -47,8 +47,8 @@ export function ConnectionTestPane({
 
   return (
     <>
-      {/* Test in Progress Alert */}
-      {isTestingRunning && (
+      {/* Test in Progress Alert (Only shown while actively running and not superseded by completed/failed test result) */}
+      {isTestingRunning && testResult?.success === undefined && (
         <Alert
           severity="info"
           icon={<CircularProgress size={20} color="inherit" />}

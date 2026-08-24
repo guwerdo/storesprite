@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
+import { Util } from "../utils/index.js";
 import { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
 
 @injectable()
@@ -42,17 +43,69 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     }
 
     // Default to Docker runner for dev environments
-    this._runDockerContainer(connectionId, userId, workerToken, backendUrl);
+    void this._runDockerContainer(connectionId, userId, workerToken, backendUrl);
   }
 
-  private _runDockerContainer(
+  private _spawnDocker(
+    args: string[]
+  ): Promise<{ code: number | null; stdout: string; stderr: string }> {
+    return new Promise((resolve, reject) => {
+      const child = spawn("docker", args, { stdio: ["ignore", "pipe", "pipe"] });
+
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout?.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString();
+      });
+      child.stderr?.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      child.on("error", reject);
+      child.on("close", (code) => resolve({ code, stdout, stderr }));
+    });
+  }
+
+  private async _ensureImageExists(imageName: string): Promise<void> {
+    const inspect = await this._spawnDocker(["image", "inspect", imageName]);
+    if (inspect.code === 0) {
+      return;
+    }
+
+    this._logger?.info(`Docker image '${imageName}' not found locally. Building on-demand...`);
+
+    const buildContext = process.env.DOWNLOADER_BUILD_CONTEXT || "/workspace/stocksprite";
+    const build = await this._spawnDocker(["build", "-t", imageName, buildContext]);
+
+    if (build.code === 0) {
+      this._logger?.info(`Successfully built '${imageName}' on-demand.`);
+      return;
+    }
+
+    const err = new Error(`Failed to build '${imageName}': ${build.stderr.trim()}`);
+    this._logger?.error("Docker build error", { error: err.message });
+    throw err;
+  }
+
+  private async _runDockerContainer(
     connectionId: string,
     userId: string,
     workerToken: string,
     backendUrl: string
-  ): void {
+  ): Promise<void> {
     const dockerNetwork = process.env.DOCKER_NETWORK || "storesprite-shared-net";
     const imageName = process.env.DOWNLOADER_IMAGE || "storesprite-downloader:latest";
+
+    try {
+      await this._ensureImageExists(imageName);
+    } catch (buildError) {
+      this._logger?.error("Could not ensure Docker image before test run", {
+        error: Util.stringifyError(buildError),
+        connectionId,
+      });
+      return;
+    }
 
     const args = [
       "run",
@@ -72,47 +125,25 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     });
 
     try {
-      const child = spawn("docker", args, { stdio: ["ignore", "pipe", "pipe"], detached: false });
-      
-      let stdout = "";
-      let stderr = "";
-      
-      child.stdout?.on("data", (chunk: Buffer) => {
-        stdout += chunk.toString();
-      });
-
-      child.stderr?.on("data", (chunk: Buffer) => {
-        stderr += chunk.toString();
-      });
-
-      child.on("error", (err) => {
-        this._logger?.error("Docker spawn error", {
-          error: String(err),
+      const { code, stdout, stderr } = await this._spawnDocker(args);
+      if (code !== 0) {
+        this._logger?.error("Docker run failed to launch container", {
+          code,
+          stderr: stderr.trim(),
+          stdout: stdout.trim(),
           connectionId,
         });
-      });
-
-      child.on("close", (code) => {
-        if (code !== 0) {
-          this._logger?.error("Docker run failed to launch container", {
-            code,
-            stderr: stderr.trim(),
-            stdout: stdout.trim(),
-            connectionId,
-          });
-        } else {
-          this._logger?.info("Docker worker container launched successfully", {
-            containerId: stdout.trim(),
-            connectionId,
-          });
-        }
-      });
+      } else {
+        this._logger?.info("Docker worker container launched successfully", {
+          containerId: stdout.trim(),
+          connectionId,
+        });
+      }
     } catch (error) {
       this._logger?.error("Failed to spawn docker container for connection test", {
-        error: String(error),
+        error: Util.stringifyError(error),
         connectionId,
       });
     }
   }
 }
-
