@@ -41,18 +41,18 @@ packages/unas-json-client/
     │   └── unas-json-client-config.interface.ts   # IUnasJsonClientConfig { baseUrl, apiKey }
     ├── core/                          # the seams / extension contract (interfaces only)
     │   ├── index.ts
-    │   ├── i-unas-http-client.ts      # IUnasHttpClient.post(url, body?, headers?) -> { status, data }
-    │   ├── i-token-store.ts           # ITokenStore { get(key), set(key, value) }
-    │   ├── i-logger.ts                # ILogger { info/warn/error/debug(message, meta?) }
-    │   ├── i-xml-service.ts           # IXmlService { parse<T>(xml), buildDocument(root) }
-    │   └── i-unas-endpoint.ts         # IUnasEndpoint<TReq,TRes>  ← the extension contract
+    │   ├── unas-http-client.interface.ts      # IUnasHttpClient.post(url, body?, headers?) -> { status, data }
+    │   ├── token-store.interface.ts           # ITokenStore { get(key), set(key, value) }
+    │   ├── logger.interface.ts                # ILogger { info/warn/error/debug(message, meta?) }
+    │   ├── xml-service.interface.ts           # IXmlService { parse<T>(xml), buildDocument(root) }
+    │   └── unas-endpoint.interface.ts         # IUnasEndpoint<TReq,TRes>  ← the extension contract
     ├── http/    axios-unas-http-client.ts      # default IUnasHttpClient (axios, validateStatus: ()=>true)
     ├── auth/    in-memory-token-store.ts       # default ITokenStore (Map-backed)
     ├── logging/ console-logger.ts              # default ILogger (console)
     ├── xml/     fast-xml-service.ts            # default IXmlService (fast-xml-parser)
     ├── client/
     │   ├── index.ts
-    │   ├── i-unas-json-client.ts      # IUnasJsonClient (the public JSON surface)
+    │   ├── unas-json-client.interface.ts      # IUnasJsonClient (the public JSON surface)
     │   └── unas-json-client.ts        # UnasJsonClient (@injectable) — auth retry + generic _call
     ├── endpoints/                      # one folder per endpoint
     │   ├── index.ts
@@ -134,23 +134,45 @@ interface ISetProductImage { type: "base" | "alt"; id: number; sefUrl: string; f
 interface ISetProductResponse { id: string; sku: string; action: string; status: "ok" | "error"; }
 ```
 
-## Extension mechanism (how to add an endpoint later)
+## Extension mechanism (how to add a new endpoint)
 
-Every endpoint is an `@injectable()` class implementing `IUnasEndpoint`, holding **all** XML knowledge. The client is generic and XML-agnostic. Adding e.g. `getProduct`:
+Every endpoint is an `@injectable()` class implementing `IUnasEndpoint`, holding **all** XML knowledge. The client is generic and XML-agnostic — it never changes to add an endpoint. Adding e.g. `getProduct` is five small edits:
 
-1. `endpoints/get-product/get-product.types.ts` — `IGetProductRequest`, `IGetProductResponse`.
-2. `endpoints/get-product/get-product-endpoint.ts` — `buildRequest` (JSON→XML via `IXmlService.buildDocument`) and `parseResponse` (XML→JSON, throws `UnasParseError` on bad shape).
-3. One typed method on `IUnasJsonClient` + `UnasJsonClient`:
+1. **Types** — `endpoints/get-product/get-product.types.ts`:
+   ```ts
+   export interface IGetProductRequest { sku: string; contentType?: "full" | "minimal"; }
+   export interface IGetProductResponse { id: string; sku: string; name: string; }
+   ```
+2. **Endpoint class** — `endpoints/get-product/get-product-endpoint.ts` (all XML knowledge lives here; `buildRequest` uses `IXmlService.buildDocument`, `parseResponse` throws `UnasParseError` on a bad shape):
+   ```ts
+   @injectable()
+   export class GetProductEndpoint implements IUnasEndpoint<IGetProductRequest, IGetProductResponse> {
+     readonly name = "getProduct";
+     readonly requiresAuth = true;
+     constructor(@inject(TYPES.IXmlService) private readonly _xml: IXmlService) {}
+     buildRequest(request: IGetProductRequest): string {
+       return this._xml.buildDocument({ Params: { Sku: { "#cdata": request.sku }, ContentType: request.contentType ?? "full" } });
+     }
+     parseResponse(xml: string): IGetProductResponse {
+       const parsed = this._xml.parse<{ Products: { Product: IGetProductResponse } }>(xml);
+       if (!parsed.Products?.Product) throw new UnasParseError("getProduct response missing <Products><Product>");
+       return parsed.Products.Product;
+     }
+   }
+   ```
+3. **Client method** — add to `IUnasJsonClient` + `UnasJsonClient`:
    ```ts
    getProduct(request: IGetProductRequest): Promise<IGetProductResponse> { return this._call("getProduct", request); }
    ```
-4. One registration line in `registerUnasJsonClient`:
+4. **Register it** — one line in `registerUnasJsonClient`:
    ```ts
    container.bind<IUnasEndpoint<unknown, unknown>>(TYPES.UnasEndpoint).to(GetProductEndpoint).inSingletonScope();
    ```
-5. Re-export from `endpoints/index.ts`.
+5. **Re-export + test** — add to `endpoints/index.ts` (and the barrel), then add `get-product-endpoint.test.ts` with golden XML fixtures.
 
-`UnasJsonClient` receives all endpoints via `@multiInject(TYPES.UnasEndpoint)`, indexes them by `name` into a `Map`, and `_call(name, params, opts)` looks one up. So "add an endpoint" = 2 small files + 1 method + 1 binding. Consumers can also register their **own** endpoints against `TYPES.UnasEndpoint`.
+`UnasJsonClient` receives all endpoints via `@multiInject(TYPES.UnasEndpoint)`, indexes them by `name` into a `Map`, and `_call(name, params, opts)` looks one up. So "add an endpoint" = 2 files + 1 method + 1 binding + 1 test. Consumers can also register their **own** endpoints against `TYPES.UnasEndpoint`.
+
+> **This recipe ships verbatim in `README.md` and `AGENTS.md`**, so anyone (human or AI agent) can extend the wrapper without reading the SDK source.
 
 ## Auth flow (inside `UnasJsonClient`)
 
@@ -228,8 +250,8 @@ export function createUnasJsonClient(
 
 The package ships three docs (vendor-agnostic GFM + RFC keywords per the monorepo's Multi-LLM Compatibility Standard):
 
-- **`README.md`** — human-facing: what it is, install/`file:` usage, both facades (`registerUnasJsonClient` / `createUnasJsonClient`), override guide, and the "add an endpoint" recipe.
-- **`AGENTS.md`** — AI-agent instructions: states it inherits the root `AGENTS.md`/`CONSTITUTION.md`/`ARCHITECTURE.md`, then the package-specific rules — ESM/NodeNext `.js` imports; Inversify `@injectable`/`@inject`/`@multiInject` + one interface per seam; `_`-prefixed private members, public-methods-on-top ordering; the `IUnasEndpoint` extension contract; and the test commands (`npm test`, `npm run test:integration`, `npm run lint`). Written vendor-agnostically (GFM, MUST/SHOULD/NEVER).
+- **`README.md`** — human-facing: what it is, install/`file:` usage, both facades (`registerUnasJsonClient` / `createUnasJsonClient`), override guide, and the step-by-step **"add a new endpoint" guide** (the recipe below, verbatim).
+- **`AGENTS.md`** — AI-agent instructions: states it inherits the root `AGENTS.md`/`CONSTITUTION.md`/`ARCHITECTURE.md`, then the package-specific rules — ESM/NodeNext `.js` imports; Inversify `@injectable`/`@inject`/`@multiInject` + one interface per seam; `_`-prefixed private members, public-methods-on-top ordering; the `IUnasEndpoint` extension contract and the step-by-step **"add a new endpoint" guide**; and the test commands (`npm test`, `npm run test:integration`, `npm run lint`). Written vendor-agnostically (GFM, MUST/SHOULD/NEVER).
 - **`CONSTITUTION.md`** — package invariants: ESM-only `tsc` build; Inversify + interfaces mandatory (no `new` in the core, no Redis/log4js hard coupling); typed `UnasError` hierarchy (never `process.exit`); endpoints MUST implement `IUnasEndpoint` and be registered in `registerUnasJsonClient`; comprehensive test mandate (happy path + edge cases + error cases); golden-XML fixtures committed and asserted.
 
 The docs live at the package root so agents/tools that auto-discover `AGENTS.md`/`CONSTITUTION.md` in the directory tree pick them up automatically; `package.json` carries a clear `description` + `keywords` for registry/tooling discovery.
@@ -264,7 +286,7 @@ Committed `.xml` files (sourced from `processor/containers/wiremock/__files/unas
 5. Default impls: `http/`, `auth/`, `logging/`, `xml/` (+ tests).
 6. Port `set-product/xml/product-request-xml-builder.ts` + `product-request-xml-elements.interface.ts` from the existing `set-product-request-builder.ts` + its `builder/interfaces/*` (+ tests).
 7. Endpoints in order login → getProductDB → getWarehouse → setProduct, each with types + endpoint + test.
-8. `client/i-unas-json-client.ts` + `client/unas-json-client.ts` (`_call`, `withAuthRetry`, typed methods, error normalization) + tests.
+8. `client/unas-json-client.interface.ts` + `client/unas-json-client.ts` (`_call`, `withAuthRetry`, typed methods, error normalization) + tests.
 9. `di/register-unas-json-client.ts` + `di/create-unas-json-client.ts` + tests.
 10. `src/index.ts` barrel (`import "reflect-metadata";` first) + all sub-barrels.
 11. `npm run build`, `npm run lint`, `npm test` — fix until green.
