@@ -201,6 +201,16 @@ Typed hierarchy in `types/errors.ts`:
 
 **Design note — `setProduct` per-product status:** `setProduct` returns the full typed `ISetProductResponse[]` (each item carries `status: "ok" | "error"`) rather than throwing on partial failure. This is the faithful-translation behavior and matches the current processor (which returns the array and lets the caller decide). A 100-product batch with 1 failure must not lose the other 99. `UnasProductError` is reserved for a future opt-in fail-fast mode. (If you'd rather it throw, this is a one-line flip — flag during review.)
 
+## Logging (internal observability)
+
+The SDK logs its **inner workings extensively** through the injected `ILogger`, so consumers and AI agents can see exactly what it's doing. Every message passes structured context as the second argument (e.g. `{ url, status, sku }`), matching the repo's `CONSTITUTION.md` logging convention:
+
+- **`error`** — every caught failure: `UnasTransportError`, `UnasHttpError` (with `status`/`url`/response body), `UnasAuthError` (login failure / retry-after-refresh), `UnasParseError`, and any unexpected exception — all with serialized error details.
+- **`warn`** — non-fatal anomalies and recoveries: token missing → logging in, token expired → refreshing, a `400` triggering the one-time re-login retry, rate-limit backoff, and a `setProduct` per-product `Status=error` (reported, not thrown).
+- **`info`** — lifecycle milestones: config resolved, each request dispatched (endpoint name + url), login succeeded, token stored/refreshed, and request completed.
+
+**Never log the API key or a full token** — redact both. The default `ConsoleLogger` emits plain lines; consumers route these into structured JSON via a log4js `ILogger` adapter (see the logging facade above).
+
 ## DI wiring — `registerUnasJsonClient` + `createUnasJsonClient`
 
 ```ts
@@ -252,7 +262,7 @@ The package ships three docs (vendor-agnostic GFM + RFC keywords per the monorep
 
 - **`README.md`** — human-facing: what it is, install/`file:` usage, both facades (`registerUnasJsonClient` / `createUnasJsonClient`), override guide, and the step-by-step **"add a new endpoint" guide** (the recipe below, verbatim).
 - **`AGENTS.md`** — AI-agent instructions: states it inherits the root `AGENTS.md`/`CONSTITUTION.md`/`ARCHITECTURE.md`, then the package-specific rules — ESM/NodeNext `.js` imports; Inversify `@injectable`/`@inject`/`@multiInject` + one interface per seam; `_`-prefixed private members, public-methods-on-top ordering; the `IUnasEndpoint` extension contract and the step-by-step **"add a new endpoint" guide**; and the test commands (`npm test`, `npm run test:integration`, `npm run lint`). Written vendor-agnostically (GFM, MUST/SHOULD/NEVER).
-- **`CONSTITUTION.md`** — package invariants: ESM-only `tsc` build; Inversify + interfaces mandatory (no `new` in the core, no Redis/log4js hard coupling); typed `UnasError` hierarchy (never `process.exit`); endpoints MUST implement `IUnasEndpoint` and be registered in `registerUnasJsonClient`; comprehensive test mandate (happy path + edge cases + error cases); golden-XML fixtures committed and asserted.
+- **`CONSTITUTION.md`** — package invariants: ESM-only `tsc` build; Inversify + interfaces mandatory (no `new` in the core, no Redis/log4js hard coupling); typed `UnasError` hierarchy (never `process.exit`); endpoints MUST implement `IUnasEndpoint` and be registered in `registerUnasJsonClient`; comprehensive test mandate (happy path + edge cases + error cases); extensive internal logging via `ILogger` (error/warn/info, never log secrets); golden-XML fixtures committed and asserted.
 
 The docs live at the package root so agents/tools that auto-discover `AGENTS.md`/`CONSTITUTION.md` in the directory tree pick them up automatically; `package.json` carries a clear `description` + `keywords` for registry/tooling discovery.
 
