@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<getProductDB>
+  <Url>http://wiremock:8080/shop/temp/products.csv</Url>
+</getProductDB>

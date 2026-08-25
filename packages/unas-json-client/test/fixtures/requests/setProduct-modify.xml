@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Products>
+  <Product>
+    <Sku>KEN5824600K</Sku>
+    <Action>modify</Action>
+    <Stocks>
+      <Status>
+        <Active>1</Active>
+      </Status>
+      <Stock>
+        <IsActive>yes</IsActive>
+        <Qty>11</Qty>
+      </Stock>
+      <Stock>
+        <WarehouseId>5726549</WarehouseId>
+        <IsActive>yes</IsActive>
+        <Qty>22</Qty>
+      </Stock>
+    </Stocks>
+  </Product>
+</Products>

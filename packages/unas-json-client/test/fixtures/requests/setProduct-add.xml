@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Products>
+  <Product>
+    <Sku>NEW-SKU-1</Sku>
+    <Action>add</Action>
+    <Description>
+      <Long><![CDATA[New product description]]></Long>
+    </Description>
+    <Datas>
+      <Data>
+        <Id>1</Id>
+        <Value><![CDATA[value-1]]></Value>
+      </Data>
+    </Datas>
+  </Product>
+</Products>

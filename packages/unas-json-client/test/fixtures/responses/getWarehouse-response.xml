@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Warehouses>
+  <Warehouse>
+    <Id>5726549</Id>
+    <Name><![CDATA[Czech warehouse]]></Name>
+    <PublicName><![CDATA[Czech warehouse]]></PublicName>
+  </Warehouse>
+  <Warehouse>
+    <Id>5726554</Id>
+    <Name><![CDATA[English warehouse]]></Name>
+    <PublicName><![CDATA[English warehouse]]></PublicName>
+  </Warehouse>
+</Warehouses>

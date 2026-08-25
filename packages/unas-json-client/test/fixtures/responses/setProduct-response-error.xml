@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Products>
+  <Product>
+    <Id>1340633017</Id>
+    <Sku>BAD-SKU</Sku>
+    <Action>modify</Action>
+    <Status>error</Status>
+  </Product>
+</Products>
