@@ -24,11 +24,29 @@ A typed JSON client SDK over the UNAS webshop XML API. Consumers call typed JSON
 4. One binding in `registerUnasJsonClient`.
 5. Re-export + a test with golden XML fixtures.
 
-## 4. Test & verify
+## 4. Test & verify (Docker Mandate)
 
+All tests, builds, and linter runs MUST be executed inside the Docker container image built from this package's `Dockerfile`:
+
+### Building the Container Image
 ```bash
-npm test                 # unit tests (offline)
-npm run test:integration # in-process HTTP + golden XML (offline)
-npm run lint
-npm run build
+docker build -t unas-json-client-dev packages/unas-json-client
 ```
+
+### Running Tests and Verification via Docker
+```bash
+# Run unit tests (offline)
+docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm test
+
+# Run integration tests with golden XML fixtures (offline)
+docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run test:integration
+
+# Run TypeScript build & linter
+docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run build
+docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run lint
+```
+
+### Automated Scripts (Host PowerShell)
+- `run-tests.ps1`: Builds image and runs all tests inside Docker.
+- `exec.ps1`: Builds image, starts/reuses container, and opens an interactive `/bin/bash` terminal.
+
