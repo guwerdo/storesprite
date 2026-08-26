@@ -4,7 +4,7 @@ import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
 
-describe("E2E Migration & Data Connections Live Test Database Tests", () => {
+describe("Migration & Data Connections Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;
 
   beforeAll(async () => {

@@ -84,8 +84,8 @@ docker exec -it storesprite-fe npm install <package-name>
 # Run Unit Tests (In-Memory Mocks)
 docker exec -it storesprite-be npm test
 
-# Run E2E API Integration Tests (Against Live Docker PostgreSQL)
-docker exec -it storesprite-be npm run test:api
+# Run Integration Tests (Against Live Docker PostgreSQL)
+docker exec -it storesprite-be npm run test:integration
 
 # Run ESLint
 docker exec -it storesprite-be npm run lint
@@ -207,12 +207,12 @@ The monorepo contains three primary services:
         *   **Edge Cases & Boundary Conditions**: Zero/null values, empty collections, minimum/maximum lengths, special characters, and boundary limits.
         *   **Error & Failure Cases**: Unauthorized access, invalid authentication, schema validation failures, database errors, timeouts, and network failure recovery.
     *   **API & Integration Test Mandates**:
-        *   Backend (`storesprite-be`): When creating or modifying API endpoints, ALWAYS create/update an API test in `tests/e2e/` testing against the real test database.
+        *   Backend (`storesprite-be`): When creating or modifying API endpoints, ALWAYS create/update an API test in `tests/integration/` testing against the real test database.
         *   Downloader (`stocksprite/downloader`): When modifying downloader container behavior, run container integration tests against mock services via `npm run test:integration`.
     *   **Execution Commands**:
         ```bash
         npm run test             # Runs pure in-memory unit tests across all packages
-        npm run test:api         # Runs backend E2E API tests against PostgreSQL (storesprite-be)
+        npm run test:integration         # Runs backend API integration tests against PostgreSQL (storesprite-be)
         npm run test:integration # Runs container integration tests against mock servers (stocksprite/downloader)
         ```
     *   **Testing Conventions**:
@@ -292,7 +292,7 @@ docker compose up -d --build
 
 # Backend (storesprite-be)
 docker exec -it storesprite-be npm test             # In-memory unit tests
-docker exec -it storesprite-be npm run test:api     # E2E API tests against live Postgres
+docker exec -it storesprite-be npm run test:integration     # API integration tests against live Postgres
 docker exec -it storesprite-be npm run lint         # ESLint checks
 docker exec -it storesprite-be npm run migration:up # Apply database migrations
 

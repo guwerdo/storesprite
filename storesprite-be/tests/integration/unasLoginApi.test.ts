@@ -9,7 +9,7 @@ import { User } from "../../src/entities/User.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
 import { makeLoginResponse, makeUnasConnectionRecord, makeWebshopInfo } from "../helpers/unasFixtures.js";
 
-describe("E2E UNAS login API Tests (Isolated Test Database)", () => {
+describe("UNAS login API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
 
   const stubClient = mock<IUnasJsonClient>();

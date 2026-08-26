@@ -74,11 +74,11 @@ This document outlines the non-negotiable principles, architectural invariants, 
      *(or `npm run test`)*
 
 2. **Backend API & Container Integration Test Mandates**:
-   * **Backend REST API Tests (`npm run test:api`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an API test in `tests/e2e/`. API tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
+   * **Backend API Integration Tests (`npm run test:integration`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an API test in `tests/integration/`. API tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
    * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/test-integration/` testing the built Docker container against mock backend & datasource servers.
 
 3. **Comprehensive Scenario Coverage Mandate (Happy Path, Edge Cases, Error Cases)**:
-   * Test suites for both unit tests and E2E API tests MUST NOT test only happy path scenarios.
+   * Test suites for both unit tests and integration tests MUST NOT test only happy path scenarios.
    * Every component, service, or API route test suite MUST systematically cover:
      * **Happy Path Scenarios**: Expected primary workflows, valid data inputs, successful state mutations, and standard response formats.
      * **Edge Cases & Boundary Conditions**: Minimum/maximum field lengths, empty arrays/strings, missing optional fields, special characters, whitespace trimming, concurrent invocations, and pagination/filter boundaries.

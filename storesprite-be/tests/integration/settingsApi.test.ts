@@ -5,7 +5,7 @@ import { User } from "../../src/entities/User.js";
 import { Language } from "../../src/entities/Language.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
 
-describe("E2E Settings API Tests (Isolated Test Database)", () => {
+describe("Settings API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
 
   beforeAll(async () => {

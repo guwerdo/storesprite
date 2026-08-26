@@ -4,7 +4,7 @@ import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
 
-describe("E2E Connections API Tests", () => {
+describe("Connections API Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;
 
   beforeAll(async () => {

@@ -26,11 +26,11 @@ After launching the Docker container stack via `docker compose up -d`, enter the
   ```
   *Runs ESLint with strict TypeScript type-checking (`eslint.config.js`).*
 
-* **Run Real End-to-End API Tests** (Real PostgreSQL test database):
+* **Run Integration Tests** (Real PostgreSQL test database):
   ```bash
-  npm run test:api
+  npm run test:integration
   ```
-  *Runs integration tests against the isolated `storesprite_test_db` database using `vitest.e2e.config.ts`, automatically wiping/truncating test tables before each test.*
+  *Runs integration tests against the isolated `storesprite_test_db` database using `vitest.integration.config.ts`, automatically wiping/truncating test tables before each test.*
 
 * **Build Production Dist Output**:
   ```bash

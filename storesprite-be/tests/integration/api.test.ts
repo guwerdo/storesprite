@@ -4,7 +4,7 @@ import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
 
-describe("E2E API Tests (Isolated Test Database)", () => {
+describe("API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
 
   beforeAll(async () => {
@@ -63,25 +63,25 @@ describe("E2E API Tests (Isolated Test Database)", () => {
           "x-worker-token": "mock_worker_token",
         },
         payload: {
-          id: "e2e_user_1",
-          email: "e2e@example.com",
-          name: "E2E User",
+          id: "api_user_1",
+          email: "api@example.com",
+          name: "API User",
         },
       });
 
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.payload);
       expect(body.user).toMatchObject({
-        id: "e2e_user_1",
-        email: "e2e@example.com",
-        name: "E2E User",
+        id: "api_user_1",
+        email: "api@example.com",
+        name: "API User",
       });
 
       // Verify directly in test database via MikroORM
       const em = app.orm.em.fork();
-      const savedUser = await em.findOne(User, { id: "e2e_user_1" });
+      const savedUser = await em.findOne(User, { id: "api_user_1" });
       expect(savedUser).not.toBeNull();
-      expect(savedUser?.email).toBe("e2e@example.com");
+      expect(savedUser?.email).toBe("api@example.com");
     });
   });
 
@@ -104,7 +104,7 @@ describe("E2E API Tests (Isolated Test Database)", () => {
       const em = app.orm.em.fork();
 
       // Seed user
-      const user = new User("worker_e2e_user", "worker_e2e@test.com", "Worker E2E");
+      const user = new User("worker_api_user", "worker_api@test.com", "Worker API");
       await em.persistAndFlush(user);
 
       // Seed connection
