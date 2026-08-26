@@ -30,23 +30,19 @@ export function UnasPermissionsDialog({ open, permissions, onClose }: UnasPermis
     >
       <DialogTitle id="unas-permissions-dialog-title">{t('settings.unasTest.permissionsTitle')}</DialogTitle>
       <DialogContent>
-        {permissions.length > 0 ? (
-          <>
-            <DialogContentText id="unas-permissions-dialog-description">
-              {t('settings.unasTest.permissionsDescription')}
-            </DialogContentText>
-            <List dense>
-              {permissions.map((permission) => (
-                <ListItem key={permission} disableGutters>
-                  <ListItemText primary={permission} />
-                </ListItem>
-              ))}
-            </List>
-          </>
-        ) : (
-          <DialogContentText id="unas-permissions-dialog-description">
-            {t('settings.unasTest.noPermissions')}
-          </DialogContentText>
+        <DialogContentText id="unas-permissions-dialog-description">
+          {permissions.length > 0
+            ? t('settings.unasTest.permissionsDescription')
+            : t('settings.unasTest.noPermissions')}
+        </DialogContentText>
+        {permissions.length > 0 && (
+          <List dense>
+            {permissions.map((permission) => (
+              <ListItem key={permission} disableGutters>
+                <ListItemText primary={permission} />
+              </ListItem>
+            ))}
+          </List>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

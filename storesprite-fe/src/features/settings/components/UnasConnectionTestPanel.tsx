@@ -10,7 +10,6 @@ export interface UnasConnectionTestPanelProps {
   connection: IUnasConnection | null;
   testing: boolean;
   disabled: boolean;
-  showSavePrompt: boolean;
   onTest: () => void;
 }
 
@@ -18,7 +17,6 @@ export function UnasConnectionTestPanel({
   connection,
   testing,
   disabled,
-  showSavePrompt,
   onTest,
 }: UnasConnectionTestPanelProps): React.JSX.Element {
   const { t } = useAppTranslation();
@@ -42,7 +40,7 @@ export function UnasConnectionTestPanel({
         </Button>
       </Box>
 
-      {showSavePrompt && (
+      {disabled && (
         <Typography variant="body2" color="text.secondary">
           {t('settings.unasTest.saveBeforeTest')}
         </Typography>

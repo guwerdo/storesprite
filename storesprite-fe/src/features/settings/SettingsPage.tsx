@@ -50,8 +50,10 @@ export default function SettingsPage(): React.JSX.Element {
   const [saving, setSaving] = useState<boolean>(false);
   const [unasConnection, setUnasConnection] = useState<IUnasConnection | null>(null);
   const [testingConnection, setTestingConnection] = useState<boolean>(false);
-  const [savedApiKey, setSavedApiKey] = useState<string>('');
-  const [savedEndpoint, setSavedEndpoint] = useState<string>(DEFAULT_UNAS_API_ENDPOINT);
+  const [savedSettings, setSavedSettings] = useState<{ apiKey: string; endpoint: string }>({
+    apiKey: '',
+    endpoint: DEFAULT_UNAS_API_ENDPOINT,
+  });
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -110,8 +112,10 @@ export default function SettingsPage(): React.JSX.Element {
           setUnasApiKey(response.settings.unasApiKey);
         }
 
-        setSavedApiKey(response.settings?.unasApiKey ?? '');
-        setSavedEndpoint(response.settings?.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT);
+        setSavedSettings({
+          apiKey: response.settings?.unasApiKey ?? '',
+          endpoint: response.settings?.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
+        });
         setUnasConnection(response.settings?.unasConnection ?? null);
 
         if (response.settings?.languageId) {
@@ -193,8 +197,8 @@ export default function SettingsPage(): React.JSX.Element {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  const hasSavedKey = savedApiKey.trim() !== '';
-  const hasUnsavedChanges = unasApiKey !== savedApiKey || unasApiEndpoint.trim() !== savedEndpoint;
+  const hasSavedKey = savedSettings.apiKey.trim() !== '';
+  const hasUnsavedChanges = unasApiKey !== savedSettings.apiKey || unasApiEndpoint.trim() !== savedSettings.endpoint;
   const testConnectionDisabled = !hasSavedKey || hasUnsavedChanges;
 
   const handleTestConnection = async (): Promise<void> => {
@@ -290,7 +294,6 @@ export default function SettingsPage(): React.JSX.Element {
                 connection={unasConnection}
                 testing={testingConnection}
                 disabled={testConnectionDisabled}
-                showSavePrompt={testConnectionDisabled}
                 onTest={() => void handleTestConnection()}
               />
 
