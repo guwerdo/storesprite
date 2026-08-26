@@ -5,6 +5,7 @@ import { SettingRepository } from "../../src/repositories/SettingRepository.js";
 import { User } from "../../src/entities/User.js";
 import { Language } from "../../src/entities/Language.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
+import { makeUnasConnectionRecord } from "../helpers/unasFixtures.js";
 
 describe("SettingRepository", () => {
   let mockEm: EntityManager;
@@ -110,16 +111,7 @@ describe("SettingRepository", () => {
       // Arrange
       const user = new User("user_abc", "user@example.com");
       const setting = new UserSetting(user, "api_key");
-      const connection = {
-        token: null,
-        expire: "2026.08.24 11:23:00",
-        expireTime: 1724752800,
-        shopId: 83219,
-        subscription: "vip-100000",
-        permissions: ["getProduct"],
-        status: "ok",
-        checkedAt: "2026-08-24T00:00:00.000Z",
-      };
+      const connection = makeUnasConnectionRecord();
       mockEm.findOne.mockResolvedValue(setting as any);
 
       // Act

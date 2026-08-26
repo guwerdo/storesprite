@@ -5,10 +5,9 @@ import { UnasHttpError, type IUnasJsonClient } from "@storesprite/unas-json-clie
 import { buildApp } from "../../src/app.js";
 import { TYPES } from "../../src/di/index.js";
 import type { IUnasClientFactory } from "../../src/types/UnasClientFactory.interface.js";
-import type { UnasConnectionRecord } from "../../src/types/UnasConnection.interface.js";
 import { User } from "../../src/entities/User.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
-import { makeLoginResponse, makeWebshopInfo } from "../helpers/unasFixtures.js";
+import { makeLoginResponse, makeUnasConnectionRecord, makeWebshopInfo } from "../helpers/unasFixtures.js";
 
 describe("E2E UNAS login API Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
@@ -114,16 +113,7 @@ describe("E2E UNAS login API Tests (Isolated Test Database)", () => {
     const user = new User("mock_jwt_user_1", "mock_jwt_user_1@dev.test", "Mock");
     await em.persistAndFlush(user);
 
-    const existingConnection: UnasConnectionRecord = {
-      token: null,
-      expire: "2026.08.24 11:23:00",
-      expireTime: 1724752800,
-      shopId: 83219,
-      subscription: "vip-100000",
-      permissions: ["getProduct"],
-      status: "ok",
-      checkedAt: "2026-08-24T00:00:00.000Z",
-    };
+    const existingConnection = makeUnasConnectionRecord();
     await em.persistAndFlush(new UserSetting(user, "test_unas_api_key", null, undefined, existingConnection));
 
     (stubClient.login as any).mockRejectedValue(

@@ -4,6 +4,7 @@ import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
 import { ISettingService, ISettingRepository, UserSettingsDto, SaveUserSettingsDto, TYPES } from "../di/index.js";
 import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 
 @injectable()
 export class SettingService implements ISettingService {
@@ -23,7 +24,7 @@ export class SettingService implements ISettingService {
 
     return {
       unasApiKey: setting.unasApiKey ?? null,
-      unasApiEndpoint: setting.unasApiEndpoint ?? "https://api.unas.eu/shop/",
+      unasApiEndpoint: setting.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
       languageId: setting.language?.id ?? null,
       unasConnection: setting.unasConnection ?? null,
     };

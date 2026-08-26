@@ -1,4 +1,5 @@
 import type { ILoginResponse, IWebshopInfo } from "@storesprite/unas-json-client";
+import type { UnasConnectionRecord } from "../../src/types/UnasConnection.interface.js";
 
 export function makeWebshopInfo(overrides: Partial<IWebshopInfo> = {}): IWebshopInfo {
   return {
@@ -48,4 +49,9 @@ export function makeLoginResponse(overrides: Partial<ILoginResponse> = {}): ILog
     webshopInfo: makeWebshopInfo(),
     ...overrides,
   };
+}
+
+export function makeUnasConnectionRecord(overrides: Partial<UnasConnectionRecord> = {}): UnasConnectionRecord {
+  const { token: _token, ...loginFields } = makeLoginResponse();
+  return { ...loginFields, token: null, checkedAt: "2026-08-24T00:00:00.000Z", ...overrides };
 }

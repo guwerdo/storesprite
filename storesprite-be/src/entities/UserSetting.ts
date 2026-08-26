@@ -2,6 +2,7 @@ import { Entity, ManyToOne, OneToOne, PrimaryKey, Property } from "@mikro-orm/co
 import { User } from "./User.js";
 import { Language } from "./Language.js";
 import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 
 @Entity({ tableName: "user_settings" })
 export class UserSetting {
@@ -14,8 +15,8 @@ export class UserSetting {
   @Property({ type: "varchar", length: 255, nullable: true })
   unasApiKey?: string | null;
 
-  @Property({ type: "varchar", length: 255, nullable: true, default: "https://api.unas.eu/shop/" })
-  unasApiEndpoint?: string | null = "https://api.unas.eu/shop/";
+  @Property({ type: "varchar", length: 255, nullable: true, default: DEFAULT_UNAS_API_ENDPOINT })
+  unasApiEndpoint?: string | null = DEFAULT_UNAS_API_ENDPOINT;
 
   @ManyToOne(() => Language, { nullable: true, deleteRule: "set null" })
   language?: Language | null;

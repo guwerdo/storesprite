@@ -15,6 +15,7 @@ import {
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
 import { UnasHttpError } from "@storesprite/unas-json-client";
 import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -140,7 +141,7 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
           success: true,
           settings: {
             unasApiKey: saved.unasApiKey ?? null,
-            unasApiEndpoint: saved.unasApiEndpoint ?? "https://api.unas.eu/shop/",
+            unasApiEndpoint: saved.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
             languageId: saved.language?.id ?? null,
           },
         };
@@ -174,7 +175,7 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
 
       try {
         const loginResponse = await unasService.login({
-          baseUrl: settings.unasApiEndpoint ?? "https://api.unas.eu/shop/",
+          baseUrl: settings.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
           apiKey: settings.unasApiKey,
         });
 

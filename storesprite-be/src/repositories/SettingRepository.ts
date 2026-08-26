@@ -5,6 +5,7 @@ import { User } from "../entities/User.js";
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
 import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 import { ISettingRepository, TYPES } from "../di/index.js";
 
 @injectable()
@@ -64,7 +65,7 @@ export class SettingRepository implements ISettingRepository {
       user,
       data.unasApiKey,
       language,
-      data.unasApiEndpoint ?? "https://api.unas.eu/shop/"
+      data.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT
     );
     await this._em.persistAndFlush(newSetting);
     this._logger?.info("New user settings created successfully", { userId, settingId: newSetting.id });

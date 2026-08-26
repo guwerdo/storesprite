@@ -6,6 +6,7 @@ import { ISettingRepository } from "../../src/types/SettingRepository.interface.
 import { Language } from "../../src/entities/Language.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
 import { User } from "../../src/entities/User.js";
+import { makeUnasConnectionRecord } from "../helpers/unasFixtures.js";
 
 describe("SettingService", () => {
   let mockSettingRepo: ISettingRepository;
@@ -55,16 +56,7 @@ describe("SettingService", () => {
   describe("saveUnasConnection", () => {
     it("should delegate the connection to the repository", async () => {
       // Arrange
-      const connection = {
-        token: null,
-        expire: "2026.08.24 11:23:00",
-        expireTime: 1724752800,
-        shopId: 83219,
-        subscription: "vip-100000",
-        permissions: ["getProduct"],
-        status: "ok",
-        checkedAt: "2026-08-24T00:00:00.000Z",
-      };
+      const connection = makeUnasConnectionRecord();
 
       // Act
       await settingService.saveUnasConnection("user_123", connection as any);
