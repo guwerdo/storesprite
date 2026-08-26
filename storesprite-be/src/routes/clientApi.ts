@@ -5,6 +5,7 @@ import {
   TYPES,
   IUserService,
   ISettingService,
+  IUnasService,
   SaveUserSettingsDto,
   IDataConnectionService,
   CreateDataConnectionDto,
@@ -145,6 +146,39 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
         const logger = request.server.container.get<Logger>(TYPES.Logger);
         logger.error("Failed to save user settings", { userId, error: Util.stringifyError(err) });
         return reply.code(500).send({ error: "Failed to save user settings" });
+      }
+    }
+  );
+
+  // Protected route (requires Clerk JWT): POST /api/client/unas/login
+  fastify.post(
+    "/unas/login",
+    { config: { auth: true } },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const settingService = request.server.container.get<ISettingService>(TYPES.ISettingService);
+      const unasService = request.server.container.get<IUnasService>(TYPES.IUnasService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      const settings = await settingService.getUserSettings(userId);
+      if (!settings?.unasApiKey) {
+        logger.warn("UNAS login attempted without configured API key", { userId });
+        return reply.code(400).send({ error: "UNAS API key is not configured" });
+      }
+
+      try {
+        const webshopInfo = await unasService.getWebshopInfo({
+          baseUrl: settings.unasApiEndpoint ?? "https://api.unas.eu/shop/",
+          apiKey: settings.unasApiKey,
+        });
+        return { webshopInfo };
+      } catch (err: unknown) {
+        logger.error("UNAS login failed", { userId, error: Util.stringifyError(err) });
+        return reply.code(502).send({ error: "UNAS login failed" });
       }
     }
   );

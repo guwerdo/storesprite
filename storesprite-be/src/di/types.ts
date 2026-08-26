@@ -17,6 +17,8 @@ export type {
 export type { IDataConnectionService } from "../types/DataConnectionService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 export type { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
+export type { IUnasService } from "../types/UnasService.interface.js";
+export type { IUnasClientFactory } from "../types/UnasClientFactory.interface.js";
 
 export const TYPES = {
   IConfiguration: Symbol.for("IConfiguration"),
@@ -28,6 +30,8 @@ export const TYPES = {
   IDataConnectionService: Symbol.for("IDataConnectionService"),
   IJsonSchemaValidator: Symbol.for("IJsonSchemaValidator"),
   IConnectionTestRunnerService: Symbol.for("IConnectionTestRunnerService"),
+  IUnasService: Symbol.for("IUnasService"),
+  IUnasClientFactory: Symbol.for("IUnasClientFactory"),
   EntityManager: Symbol.for("EntityManager"),
   MikroORM: Symbol.for("MikroORM"),
   Logger: Symbol.for("Logger"),

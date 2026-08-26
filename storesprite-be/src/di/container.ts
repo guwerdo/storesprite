@@ -11,6 +11,8 @@ import { SettingRepository } from "../repositories/SettingRepository.js";
 import { DataConnectionService } from "../services/DataConnectionService.js";
 import { DataConnectionRepository } from "../repositories/DataConnectionRepository.js";
 import { ConnectionTestRunnerService } from "../services/ConnectionTestRunnerService.js";
+import { UnasClientFactory } from "../services/UnasClientFactory.js";
+import { UnasService } from "../services/UnasService.js";
 import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
 import type { MikroORM } from "@mikro-orm/postgresql";
 
@@ -31,6 +33,10 @@ export function createContainer(orm?: MikroORM): Container {
 
   // Bind Connection Test Runner Service
   container.bind(TYPES.IConnectionTestRunnerService).to(ConnectionTestRunnerService).inSingletonScope();
+
+  // Bind UNAS client factory (singleton) and UNAS service (request scope)
+  container.bind(TYPES.IUnasClientFactory).to(UnasClientFactory).inSingletonScope();
+  container.bind(TYPES.IUnasService).to(UnasService).inRequestScope();
 
   // If MikroORM is initialized, bind the EntityManager factory or instance
   if (orm) {
