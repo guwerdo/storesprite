@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, Typography, CircularProgress, Link, Stack } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import Info from '@mui/icons-material/Info';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import { Util } from '../../../utils/index.js';
 import type { IUnasConnection } from '../../../types/UnasConnection.interface.js';
@@ -48,30 +48,21 @@ export function UnasConnectionTestPanel({
 
       {connection && (
         <Stack spacing={0.5} sx={{ mt: 1 }}>
-          <Typography
-            variant="body2"
-            color="success.main"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <CheckCircleIcon fontSize="small" />
-            {t('settings.unasTest.success')}
+          <Typography variant="body2" color="text.secondary">
+            {t('settings.unasTest.connectedToWebshop', {
+              webshopName: connection.webshopInfo?.webshopName ?? '',
+              checkedAt: Util.formatDateTime(connection.checkedAt),
+            })}
           </Typography>
-          <Typography variant="body2">
-            {t('settings.unasTest.lastTest')} {Util.formatDate(connection.checkedAt)}
-          </Typography>
-          {connection.webshopInfo?.webshopName && (
-            <Typography variant="body2">
-              {t('settings.unasTest.connected', { webshopName: connection.webshopInfo.webshopName })}
-            </Typography>
-          )}
           <Link
             component="button"
             variant="body2"
             id="available-permissions-link"
             type="button"
             onClick={() => setPermissionsOpen(true)}
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
           >
+            <Info fontSize="small" />
             {t('settings.unasTest.availablePermissions')}
           </Link>
         </Stack>

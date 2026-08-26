@@ -257,9 +257,8 @@ describe('SettingsPage', () => {
     // Assert
     await waitFor(() => {
       expect(loginSpy).toHaveBeenCalledWith('test_token');
-      expect(screen.getByText(/Connection successful|Sikeres kapcsolat/i)).toBeInTheDocument();
-      expect(screen.getByText(/Last test:|Utolsó teszt:/i)).toBeInTheDocument();
-      expect(screen.getByText(/Test Webshop connected|Test Webshop csatlakoztatva/i)).toBeInTheDocument();
+      expect(screen.getByText(/Connected to webshop: Test Webshop|Webáruházhoz csatlakozva: Test Webshop/i)).toBeInTheDocument();
+      expect(screen.getByText(/Checked on:|Ellenőrizve:/i)).toBeInTheDocument();
     });
   });
 

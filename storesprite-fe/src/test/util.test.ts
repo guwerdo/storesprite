@@ -10,6 +10,14 @@ describe('Frontend Util Module', () => {
     });
   });
 
+  describe('formatDateTime', () => {
+    it('should format valid date string with time', () => {
+      const formatted = Util.formatDateTime('2026-08-17T12:00:00Z');
+      expect(typeof formatted).toBe('string');
+      expect(formatted.length).toBeGreaterThan(0);
+    });
+  });
+
   describe('stringifyError', () => {
     it('should extract error message from Error instance', () => {
       const error = new Error('Frontend error');
