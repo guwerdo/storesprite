@@ -1,32 +1,67 @@
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
-import type { IUnasJsonClientConfig, ILoginResponse } from "@storesprite/unas-json-client";
-import { TYPES } from "../di/index.js";
+import { UnasConfigError, UnasHttpError, type ILoginResponse, type IWebshopInfo } from "@storesprite/unas-json-client";
+import { TYPES, ISettingService } from "../di/index.js";
+import { Util } from "../utils/index.js";
 import type { IUnasClientFactory } from "../types/UnasClientFactory.interface.js";
 import type { IUnasService } from "../types/UnasService.interface.js";
+import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 
 @injectable()
 export class UnasService implements IUnasService {
   constructor(
+    @inject(TYPES.ISettingService)
+    private readonly _settingService: ISettingService,
     @inject(TYPES.IUnasClientFactory)
     private readonly _unasClientFactory: IUnasClientFactory,
     @inject(TYPES.Logger)
     private readonly _logger?: Logger
   ) {}
 
-  public async login(config: IUnasJsonClientConfig): Promise<ILoginResponse> {
-    this._logger?.info("Creating UNAS JSON client", { baseUrl: config.baseUrl });
+  public async login(userId: string): Promise<IWebshopInfo | null> {
+    const settings = await this._settingService.getUserSettings(userId);
+    if (!settings?.unasApiKey) {
+      this._logger?.warn("UNAS login attempted without configured API key", { userId });
+      throw new UnasConfigError("UNAS API key is not configured");
+    }
 
+    const config = {
+      baseUrl: settings.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
+      apiKey: settings.unasApiKey,
+    };
+
+    this._logger?.info("Creating UNAS JSON client", { baseUrl: config.baseUrl });
     const client = this._unasClientFactory.create(config);
 
     this._logger?.info("Calling UNAS login", { baseUrl: config.baseUrl });
-    const response = await client.login(true);
+
+    let response: ILoginResponse;
+    try {
+      response = await client.login(true);
+    } catch (err: unknown) {
+      if (err instanceof UnasHttpError) {
+        try {
+          await this._settingService.saveUnasConnection(userId, null);
+        } catch (resetErr: unknown) {
+          this._logger?.error("Failed to reset UNAS connection", { userId, error: Util.stringifyError(resetErr) });
+        }
+      }
+      throw err;
+    }
 
     this._logger?.info("UNAS login succeeded", {
       shopId: response.shopId,
       webshopName: response.webshopInfo?.webshopName,
     });
 
-    return response;
+    const record: UnasConnectionRecord = {
+      ...response,
+      token: null,
+      checkedAt: new Date().toISOString(),
+    };
+    await this._settingService.saveUnasConnection(userId, record);
+
+    return response.webshopInfo ?? null;
   }
 }

@@ -1,53 +1,83 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import type { IUnasJsonClient } from "@storesprite/unas-json-client";
+import { UnasConfigError, UnasHttpError, UnasTransportError, type IUnasJsonClient } from "@storesprite/unas-json-client";
 import { UnasService } from "../../src/services/UnasService.js";
+import type { ISettingService } from "../../src/types/SettingService.interface.js";
 import type { IUnasClientFactory } from "../../src/types/UnasClientFactory.interface.js";
-import { makeLoginResponse } from "../helpers/unasFixtures.js";
+import { makeLoginResponse, makeWebshopInfo } from "../helpers/unasFixtures.js";
 
 describe("UnasService", () => {
+  let mockSettingService: ISettingService;
   let mockFactory: IUnasClientFactory;
   let mockClient: IUnasJsonClient;
   let mockLogger: Logger;
   let unasService: UnasService;
 
-  const config = {
-    baseUrl: "https://api.unas.eu/shop/",
-    apiKey: "test-key",
+  const userId = "user_123";
+  const settings = {
+    unasApiKey: "test-key",
+    unasApiEndpoint: "https://api.unas.eu/shop/",
   };
 
   beforeEach(() => {
+    mockSettingService = mock<ISettingService>();
     mockFactory = mock<IUnasClientFactory>();
     mockClient = mock<IUnasJsonClient>();
     mockLogger = mock<Logger>();
-    unasService = new UnasService(mockFactory, mockLogger);
+    unasService = new UnasService(mockSettingService, mockFactory, mockLogger);
     (mockFactory.create as any).mockReturnValue(mockClient);
+    (mockSettingService.getUserSettings as any).mockResolvedValue(settings);
   });
 
-  it("should build the client, call login(true), and return the full login response", async () => {
+  it("should fetch settings, login, redact the token, persist, and return webshop info", async () => {
     // Arrange
-    const loginResponse = makeLoginResponse();
-    (mockClient.login as any).mockResolvedValue(loginResponse);
+    const webshopInfo = makeWebshopInfo();
+    (mockClient.login as any).mockResolvedValue(makeLoginResponse({ webshopInfo }));
 
     // Act
-    const result = await unasService.login(config);
+    const result = await unasService.login(userId);
 
     // Assert
-    expect(mockFactory.create).toHaveBeenCalledWith(config);
+    expect(mockSettingService.getUserSettings).toHaveBeenCalledWith(userId);
     expect(mockClient.login).toHaveBeenCalledWith(true);
-    expect(result).toEqual(loginResponse);
-    expect(mockLogger.info).toHaveBeenCalledWith("UNAS login succeeded", {
-      shopId: loginResponse.shopId,
-      webshopName: loginResponse.webshopInfo?.webshopName,
-    });
+    expect(mockSettingService.saveUnasConnection).toHaveBeenCalledWith(
+      userId,
+      expect.objectContaining({
+        token: null,
+        checkedAt: expect.any(String),
+        shopId: 83219,
+        webshopInfo,
+      })
+    );
+    expect(result).toEqual(webshopInfo);
   });
 
-  it("should propagate errors thrown by the UNAS client", async () => {
+  it("should throw UnasConfigError when the user has no API key configured", async () => {
     // Arrange
-    (mockClient.login as any).mockRejectedValue(new Error("UNAS is down"));
+    (mockSettingService.getUserSettings as any).mockResolvedValue(null);
 
     // Act & Assert
-    await expect(unasService.login(config)).rejects.toThrow("UNAS is down");
+    await expect(unasService.login(userId)).rejects.toThrow(UnasConfigError);
+  });
+
+  it("should reset the connection and rethrow on a non-2xx UNAS response", async () => {
+    // Arrange
+    (mockClient.login as any).mockRejectedValue(
+      new UnasHttpError("invalid ApiKey", 400, "https://api.unas.eu/shop/login")
+    );
+
+    // Act & Assert
+    await expect(unasService.login(userId)).rejects.toThrow(UnasHttpError);
+    expect(mockSettingService.saveUnasConnection).toHaveBeenCalledWith(userId, null);
+  });
+
+  it("should NOT reset the connection on a network error", async () => {
+    // Arrange
+    (mockClient.login as any).mockRejectedValue(new UnasTransportError("network timeout"));
+
+    // Act & Assert
+    await expect(unasService.login(userId)).rejects.toThrow(UnasTransportError);
+    expect(mockSettingService.saveUnasConnection).not.toHaveBeenCalled();
   });
 });

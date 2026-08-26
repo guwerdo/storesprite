@@ -13,8 +13,7 @@ import {
   IConnectionTestRunnerService,
 } from "../di/index.js";
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
-import { UnasHttpError } from "@storesprite/unas-json-client";
-import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
+import { UnasConfigError, UnasHttpError, UnasTransportError } from "@storesprite/unas-json-client";
 import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 
 declare module "fastify" {
@@ -163,42 +162,23 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
         return reply.code(401).send({ error: "Unauthorized" });
       }
 
-      const settingService = request.server.container.get<ISettingService>(TYPES.ISettingService);
       const unasService = request.server.container.get<IUnasService>(TYPES.IUnasService);
       const logger = request.server.container.get<Logger>(TYPES.Logger);
 
-      const settings = await settingService.getUserSettings(userId);
-      if (!settings?.unasApiKey) {
-        logger.warn("UNAS login attempted without configured API key", { userId });
-        return reply.code(400).send({ error: "UNAS API key is not configured" });
-      }
-
       try {
-        const loginResponse = await unasService.login({
-          baseUrl: settings.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
-          apiKey: settings.unasApiKey,
-        });
-
-        const record: UnasConnectionRecord = {
-          ...loginResponse,
-          token: null,
-          checkedAt: new Date().toISOString(),
-        };
-        await settingService.saveUnasConnection(userId, record);
-
-        return { webshopInfo: loginResponse.webshopInfo ?? null };
+        const webshopInfo = await unasService.login(userId);
+        return { webshopInfo };
       } catch (err: unknown) {
-        logger.error("UNAS login failed", { userId, error: Util.stringifyError(err) });
-
-        if (err instanceof UnasHttpError) {
-          try {
-            await settingService.saveUnasConnection(userId, null);
-          } catch (resetErr: unknown) {
-            logger.error("Failed to reset UNAS connection", { userId, error: Util.stringifyError(resetErr) });
-          }
+        if (err instanceof UnasConfigError) {
+          return reply.code(400).send({ error: "UNAS API key is not configured" });
         }
 
-        return reply.code(502).send({ error: "UNAS login failed" });
+        logger.error("UNAS login failed", { userId, error: Util.stringifyError(err) });
+
+        if (err instanceof UnasHttpError || err instanceof UnasTransportError) {
+          return reply.code(502).send({ error: "UNAS login failed" });
+        }
+        return reply.code(500).send({ error: "Failed to save UNAS connection" });
       }
     }
   );
