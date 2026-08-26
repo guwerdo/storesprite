@@ -6,7 +6,7 @@ import type { ISetProductRequest, ISetProductResponse } from "./set-product.type
 import { createProductElement } from "./xml/product-request-xml-builder.js";
 
 interface ISetProductResponseContent {
-    Products?: { Product?: { Id: number | string; Sku: string; Action: string; Status: string }[] };
+    Products?: { Product?: { Id: string; Sku: string; Action: string; Status: string }[] };
 }
 
 @injectable()
@@ -28,7 +28,7 @@ export class SetProductEndpoint implements IUnasEndpoint<ISetProductRequest, ISe
             return [];
         }
         return products.map((p) => ({
-            id: String(p.Id),
+            id: p.Id,
             sku: p.Sku,
             action: p.Action,
             status: p.Status === "error" ? "error" : "ok",
