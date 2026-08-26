@@ -4,4 +4,4 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 5173
-CMD ["sh", "-c", "echo 'To start the service run: npm run dev' && tail -f /dev/null"]
+CMD ["sh", "-c", "npm run start:dev & tail -f /dev/null"]

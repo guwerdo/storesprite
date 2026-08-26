@@ -15,4 +15,4 @@ RUN npm install
 COPY storesprite-be/ /workspace/storesprite-be/
 
 EXPOSE 3000
-CMD ["sh", "-c", "echo 'To start the service run: npm run dev' && tail -f /dev/null"]
+CMD ["sh", "-c", "npm run start:dev & tail -f /dev/null"]
