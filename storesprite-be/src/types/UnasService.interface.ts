@@ -1,5 +1,5 @@
-import type { IUnasJsonClientConfig, IWebshopInfo } from "@storesprite/unas-json-client";
+import type { IUnasJsonClientConfig, ILoginResponse } from "@storesprite/unas-json-client";
 
 export interface IUnasService {
-  getWebshopInfo(config: IUnasJsonClientConfig): Promise<IWebshopInfo>;
+  login(config: IUnasJsonClientConfig): Promise<ILoginResponse>;
 }

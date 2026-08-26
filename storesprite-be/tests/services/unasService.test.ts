@@ -4,7 +4,7 @@ import type { Logger } from "log4js";
 import type { IUnasJsonClient } from "@storesprite/unas-json-client";
 import { UnasService } from "../../src/services/UnasService.js";
 import type { IUnasClientFactory } from "../../src/types/UnasClientFactory.interface.js";
-import { makeLoginResponse, makeWebshopInfo } from "../helpers/unasFixtures.js";
+import { makeLoginResponse } from "../helpers/unasFixtures.js";
 
 describe("UnasService", () => {
   let mockFactory: IUnasClientFactory;
@@ -25,21 +25,21 @@ describe("UnasService", () => {
     (mockFactory.create as any).mockReturnValue(mockClient);
   });
 
-  it("should build the client, call login(true), and return webshop info", async () => {
+  it("should build the client, call login(true), and return the full login response", async () => {
     // Arrange
-    const webshopInfo = makeWebshopInfo();
-    (mockClient.login as any).mockResolvedValue(makeLoginResponse({ webshopInfo }));
+    const loginResponse = makeLoginResponse();
+    (mockClient.login as any).mockResolvedValue(loginResponse);
 
     // Act
-    const result = await unasService.getWebshopInfo(config);
+    const result = await unasService.login(config);
 
     // Assert
     expect(mockFactory.create).toHaveBeenCalledWith(config);
     expect(mockClient.login).toHaveBeenCalledWith(true);
-    expect(result).toEqual(webshopInfo);
-    expect(mockLogger.info).toHaveBeenCalledWith("UNAS webshop info retrieved", {
-      shopId: 83219,
-      webshopName: webshopInfo.webshopName,
+    expect(result).toEqual(loginResponse);
+    expect(mockLogger.info).toHaveBeenCalledWith("UNAS login succeeded", {
+      shopId: loginResponse.shopId,
+      webshopName: loginResponse.webshopInfo?.webshopName,
     });
   });
 
@@ -48,16 +48,6 @@ describe("UnasService", () => {
     (mockClient.login as any).mockRejectedValue(new Error("UNAS is down"));
 
     // Act & Assert
-    await expect(unasService.getWebshopInfo(config)).rejects.toThrow("UNAS is down");
-  });
-
-  it("should throw when the login response has no webshop info", async () => {
-    // Arrange
-    (mockClient.login as any).mockResolvedValue(makeLoginResponse({ webshopInfo: undefined }));
-
-    // Act & Assert
-    await expect(unasService.getWebshopInfo(config)).rejects.toThrow(
-      "UNAS login response did not include webshop info"
-    );
+    await expect(unasService.login(config)).rejects.toThrow("UNAS is down");
   });
 });

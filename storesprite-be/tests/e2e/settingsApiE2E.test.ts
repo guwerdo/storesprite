@@ -114,6 +114,7 @@ describe("E2E Settings API Tests (Isolated Test Database)", () => {
         unasApiKey: "test_unas_api_key_12345",
         unasApiEndpoint: "https://custom.unas.eu/shop/",
         languageId: huLang!.id,
+        unasConnection: null,
       });
 
       // 4. Verify directly in database via MikroORM

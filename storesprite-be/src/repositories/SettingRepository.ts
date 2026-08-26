@@ -4,6 +4,7 @@ import type { Logger } from "log4js";
 import { User } from "../entities/User.js";
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
+import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
 import { ISettingRepository, TYPES } from "../di/index.js";
 
 @injectable()
@@ -73,5 +74,21 @@ export class SettingRepository implements ISettingRepository {
   async getLanguages(): Promise<Language[]> {
     this._logger?.info("Fetching all available languages");
     return this._em.find(Language, {}, { orderBy: { id: "ASC" } });
+  }
+
+  async setUnasConnection(userId: string, connection: UnasConnectionRecord | null): Promise<void> {
+    this._logger?.info("Setting UNAS connection", { userId, hasConnection: connection !== null });
+
+    const setting = await this._em.findOne(UserSetting, { user: { id: userId } });
+    if (!setting) {
+      this._logger?.warn("Cannot set UNAS connection: no settings row for user", { userId });
+      return;
+    }
+
+    setting.unasConnection = connection;
+    setting.updatedAt = new Date();
+    await this._em.flush();
+
+    this._logger?.info("UNAS connection saved", { userId, hasConnection: connection !== null });
   }
 }

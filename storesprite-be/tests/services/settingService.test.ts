@@ -36,6 +36,7 @@ describe("SettingService", () => {
         unasApiKey: "unas_secret_key_123",
         unasApiEndpoint: "https://api.unas.eu/shop/",
         languageId: 2,
+        unasConnection: null,
       });
     });
 
@@ -48,6 +49,36 @@ describe("SettingService", () => {
 
       // Assert
       expect(result).toBeNull();
+    });
+  });
+
+  describe("saveUnasConnection", () => {
+    it("should delegate the connection to the repository", async () => {
+      // Arrange
+      const connection = {
+        token: null,
+        expire: "2026.08.24 11:23:00",
+        expireTime: 1724752800,
+        shopId: 83219,
+        subscription: "vip-100000",
+        permissions: ["getProduct"],
+        status: "ok",
+        checkedAt: "2026-08-24T00:00:00.000Z",
+      };
+
+      // Act
+      await settingService.saveUnasConnection("user_123", connection as any);
+
+      // Assert
+      expect(mockSettingRepo.setUnasConnection).toHaveBeenCalledWith("user_123", connection);
+    });
+
+    it("should delegate a null connection to reset", async () => {
+      // Act
+      await settingService.saveUnasConnection("user_123", null);
+
+      // Assert
+      expect(mockSettingRepo.setUnasConnection).toHaveBeenCalledWith("user_123", null);
     });
   });
 

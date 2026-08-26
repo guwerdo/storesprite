@@ -211,27 +211,6 @@
           "keyName": "data_connections_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "user_id",
-            "is_active"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_data_connections_user_active",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "user_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "idx_data_connections_user_id",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -462,6 +441,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "unas_connection": {
+          "name": "unas_connection",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "user_settings",

@@ -3,6 +3,7 @@ import type { Logger } from "log4js";
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
 import { ISettingService, ISettingRepository, UserSettingsDto, SaveUserSettingsDto, TYPES } from "../di/index.js";
+import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
 
 @injectable()
 export class SettingService implements ISettingService {
@@ -24,6 +25,7 @@ export class SettingService implements ISettingService {
       unasApiKey: setting.unasApiKey ?? null,
       unasApiEndpoint: setting.unasApiEndpoint ?? "https://api.unas.eu/shop/",
       languageId: setting.language?.id ?? null,
+      unasConnection: setting.unasConnection ?? null,
     };
   }
 
@@ -35,5 +37,10 @@ export class SettingService implements ISettingService {
   async getAvailableLanguages(): Promise<Language[]> {
     this._logger?.info("Fetching available languages in service");
     return this._settingRepository.getLanguages();
+  }
+
+  async saveUnasConnection(userId: string, connection: UnasConnectionRecord | null): Promise<void> {
+    this._logger?.info("Saving UNAS connection in service", { userId, hasConnection: connection !== null });
+    await this._settingRepository.setUnasConnection(userId, connection);
   }
 }

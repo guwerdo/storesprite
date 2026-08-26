@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
-import type { IUnasJsonClient } from "@storesprite/unas-json-client";
+import { UnasHttpError, UnasTransportError, type IUnasJsonClient } from "@storesprite/unas-json-client";
 
 vi.mock("../src/plugins/mikroOrm.js", () => ({
   default: Object.assign(async () => {}, { [Symbol.for("fastify.display-name")]: "mikroOrmPlugin" }),
@@ -20,6 +20,12 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
   const mockFactory = mock<IUnasClientFactory>();
   const mockClient = mock<IUnasJsonClient>();
 
+  const settingsWithKey = {
+    unasApiKey: "test-key",
+    unasApiEndpoint: "https://api.unas.eu/shop/",
+    languageId: null,
+  };
+
   beforeAll(async () => {
     app = buildApp({ logger: false });
     await app.ready();
@@ -33,17 +39,14 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
   });
 
   beforeEach(() => {
-    // Satisfy the JIT provisioning hook with an already-existing user
+    vi.clearAllMocks();
     (mockUserService.getUserById as any).mockResolvedValue(new User("mock_jwt_user_1", "dev@localhost", "Dev"));
     (mockFactory.create as any).mockReturnValue(mockClient);
   });
 
   it("should return 401 when Authorization header is missing", async () => {
     // Act
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/client/unas/login",
-    });
+    const response = await app.inject({ method: "POST", url: "/api/client/unas/login" });
 
     // Assert
     expect(response.statusCode).toBe(401);
@@ -65,14 +68,10 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
     expect(JSON.parse(response.payload)).toEqual({ error: "UNAS API key is not configured" });
   });
 
-  it("should return webshop info on successful UNAS login", async () => {
+  it("should save the connection and return webshop info on success", async () => {
     // Arrange
     const webshopInfo = makeWebshopInfo();
-    (mockSettingService.getUserSettings as any).mockResolvedValue({
-      unasApiKey: "test-key",
-      unasApiEndpoint: "https://api.unas.eu/shop/",
-      languageId: null,
-    });
+    (mockSettingService.getUserSettings as any).mockResolvedValue(settingsWithKey);
     (mockClient.login as any).mockResolvedValue(makeLoginResponse({ webshopInfo }));
 
     // Act
@@ -86,16 +85,23 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.payload)).toEqual({ webshopInfo });
     expect(mockClient.login).toHaveBeenCalledWith(true);
+    expect(mockSettingService.saveUnasConnection).toHaveBeenCalledWith(
+      "mock_jwt_user_1",
+      expect.objectContaining({
+        token: null,
+        checkedAt: expect.any(String),
+        shopId: 83219,
+        webshopInfo,
+      })
+    );
   });
 
-  it("should return 502 when UNAS login fails", async () => {
+  it("should reset the connection and return 502 on a non-2xx UNAS response", async () => {
     // Arrange
-    (mockSettingService.getUserSettings as any).mockResolvedValue({
-      unasApiKey: "test-key",
-      unasApiEndpoint: "https://api.unas.eu/shop/",
-      languageId: null,
-    });
-    (mockClient.login as any).mockRejectedValue(new Error("UNAS is unreachable"));
+    (mockSettingService.getUserSettings as any).mockResolvedValue(settingsWithKey);
+    (mockClient.login as any).mockRejectedValue(
+      new UnasHttpError("Login Error: invalid ApiKey", 400, "https://api.unas.eu/shop/login")
+    );
 
     // Act
     const response = await app.inject({
@@ -107,5 +113,23 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
     // Assert
     expect(response.statusCode).toBe(502);
     expect(JSON.parse(response.payload)).toEqual({ error: "UNAS login failed" });
+    expect(mockSettingService.saveUnasConnection).toHaveBeenCalledWith("mock_jwt_user_1", null);
+  });
+
+  it("should NOT reset the connection on a network/transport error", async () => {
+    // Arrange
+    (mockSettingService.getUserSettings as any).mockResolvedValue(settingsWithKey);
+    (mockClient.login as any).mockRejectedValue(new UnasTransportError("network timeout"));
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/client/unas/login",
+      headers: { authorization: "Bearer mock_jwt_user_1" },
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(502);
+    expect(mockSettingService.saveUnasConnection).not.toHaveBeenCalled();
   });
 });

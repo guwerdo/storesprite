@@ -468,6 +468,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "string"
+        },
+        "unas_connection": {
+          "name": "unas_connection",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "user_settings",

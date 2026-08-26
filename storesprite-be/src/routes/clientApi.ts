@@ -13,6 +13,8 @@ import {
   IConnectionTestRunnerService,
 } from "../di/index.js";
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
+import { UnasHttpError } from "@storesprite/unas-json-client";
+import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -171,13 +173,30 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
       }
 
       try {
-        const webshopInfo = await unasService.getWebshopInfo({
+        const loginResponse = await unasService.login({
           baseUrl: settings.unasApiEndpoint ?? "https://api.unas.eu/shop/",
           apiKey: settings.unasApiKey,
         });
-        return { webshopInfo };
+
+        const record: UnasConnectionRecord = {
+          ...loginResponse,
+          token: null,
+          checkedAt: new Date().toISOString(),
+        };
+        await settingService.saveUnasConnection(userId, record);
+
+        return { webshopInfo: loginResponse.webshopInfo ?? null };
       } catch (err: unknown) {
         logger.error("UNAS login failed", { userId, error: Util.stringifyError(err) });
+
+        if (err instanceof UnasHttpError) {
+          try {
+            await settingService.saveUnasConnection(userId, null);
+          } catch (resetErr: unknown) {
+            logger.error("Failed to reset UNAS connection", { userId, error: Util.stringifyError(resetErr) });
+          }
+        }
+
         return reply.code(502).send({ error: "UNAS login failed" });
       }
     }

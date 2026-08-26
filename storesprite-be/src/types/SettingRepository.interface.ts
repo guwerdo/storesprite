@@ -1,5 +1,6 @@
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
+import type { UnasConnectionRecord } from "./UnasConnection.interface.js";
 
 export interface ISettingRepository {
   getByUserId(userId: string): Promise<UserSetting | null>;
@@ -8,4 +9,5 @@ export interface ISettingRepository {
     data: { unasApiKey?: string | null; unasApiEndpoint?: string | null; languageId?: number | null }
   ): Promise<UserSetting>;
   getLanguages(): Promise<Language[]>;
+  setUnasConnection(userId: string, connection: UnasConnectionRecord | null): Promise<void>;
 }

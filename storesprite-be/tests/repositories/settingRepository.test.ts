@@ -104,4 +104,42 @@ describe("SettingRepository", () => {
       expect(result.language).toBe(lang);
     });
   });
+
+  describe("setUnasConnection", () => {
+    it("should set the connection and flush when a setting exists", async () => {
+      // Arrange
+      const user = new User("user_abc", "user@example.com");
+      const setting = new UserSetting(user, "api_key");
+      const connection = {
+        token: null,
+        expire: "2026.08.24 11:23:00",
+        expireTime: 1724752800,
+        shopId: 83219,
+        subscription: "vip-100000",
+        permissions: ["getProduct"],
+        status: "ok",
+        checkedAt: "2026-08-24T00:00:00.000Z",
+      };
+      mockEm.findOne.mockResolvedValue(setting as any);
+
+      // Act
+      await repo.setUnasConnection("user_abc", connection as any);
+
+      // Assert
+      expect(mockEm.findOne).toHaveBeenCalledWith(UserSetting, { user: { id: "user_abc" } });
+      expect(setting.unasConnection).toBe(connection);
+      expect(mockEm.flush).toHaveBeenCalled();
+    });
+
+    it("should no-op when no setting exists", async () => {
+      // Arrange
+      mockEm.findOne.mockResolvedValue(null as any);
+
+      // Act
+      await repo.setUnasConnection("user_404", null);
+
+      // Assert
+      expect(mockEm.flush).not.toHaveBeenCalled();
+    });
+  });
 });
