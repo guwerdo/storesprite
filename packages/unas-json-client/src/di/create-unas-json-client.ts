@@ -15,21 +15,19 @@ export interface IUnasJsonClientOverrides {
     xmlService?: IXmlService;
 }
 
+function bindOverride<T>(container: Container, symbol: symbol, value: T | undefined): void {
+    if (value !== undefined) {
+        container.bind<T>(symbol).toConstantValue(value);
+    }
+}
+
 /** Non-Inversify facade — the caller never imports `inversify`. */
 export function createUnasJsonClient(config: IUnasJsonClientConfig, overrides?: IUnasJsonClientOverrides): IUnasJsonClient {
     const container = new Container();
-    if (overrides?.httpClient) {
-        container.bind(TYPES.IUnasHttpClient).toConstantValue(overrides.httpClient);
-    }
-    if (overrides?.tokenStore) {
-        container.bind(TYPES.ITokenStore).toConstantValue(overrides.tokenStore);
-    }
-    if (overrides?.logger) {
-        container.bind(TYPES.ILogger).toConstantValue(overrides.logger);
-    }
-    if (overrides?.xmlService) {
-        container.bind(TYPES.IXmlService).toConstantValue(overrides.xmlService);
-    }
+    bindOverride(container, TYPES.IUnasHttpClient, overrides?.httpClient);
+    bindOverride(container, TYPES.ITokenStore, overrides?.tokenStore);
+    bindOverride(container, TYPES.ILogger, overrides?.logger);
+    bindOverride(container, TYPES.IXmlService, overrides?.xmlService);
     registerUnasJsonClient(container, config);
     return container.get<IUnasJsonClient>(TYPES.IUnasJsonClient);
 }

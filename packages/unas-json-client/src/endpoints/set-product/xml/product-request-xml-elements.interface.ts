@@ -41,9 +41,3 @@ export interface IImagesElement {
     Version: string;
     Image: IImageElement[];
 }
-
-export interface ISetProductRequest {
-    Products: {
-        Product: IProductElement[];
-    };
-}

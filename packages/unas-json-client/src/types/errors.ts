@@ -15,7 +15,7 @@ export class UnasTransportError extends UnasError {}
 export class UnasHttpError extends UnasError {
     public readonly status: number;
     public readonly url: string;
-    public readonly method: string;
+    public readonly method: string = "POST";
     public readonly responseBody?: string;
     public readonly unasErrorMessage?: string;
 
@@ -28,7 +28,6 @@ export class UnasHttpError extends UnasError {
         super(message, { cause: options?.cause });
         this.status = status;
         this.url = url;
-        this.method = "POST";
         this.responseBody = options?.responseBody;
         this.unasErrorMessage = options?.unasErrorMessage;
     }
@@ -39,6 +38,3 @@ export class UnasAuthError extends UnasError {}
 
 /** The response XML was missing an expected node. */
 export class UnasParseError extends UnasError {}
-
-/** Reserved for a future opt-in fail-fast mode on `setProduct` partial failures. */
-export class UnasProductError extends UnasError {}

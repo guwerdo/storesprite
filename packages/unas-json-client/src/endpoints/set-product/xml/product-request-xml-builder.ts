@@ -1,16 +1,7 @@
-import { XMLBuilder } from "fast-xml-parser";
 import type { ISetProduct, ISetProductData, ISetProductImage, ISetProductImages, ISetProductStock } from "../set-product.types.js";
-import type { IDataElement, IDescriptionElement, IImageElement, IImagesElement, IProductElement, ISetProductRequest, IStockElement } from "./product-request-xml-elements.interface.js";
+import type { IDataElement, IDescriptionElement, IImageElement, IImagesElement, IProductElement, IStockElement } from "./product-request-xml-elements.interface.js";
 
-// `format: false` and `indentBy: ""` keep the output minified. UNAS rejects newlines
-// inside <Filename> CDATA ("Invalid character in file name"). A single image cannot be
-// updated via setProduct — only the whole set at once, keyed by <Version>.
-export function createSetProductRequestXml(productElements: IProductElement[]): string {
-    const builder = new XMLBuilder({ ignoreAttributes: false, format: false, indentBy: "", cdataPropName: "#cdata" });
-    const request: ISetProductRequest = { Products: { Product: productElements } };
-    return '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(request);
-}
-
+// A single image cannot be updated via setProduct — only the whole set at once, keyed by <Version>.
 export function createProductElement(product: ISetProduct): IProductElement {
     return {
         Sku: product.sku,

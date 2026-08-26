@@ -18,6 +18,7 @@ const TOKEN_KEY = "unasToken";
 @injectable()
 export class UnasJsonClient implements IUnasJsonClient {
     private readonly _endpoints: Map<string, IUnasEndpoint>;
+    private readonly _baseUrl: string;
 
     constructor(
         @inject(TYPES.IUnasJsonClientConfig) private readonly _config: IUnasJsonClientConfig,
@@ -27,10 +28,8 @@ export class UnasJsonClient implements IUnasJsonClient {
         @inject(TYPES.IXmlService) private readonly _xmlService: IXmlService,
         @multiInject(TYPES.UnasEndpoint) endpoints: IUnasEndpoint[],
     ) {
-        this._endpoints = new Map<string, IUnasEndpoint>();
-        for (const endpoint of endpoints) {
-            this._endpoints.set(endpoint.name, endpoint);
-        }
+        this._baseUrl = this._config.baseUrl.endsWith("/") ? this._config.baseUrl : `${this._config.baseUrl}/`;
+        this._endpoints = new Map(endpoints.map((endpoint) => [endpoint.name, endpoint] as const));
     }
 
     public async login(): Promise<string> {
@@ -70,8 +69,7 @@ export class UnasJsonClient implements IUnasJsonClient {
                 throw error;
             }
             this._logger.warn("UNAS token expired, refreshing", { url: error.url, status: error.status });
-            token = await this.login();
-            await this._tokenStore.set(TOKEN_KEY, token);
+            token = await this.fetchAndStoreToken();
             try {
                 return await op(token);
             } catch (retryError) {
@@ -81,12 +79,16 @@ export class UnasJsonClient implements IUnasJsonClient {
     }
 
     private async getToken(): Promise<string> {
-        let token = await this._tokenStore.get(TOKEN_KEY);
+        const token = await this._tokenStore.get(TOKEN_KEY);
         if (token) {
             return token;
         }
         this._logger.info("UNAS token not found, requesting new token");
-        token = await this.login();
+        return this.fetchAndStoreToken();
+    }
+
+    private async fetchAndStoreToken(): Promise<string> {
+        const token = await this.login();
         await this._tokenStore.set(TOKEN_KEY, token);
         return token;
     }
@@ -133,7 +135,6 @@ export class UnasJsonClient implements IUnasJsonClient {
     }
 
     private buildUrl(endpointName: string): string {
-        const base = this._config.baseUrl.endsWith("/") ? this._config.baseUrl : `${this._config.baseUrl}/`;
-        return `${base}${endpointName}`;
+        return `${this._baseUrl}${endpointName}`;
     }
 }

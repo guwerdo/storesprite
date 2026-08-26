@@ -3,7 +3,7 @@ import type { IUnasEndpoint } from "../../core/unas-endpoint.interface.js";
 import type { IXmlService } from "../../core/xml-service.interface.js";
 import { TYPES } from "../../types/binding-keys.js";
 import type { ISetProductRequest, ISetProductResponse } from "./set-product.types.js";
-import { createProductElement, createSetProductRequestXml } from "./xml/product-request-xml-builder.js";
+import { createProductElement } from "./xml/product-request-xml-builder.js";
 
 interface ISetProductResponseContent {
     Products?: { Product?: { Id: number | string; Sku: string; Action: string; Status: string }[] };
@@ -17,8 +17,8 @@ export class SetProductEndpoint implements IUnasEndpoint<ISetProductRequest, ISe
     constructor(@inject(TYPES.IXmlService) private readonly _xml: IXmlService) {}
 
     public buildRequest(request: ISetProductRequest): string {
-        const productElements = request.products.map((product) => createProductElement(product));
-        return createSetProductRequestXml(productElements);
+        const productElements = request.products.map(createProductElement);
+        return this._xml.buildDocument({ Products: { Product: productElements } });
     }
 
     public parseResponse(xml: string): ISetProductResponse[] {

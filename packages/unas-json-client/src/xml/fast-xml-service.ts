@@ -5,6 +5,7 @@ import type { IXmlService } from "../core/xml-service.interface.js";
 @injectable()
 export class FastXmlService implements IXmlService {
     private readonly _parser: XMLParser;
+    private readonly _builder: XMLBuilder;
 
     constructor() {
         this._parser = new XMLParser({
@@ -13,6 +14,8 @@ export class FastXmlService implements IXmlService {
             // Add to this list as new endpoints are introduced (Order, Customer, …).
             isArray: (tagName: string) => tagName === "Product" || tagName === "Warehouse",
         });
+        // `format: false` keeps the output minified — UNAS rejects newlines inside <Filename> CDATA.
+        this._builder = new XMLBuilder({ ignoreAttributes: false, format: false, indentBy: "", cdataPropName: "#cdata" });
     }
 
     public parse<T>(xml: string): T {
@@ -20,8 +23,6 @@ export class FastXmlService implements IXmlService {
     }
 
     public buildDocument(root: unknown): string {
-        // `format: false` keeps the output minified — UNAS rejects newlines inside <Filename> CDATA.
-        const builder = new XMLBuilder({ ignoreAttributes: false, format: false, indentBy: "", cdataPropName: "#cdata" });
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(root);
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + this._builder.build(root);
     }
 }

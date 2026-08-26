@@ -12,27 +12,24 @@ import { ConsoleLogger } from "../logging/console-logger.js";
 import { TYPES } from "../types/binding-keys.js";
 import { FastXmlService } from "../xml/fast-xml-service.js";
 
+function bindDefault<T>(container: Container, symbol: symbol, impl: new () => T): void {
+    if (!container.isBound(symbol)) {
+        container.bind<T>(symbol).to(impl).inSingletonScope();
+    }
+}
+
 export function registerUnasJsonClient(container: Container, config: IUnasJsonClientConfig): Container {
     if (!container.isBound(TYPES.IUnasJsonClientConfig)) {
         container.bind(TYPES.IUnasJsonClientConfig).toConstantValue(config);
     }
-    if (!container.isBound(TYPES.IUnasHttpClient)) {
-        container.bind(TYPES.IUnasHttpClient).to(AxiosUnasHttpClient).inSingletonScope();
-    }
-    if (!container.isBound(TYPES.ITokenStore)) {
-        container.bind(TYPES.ITokenStore).to(InMemoryTokenStore).inSingletonScope();
-    }
-    if (!container.isBound(TYPES.ILogger)) {
-        container.bind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope();
-    }
-    if (!container.isBound(TYPES.IXmlService)) {
-        container.bind(TYPES.IXmlService).to(FastXmlService).inSingletonScope();
-    }
+    bindDefault(container, TYPES.IUnasHttpClient, AxiosUnasHttpClient);
+    bindDefault(container, TYPES.ITokenStore, InMemoryTokenStore);
+    bindDefault(container, TYPES.ILogger, ConsoleLogger);
+    bindDefault(container, TYPES.IXmlService, FastXmlService);
 
-    container.bind<IUnasEndpoint<unknown, unknown>>(TYPES.UnasEndpoint).to(LoginEndpoint).inSingletonScope();
-    container.bind<IUnasEndpoint<unknown, unknown>>(TYPES.UnasEndpoint).to(GetProductDbEndpoint).inSingletonScope();
-    container.bind<IUnasEndpoint<unknown, unknown>>(TYPES.UnasEndpoint).to(GetWarehouseEndpoint).inSingletonScope();
-    container.bind<IUnasEndpoint<unknown, unknown>>(TYPES.UnasEndpoint).to(SetProductEndpoint).inSingletonScope();
+    for (const Endpoint of [LoginEndpoint, GetProductDbEndpoint, GetWarehouseEndpoint, SetProductEndpoint]) {
+        container.bind<IUnasEndpoint>(TYPES.UnasEndpoint).to(Endpoint).inSingletonScope();
+    }
 
     if (!container.isBound(TYPES.IUnasJsonClient)) {
         container.bind(TYPES.IUnasJsonClient).to(UnasJsonClient).inSingletonScope();
