@@ -61,7 +61,7 @@ export interface ConnectionFormProps {
 
 function isTestRunning(connection: IDataConnection | null | undefined): boolean {
   const testResult = connection?.testResult;
-  if (!isInProgress(testResult?.progress)) return false;
+  if (!testResult || !isInProgress(testResult.progress)) return false;
   const startedAt = testResult.started_at ? new Date(testResult.started_at).getTime() : 0;
   // If more than 15 minutes have passed since started_at, consider it timed out / not running
   return startedAt === 0 || Date.now() - startedAt <= TEST_RUN_TIMEOUT_MS;

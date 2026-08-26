@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
-import { UnasConfigError, UnasHttpError, type ILoginResponse, type IWebshopInfo } from "@storesprite/unas-json-client";
+import { UnasConfigError, UnasHttpError, type ILoginResponse } from "@storesprite/unas-json-client";
 import { TYPES, ISettingService } from "../di/index.js";
 import { Util } from "../utils/index.js";
 import type { IUnasClientFactory } from "../types/UnasClientFactory.interface.js";
@@ -19,7 +19,7 @@ export class UnasService implements IUnasService {
     private readonly _logger?: Logger
   ) {}
 
-  public async login(userId: string): Promise<IWebshopInfo | null> {
+  public async login(userId: string): Promise<UnasConnectionRecord> {
     const settings = await this._settingService.getUserSettings(userId);
     if (!settings?.unasApiKey) {
       this._logger?.warn("UNAS login attempted without configured API key", { userId });
@@ -62,6 +62,6 @@ export class UnasService implements IUnasService {
     };
     await this._settingService.saveUnasConnection(userId, record);
 
-    return response.webshopInfo ?? null;
+    return record;
   }
 }

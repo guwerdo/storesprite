@@ -1,3 +1,5 @@
+import type { IUnasConnection } from './UnasConnection.interface.js';
+
 export interface ILanguage {
   id: number;
   code: string;
@@ -7,6 +9,7 @@ export interface IUserSettings {
   unasApiKey: string;
   unasApiEndpoint?: string | null;
   languageId: number | null;
+  unasConnection?: IUnasConnection | null;
 }
 
 export interface ISettingsApiResponse {

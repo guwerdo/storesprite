@@ -3,4 +3,5 @@ export const TYPES = {
   ISettingService: Symbol.for('ISettingService'),
   IConnectionService: Symbol.for('IConnectionService'),
   ISocketService: Symbol.for('ISocketService'),
+  IUnasService: Symbol.for('IUnasService'),
 } as const;

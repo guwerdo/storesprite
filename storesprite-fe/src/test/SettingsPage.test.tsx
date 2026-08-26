@@ -5,6 +5,8 @@ import { Container } from 'inversify';
 import { ContainerProvider } from '../di/ContainerProvider.js';
 import { TYPES } from '../di/types.js';
 import type { ISettingService } from '../types/SettingService.interface.js';
+import type { IUnasService } from '../types/UnasService.interface.js';
+import type { IUnasConnection } from '../types/UnasConnection.interface.js';
 import SettingsPage from '../features/settings/SettingsPage.js';
 import { I18nProvider } from '../i18n/I18nProvider.js';
 
@@ -19,10 +21,19 @@ vi.mock('@clerk/clerk-react', () => ({
   }),
 }));
 
+const makeConnection = (overrides: Partial<IUnasConnection> = {}): IUnasConnection => ({
+  checkedAt: '2026-08-26T12:00:00.000Z',
+  permissions: ['getOrder', 'setPackageOffer'],
+  webshopInfo: { webshopName: 'Test Webshop' },
+  ...overrides,
+});
+
 describe('SettingsPage', () => {
   let getSettingsSpy: ReturnType<typeof vi.fn>;
   let saveSettingsSpy: ReturnType<typeof vi.fn>;
+  let loginSpy: ReturnType<typeof vi.fn>;
   let mockSettingService: ISettingService;
+  let mockUnasService: IUnasService;
   let testContainer: Container;
 
   beforeEach(() => {
@@ -38,14 +49,19 @@ describe('SettingsPage', () => {
       ],
     });
     saveSettingsSpy = vi.fn().mockResolvedValue({ success: true });
+    loginSpy = vi.fn().mockResolvedValue({ connection: makeConnection() });
 
     mockSettingService = {
       getSettings: getSettingsSpy,
       saveSettings: saveSettingsSpy,
     };
+    mockUnasService = {
+      login: loginSpy,
+    };
 
     testContainer = new Container();
     testContainer.bind<ISettingService>(TYPES.ISettingService).toConstantValue(mockSettingService);
+    testContainer.bind<IUnasService>(TYPES.IUnasService).toConstantValue(mockUnasService);
   });
 
   const renderSettingsPage = () =>
@@ -180,5 +196,138 @@ describe('SettingsPage', () => {
     // Act again to toggle back
     fireEvent.click(toggleButton);
     expect(apiKeyInput).toHaveAttribute('type', 'password');
+  });
+
+  it('disables the test connection button and shows a prompt when no API key is saved', async () => {
+    // Arrange
+    getSettingsSpy.mockResolvedValue({
+      settings: { unasApiKey: '', unasApiEndpoint: 'https://api.unas.eu/shop/', languageId: 2 },
+      languages: [
+        { id: 1, code: 'en' },
+        { id: 2, code: 'hu' },
+      ],
+    });
+
+    // Act
+    renderSettingsPage();
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Test Unas connection|UNAS kapcsolat tesztelése/i })).toBeDisabled();
+    });
+    expect(
+      screen.getByText(/Save your settings before testing|Mentse a beállításait az UNAS kapcsolat tesztelése előtt/i),
+    ).toBeInTheDocument();
+  });
+
+  it('disables the test connection button while the API key has unsaved changes', async () => {
+    // Arrange
+    renderSettingsPage();
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();
+    });
+
+    const apiKeyInput = screen.getByDisplayValue('initial_unas_key');
+    fireEvent.change(apiKeyInput, { target: { value: 'changed_key' } });
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Test Unas connection|UNAS kapcsolat tesztelése/i })).toBeDisabled();
+    });
+    expect(
+      screen.getByText(/Save your settings before testing|Mentse a beállításait az UNAS kapcsolat tesztelése előtt/i),
+    ).toBeInTheDocument();
+  });
+
+  it('calls the login endpoint and renders the connection result on success', async () => {
+    // Arrange
+    renderSettingsPage();
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();
+    });
+
+    const testButton = screen.getByRole('button', { name: /Test Unas connection|UNAS kapcsolat tesztelése/i });
+    expect(testButton).toBeEnabled();
+
+    // Act
+    fireEvent.click(testButton);
+
+    // Assert
+    await waitFor(() => {
+      expect(loginSpy).toHaveBeenCalledWith('test_token');
+      expect(screen.getByText(/Connection successful|Sikeres kapcsolat/i)).toBeInTheDocument();
+      expect(screen.getByText(/Last test:|Utolsó teszt:/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Webshop connected|Test Webshop csatlakoztatva/i)).toBeInTheDocument();
+    });
+  });
+
+  it('opens and closes the permissions dialog from the result panel', async () => {
+    // Arrange
+    getSettingsSpy.mockResolvedValue({
+      settings: {
+        unasApiKey: 'initial_unas_key',
+        unasApiEndpoint: 'https://api.unas.eu/shop/',
+        languageId: 2,
+        unasConnection: makeConnection(),
+      },
+      languages: [
+        { id: 1, code: 'en' },
+        { id: 2, code: 'hu' },
+      ],
+    });
+
+    renderSettingsPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /available permissions|elérhető jogosultságok/i }),
+      ).toBeInTheDocument();
+    });
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: /available permissions|elérhető jogosultságok/i }));
+
+    // Assert
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /Available Permissions|Elérhető jogosultságok/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('getOrder')).toBeInTheDocument();
+      expect(screen.getByText('setPackageOffer')).toBeInTheDocument();
+    });
+
+    // Act - close dialog
+    fireEvent.click(screen.getByRole('button', { name: /OK|Rendben/i }));
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.queryByText('getOrder')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows an error toast when the connection test fails', async () => {
+    // Arrange
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    loginSpy.mockRejectedValueOnce(new Error('API error'));
+
+    renderSettingsPage();
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('initial_unas_key')).toBeInTheDocument();
+    });
+
+    const testButton = screen.getByRole('button', { name: /Test Unas connection|UNAS kapcsolat tesztelése/i });
+
+    // Act
+    fireEvent.click(testButton);
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByText(/Connection test failed|Az UNAS kapcsolat tesztelése sikertelen/i)).toBeInTheDocument();
+    });
+
+    consoleErrorSpy.mockRestore();
   });
 });

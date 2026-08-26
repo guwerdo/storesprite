@@ -83,7 +83,14 @@ describe("UNAS login endpoint (mocked dependencies)", () => {
 
     // Assert
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.payload)).toEqual({ webshopInfo });
+    expect(JSON.parse(response.payload)).toEqual({
+      connection: expect.objectContaining({
+        token: null,
+        checkedAt: expect.any(String),
+        shopId: 83219,
+        webshopInfo,
+      }),
+    });
     expect(mockClient.login).toHaveBeenCalledWith(true);
     expect(mockSettingService.saveUnasConnection).toHaveBeenCalledWith(
       "mock_jwt_user_1",

@@ -30,7 +30,7 @@ describe("UnasService", () => {
     (mockSettingService.getUserSettings as any).mockResolvedValue(settings);
   });
 
-  it("should fetch settings, login, redact the token, persist, and return webshop info", async () => {
+  it("should fetch settings, login, redact the token, persist, and return the connection record", async () => {
     // Arrange
     const webshopInfo = makeWebshopInfo();
     (mockClient.login as any).mockResolvedValue(makeLoginResponse({ webshopInfo }));
@@ -50,7 +50,14 @@ describe("UnasService", () => {
         webshopInfo,
       })
     );
-    expect(result).toEqual(webshopInfo);
+    expect(result).toEqual(
+      expect.objectContaining({
+        token: null,
+        checkedAt: expect.any(String),
+        shopId: 83219,
+        webshopInfo,
+      })
+    );
   });
 
   it("should throw UnasConfigError when the user has no API key configured", async () => {

@@ -27,12 +27,16 @@ import { useInjection } from '../../di/ContainerProvider.js';
 import { TYPES } from '../../di/types.js';
 import type { ISettingService } from '../../types/SettingService.interface.js';
 import type { ILanguage } from '../../types/Setting.interface.js';
+import type { IUnasService } from '../../types/UnasService.interface.js';
+import type { IUnasConnection } from '../../types/UnasConnection.interface.js';
+import { UnasConnectionTestPanel } from './components/UnasConnectionTestPanel.js';
 import { useAppTranslation } from '../../i18n/I18nProvider.js';
 
 export default function SettingsPage(): React.JSX.Element {
   const { t, language, setLanguage } = useAppTranslation();
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const settingService = useInjection<ISettingService>(TYPES.ISettingService);
+  const unasService = useInjection<IUnasService>(TYPES.IUnasService);
 
   const DEFAULT_UNAS_API_ENDPOINT = 'https://api.unas.eu/shop/';
 
@@ -44,6 +48,10 @@ export default function SettingsPage(): React.JSX.Element {
   const [languages, setLanguages] = useState<ILanguage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
+  const [unasConnection, setUnasConnection] = useState<IUnasConnection | null>(null);
+  const [testingConnection, setTestingConnection] = useState<boolean>(false);
+  const [savedApiKey, setSavedApiKey] = useState<string>('');
+  const [savedEndpoint, setSavedEndpoint] = useState<string>(DEFAULT_UNAS_API_ENDPOINT);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -101,6 +109,10 @@ export default function SettingsPage(): React.JSX.Element {
         if (response.settings?.unasApiKey) {
           setUnasApiKey(response.settings.unasApiKey);
         }
+
+        setSavedApiKey(response.settings?.unasApiKey ?? '');
+        setSavedEndpoint(response.settings?.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT);
+        setUnasConnection(response.settings?.unasConnection ?? null);
 
         if (response.settings?.languageId) {
           setSelectedLanguageId(response.settings.languageId);
@@ -181,6 +193,28 @@ export default function SettingsPage(): React.JSX.Element {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
+  const hasSavedKey = savedApiKey.trim() !== '';
+  const hasUnsavedChanges = unasApiKey !== savedApiKey || unasApiEndpoint.trim() !== savedEndpoint;
+  const testConnectionDisabled = !hasSavedKey || hasUnsavedChanges;
+
+  const handleTestConnection = async (): Promise<void> => {
+    try {
+      setTestingConnection(true);
+      const token = await getToken();
+      const response = await unasService.login(token ?? '');
+      setUnasConnection(response.connection);
+    } catch (err: unknown) {
+      console.error('Failed to test UNAS connection:', err);
+      setSnackbar({
+        open: true,
+        message: t('settings.unasTest.failed'),
+        severity: 'error',
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 760 }}>
       <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
@@ -250,6 +284,14 @@ export default function SettingsPage(): React.JSX.Element {
                 helperText={t('settings.unasApiKeyHelper')}
                 fullWidth
                 size="small"
+              />
+
+              <UnasConnectionTestPanel
+                connection={unasConnection}
+                testing={testingConnection}
+                disabled={testConnectionDisabled}
+                showSavePrompt={testConnectionDisabled}
+                onTest={() => void handleTestConnection()}
               />
 
               <FormControl fullWidth size="small">

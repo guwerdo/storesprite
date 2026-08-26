@@ -1,5 +1,5 @@
-import type { IWebshopInfo } from "@storesprite/unas-json-client";
+import type { UnasConnectionRecord } from "./UnasConnection.interface.js";
 
 export interface IUnasService {
-  login(userId: string): Promise<IWebshopInfo | null>;
+  login(userId: string): Promise<UnasConnectionRecord>;
 }

@@ -166,8 +166,8 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
       const logger = request.server.container.get<Logger>(TYPES.Logger);
 
       try {
-        const webshopInfo = await unasService.login(userId);
-        return { webshopInfo };
+        const connection = await unasService.login(userId);
+        return { connection };
       } catch (err: unknown) {
         if (err instanceof UnasConfigError) {
           return reply.code(400).send({ error: "UNAS API key is not configured" });
