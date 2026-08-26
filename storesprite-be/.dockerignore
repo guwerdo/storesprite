@@ -1,10 +1,9 @@
-# Dependencies
+﻿# Dependencies
 node_modules
-**/node_modules
+.pnpm-store
 
 # Build & compiled output
 dist
-**/dist
 build
 .temp
 .cache

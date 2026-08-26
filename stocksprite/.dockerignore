@@ -1,7 +1,39 @@
+# Dependencies
+**/node_modules
 downloader/node_modules
+
+# Build & compiled output
+**/dist
 downloader/dist
+build
+.temp
+.cache
+*.tsbuildinfo
+
+# Test & coverage output
+coverage
+.nyc_output
+
+# Temp files & runtime outputs
+**/temp
 downloader/temp
-downloader/*.log
-processor/
-.git
+*.tmp
+
+# Environment & secrets
 .env
+.env.*
+!.env.example
+
+# Version control & IDE
+.git
+.vscode
+.idea
+processor/
+
+# Logs
+**/logs
+*.log
+downloader/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
