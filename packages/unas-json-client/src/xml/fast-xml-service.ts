@@ -10,9 +10,13 @@ export class FastXmlService implements IXmlService {
     constructor() {
         this._parser = new XMLParser({
             ignoreAttributes: false,
+            // Keep values as strings — endpoints coerce numbers themselves. Auto-coercion
+            // would corrupt CDATA like the phone number "+36704341115" into a number.
+            parseTagValue: false,
             // Repeating elements that must always parse as arrays (even when single).
             // Add to this list as new endpoints are introduced (Order, Customer, …).
-            isArray: (tagName: string) => tagName === "Product" || tagName === "Warehouse",
+            isArray: (tagName: string) =>
+                tagName === "Product" || tagName === "Warehouse" || tagName === "Permission" || tagName === "Language",
         });
         // `format: false` keeps the output minified — UNAS rejects newlines inside <Filename> CDATA.
         this._builder = new XMLBuilder({ ignoreAttributes: false, format: false, indentBy: "", cdataPropName: "#cdata" });

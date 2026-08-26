@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Login>
   <Token>tok-123</Token>
-  <Expire>2026.08.26 13:21:26</Expire>
-  <ExpireTime>1787743286</ExpireTime>
+  <Expire>2026.08.26 13:12:22</Expire>
+  <ExpireTime>1787742742</ExpireTime>
   <ShopId>83219</ShopId>
   <Subscription>vip-100000</Subscription>
   <Permissions>
@@ -52,5 +52,42 @@
     <Permission>getPackageOffer</Permission>
     <Permission>setPackageOffer</Permission>
   </Permissions>
+  <WebshopInfo>
+    <WebshopName><![CDATA[Ezermesterszerszám]]></WebshopName>
+    <WebshopURL><![CDATA[www.ezermesterszerszam.hu]]></WebshopURL>
+    <Contact>
+      <Name><![CDATA[Agro Garden Kft.]]></Name>
+      <Email><![CDATA[webshop@agrogarden.hu]]></Email>
+      <Phone><![CDATA[+36-70/434-1115]]></Phone>
+      <Mobile><![CDATA[+36704341115]]></Mobile>
+    </Contact>
+    <Trader>
+      <Name><![CDATA[Agro Garden Kft.]]></Name>
+      <Country><![CDATA[hu]]></Country>
+      <ZIP><![CDATA[2330]]></ZIP>
+      <County><![CDATA[Pest]]></County>
+      <City><![CDATA[Dunaharaszti]]></City>
+      <Address><![CDATA[Némedi út 10.]]></Address>
+      <Phone><![CDATA[+36-70/434-1115]]></Phone>
+      <Fax><![CDATA[]]></Fax>
+      <DefaultCurrency><![CDATA[Ft]]></DefaultCurrency>
+      <VAT><![CDATA[14743977-2-13]]></VAT>
+      <EUVAT><![CDATA[HU14743977]]></EUVAT>
+      <Email><![CDATA[webshop@agrogarden.hu]]></Email>
+      <RegistrationNumber><![CDATA[13-09-128364]]></RegistrationNumber>
+      <RegistrationCourt><![CDATA[Pest Megyei Bíróság]]></RegistrationCourt>
+      <LicenseNumber><![CDATA[2613-5/2010]]></LicenseNumber>
+      <RegistrationDate><![CDATA[2010. május 11.]]></RegistrationDate>
+      <BankAccount><![CDATA[11742180-20070809]]></BankAccount>
+      <IBAN><![CDATA[HU92117421802007080900000000]]></IBAN>
+      <Website><![CDATA[www.ezermesterszerszam.hu]]></Website>
+    </Trader>
+    <Languages>
+      <Language>
+        <Code>hu</Code>
+        <Default>yes</Default>
+      </Language>
+    </Languages>
+  </WebshopInfo>
   <Status>ok</Status>
 </Login>

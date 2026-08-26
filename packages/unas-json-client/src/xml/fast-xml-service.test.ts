@@ -11,11 +11,11 @@ describe("FastXmlService", () => {
     });
 
     it("parses a single repeating element into an array", () => {
-        const parsed = xml.parse<{ Warehouses: { Warehouse: { Id: number }[] } }>(
+        const parsed = xml.parse<{ Warehouses: { Warehouse: { Id: string }[] } }>(
             "<Warehouses><Warehouse><Id>1</Id></Warehouse></Warehouses>",
         );
         expect(Array.isArray(parsed.Warehouses.Warehouse)).toBe(true);
-        expect(parsed.Warehouses.Warehouse[0].Id).toBe(1);
+        expect(parsed.Warehouses.Warehouse[0].Id).toBe("1");
     });
 
     it("parses CDATA content", () => {

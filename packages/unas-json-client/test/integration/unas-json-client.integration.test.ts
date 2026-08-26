@@ -51,4 +51,21 @@ describe("unas-json-client integration", () => {
         expect(warehouses).toHaveLength(2);
         expect(warehouses[0].id).toBe(5726549);
     });
+
+    it("requests webshop info when login(true)", async () => {
+        server = await startTestHttpServer((request) => {
+            if (request.url.endsWith("/login")) {
+                return { status: 200, body: loadFixture("responses", "login-response-webshopinfo.xml") };
+            }
+            return { status: 404, body: "<Error>not found</Error>" };
+        });
+
+        const client = createUnasJsonClient({ baseUrl: server.baseUrl, apiKey: "test-key" });
+        const response = await client.login(true);
+
+        expect(response.webshopInfo).toBeDefined();
+        expect(response.webshopInfo?.webshopName).toBe("Ezermesterszerszám");
+        const [loginRequest] = server.requests;
+        expect(normalizeXml(loginRequest.body)).toBe(normalizeXml(loadFixture("requests", "login-webshopinfo.xml")));
+    });
 });

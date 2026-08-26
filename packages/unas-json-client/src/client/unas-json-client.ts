@@ -32,9 +32,8 @@ export class UnasJsonClient implements IUnasJsonClient {
         this._endpoints = new Map(endpoints.map((endpoint) => [endpoint.name, endpoint] as const));
     }
 
-    public async login(): Promise<string> {
-        const response = await this._call<ILoginRequest, ILoginResponse>("login", { apiKey: this._config.apiKey });
-        return response.token;
+    public async login(webshopInfo = false): Promise<ILoginResponse> {
+        return this._call<ILoginRequest, ILoginResponse>("login", { apiKey: this._config.apiKey, webshopInfo });
     }
 
     public async getProductDB(request: IGetProductDBRequest = {}): Promise<string> {
@@ -88,7 +87,7 @@ export class UnasJsonClient implements IUnasJsonClient {
     }
 
     private async fetchAndStoreToken(): Promise<string> {
-        const token = await this.login();
+        const { token } = await this.login();
         await this._tokenStore.set(TOKEN_KEY, token);
         return token;
     }

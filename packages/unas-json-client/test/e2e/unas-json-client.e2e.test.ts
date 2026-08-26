@@ -9,8 +9,8 @@ const enabled = process.env.UNAS_E2E === "1" && !!baseUrl && !!apiKey;
 describe.skipIf(!enabled)("UNAS live API (e2e)", () => {
     it("logs in and lists warehouses", async () => {
         const client = createUnasJsonClient({ baseUrl: baseUrl!, apiKey: apiKey! });
-        const token = await client.login();
-        expect(token).toBeTruthy();
+        const response = await client.login();
+        expect(response.token).toBeTruthy();
         const warehouses = await client.getWarehouse();
         expect(Array.isArray(warehouses)).toBe(true);
     });

@@ -5,7 +5,7 @@ import { TYPES } from "../../types/binding-keys.js";
 import type { IWarehouseResponse } from "./get-warehouse.types.js";
 
 interface IWarehouseContent {
-    Warehouses?: { Warehouse?: { Id: number; Name: string; PublicName: string }[] };
+    Warehouses?: { Warehouse?: { Id: string; Name: string; PublicName: string }[] };
 }
 
 @injectable()
@@ -25,6 +25,6 @@ export class GetWarehouseEndpoint implements IUnasEndpoint<undefined, IWarehouse
         if (!warehouses) {
             return [];
         }
-        return warehouses.map((w) => ({ id: w.Id, name: w.Name, publicName: w.PublicName }));
+        return warehouses.map((w) => ({ id: Number(w.Id), name: w.Name, publicName: w.PublicName }));
     }
 }

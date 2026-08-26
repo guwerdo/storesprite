@@ -22,10 +22,24 @@ describe("UnasJsonClient", () => {
         fake.enqueue(`${BASE}login`, LOGIN_OK);
         const client = setup(fake);
 
-        const token = await client.login();
-        expect(token).toBe("tok-1");
+        const response = await client.login();
+        expect(response.token).toBe("tok-1");
         expect(fake.requests).toHaveLength(1);
         expect(fake.requests[0].headers).toBeUndefined();
+    });
+
+    it("sends WebshopInfo only when requested", async () => {
+        const fake = new FakeUnasHttpClient();
+        fake.enqueue(`${BASE}login`, LOGIN_OK);
+        fake.enqueue(`${BASE}login`, LOGIN_OK);
+        const client = setup(fake);
+
+        await client.login();
+        await client.login(true);
+
+        expect(fake.requests).toHaveLength(2);
+        expect(fake.requests[0].body ?? "").not.toContain("WebshopInfo");
+        expect(fake.requests[1].body ?? "").toContain("<WebshopInfo>true</WebshopInfo>");
     });
 
     it("sends a Bearer header for an authenticated request", async () => {
