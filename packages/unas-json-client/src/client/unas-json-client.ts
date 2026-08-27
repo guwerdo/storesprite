@@ -13,12 +13,13 @@ import { TYPES } from "../types/binding-keys.js";
 import { UnasAuthError, UnasConfigError, UnasHttpError, UnasTransportError } from "../types/errors.js";
 import type { IUnasJsonClient } from "./unas-json-client.interface.js";
 
-const TOKEN_KEY = "unasToken";
+const DEFAULT_TOKEN_KEY = "unasToken";
 
 @injectable()
 export class UnasJsonClient implements IUnasJsonClient {
     private readonly _endpoints: Map<string, IUnasEndpoint>;
     private readonly _baseUrl: string;
+    private readonly _tokenKey: string;
 
     constructor(
         @inject(TYPES.IUnasJsonClientConfig) private readonly _config: IUnasJsonClientConfig,
@@ -29,6 +30,7 @@ export class UnasJsonClient implements IUnasJsonClient {
         @multiInject(TYPES.UnasEndpoint) endpoints: IUnasEndpoint[],
     ) {
         this._baseUrl = this._config.baseUrl.endsWith("/") ? this._config.baseUrl : `${this._config.baseUrl}/`;
+        this._tokenKey = this._config.tokenKey ?? DEFAULT_TOKEN_KEY;
         this._endpoints = new Map(endpoints.map((endpoint) => [endpoint.name, endpoint] as const));
     }
 
@@ -78,7 +80,7 @@ export class UnasJsonClient implements IUnasJsonClient {
     }
 
     private async getToken(): Promise<string> {
-        const token = await this._tokenStore.get(TOKEN_KEY);
+        const token = await this._tokenStore.get(this._tokenKey);
         if (token) {
             return token;
         }
@@ -88,7 +90,7 @@ export class UnasJsonClient implements IUnasJsonClient {
 
     private async fetchAndStoreToken(): Promise<string> {
         const { token } = await this.login();
-        await this._tokenStore.set(TOKEN_KEY, token);
+        await this._tokenStore.set(this._tokenKey, token);
         return token;
     }
 

@@ -29,6 +29,7 @@ export class UnasService implements IUnasService {
     const config = {
       baseUrl: settings.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
       apiKey: settings.unasApiKey,
+      tokenKey: userId,
     };
 
     this._logger?.info("Creating UNAS JSON client", { baseUrl: config.baseUrl });

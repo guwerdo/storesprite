@@ -1,5 +1,6 @@
 import { Container } from "inversify";
 import log4js from "log4js";
+import { InMemoryTokenStore } from "@storesprite/unas-json-client";
 import { jsonWithDataFieldLayout } from "../log/index.js";
 import { log4jsConfig } from "../config/log4js.config.js";
 import { configuration } from "../config/configuration.js";
@@ -33,6 +34,9 @@ export function createContainer(orm?: MikroORM): Container {
 
   // Bind Connection Test Runner Service
   container.bind(TYPES.IConnectionTestRunnerService).to(ConnectionTestRunnerService).inSingletonScope();
+
+  // Shared app-owned UNAS token store, keyed per tenant (userId)
+  container.bind(TYPES.ITokenStore).to(InMemoryTokenStore).inSingletonScope();
 
   // Bind UNAS client factory (singleton) and UNAS service (request scope)
   container.bind(TYPES.IUnasClientFactory).to(UnasClientFactory).inSingletonScope();

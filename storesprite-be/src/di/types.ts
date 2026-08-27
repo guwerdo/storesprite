@@ -32,6 +32,7 @@ export const TYPES = {
   IConnectionTestRunnerService: Symbol.for("IConnectionTestRunnerService"),
   IUnasService: Symbol.for("IUnasService"),
   IUnasClientFactory: Symbol.for("IUnasClientFactory"),
+  ITokenStore: Symbol.for("ITokenStore"),
   EntityManager: Symbol.for("EntityManager"),
   MikroORM: Symbol.for("MikroORM"),
   Logger: Symbol.for("Logger"),
