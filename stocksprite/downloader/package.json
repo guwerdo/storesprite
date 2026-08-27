@@ -16,7 +16,7 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "iconv-lite": "^0.7.3",
-    "inversify": "^6.0.2",
+    "inversify": "^8.2.3",
     "log4js": "^6.9.1",
     "reflect-metadata": "^0.2.2",
     "sax": "^1.4.1",

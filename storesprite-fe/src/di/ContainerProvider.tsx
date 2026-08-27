@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import type { Container, interfaces } from 'inversify';
+import type { Container, ServiceIdentifier } from 'inversify';
 import type { IContainerProviderProps } from '../types/Container.interface.js';
 
 const ContainerContext = createContext<Container | null>(null);
@@ -12,7 +12,7 @@ export function ContainerProvider({ container, children }: IContainerProviderPro
   );
 }
 
-export function useInjection<T>(identifier: interfaces.ServiceIdentifier<T>): T {
+export function useInjection<T>(identifier: ServiceIdentifier<T>): T {
   const ctx = useContext(ContainerContext);
   if (ctx === null) {
     throw new Error('useInjection must be used within a ContainerProvider');

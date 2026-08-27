@@ -59,8 +59,8 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
 | :--- | :--- | :--- | :--- |
 | **`storesprite-fe/`** | `storesprite-fe` | `/workspace` | Frontend React UI & Vite dev server |
 | **`storesprite-be/`** | `storesprite-be` | `/workspace/storesprite-be` | Fastify API, MikroORM & PostgreSQL connections |
-| **`stocksprite/`** | `stocksprite-app` / `app` | `/app` | Worker CLI, BullMQ queues & Redis connections |
-| **`packages/unas-json-client/`** | `unas-json-client-dev` | `/workspace` | UNAS JSON Client SDK builds, tests & validation |
+| **`stocksprite/downloader/`** | `storesprite-be` (or on-demand `storesprite-downloader`) | `/workspace/stocksprite/downloader` | Downloader CLI, SFTP/HTTP fetching & stream converters |
+| **`packages/unas-json-client/`** | `storesprite-be` (or `unas-json-client-dev`) | `/workspace/packages/unas-json-client` | UNAS JSON Client SDK builds, tests & validation |
 | **Database** | `postgres` | `/` | PostgreSQL 16 server |
 
 ### Common Agent Commands (Run Inside Container)
@@ -99,30 +99,22 @@ docker exec -it storesprite-be npm install <package-name>
 # ==============================================================================
 # UNAS JSON CLIENT PACKAGE (packages/unas-json-client)
 # ==============================================================================
-# Build Image from Dockerfile
-docker build -t unas-json-client-dev packages/unas-json-client
+# Run Unit Tests
+docker exec -it storesprite-be npm --prefix /workspace/packages/unas-json-client test
 
-# Run Unit Tests in Docker
-docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm test
-
-# Run Integration Tests in Docker
-docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run test:integration
-
-# Run Build & Lint in Docker
-docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run build
-docker run --rm -v "${PWD}/packages/unas-json-client:/workspace" -v "/workspace/node_modules" unas-json-client-dev npm run lint
+# Run Build & Lint
+docker exec -it storesprite-be npm --prefix /workspace/packages/unas-json-client run build
+docker exec -it storesprite-be npm --prefix /workspace/packages/unas-json-client run lint
 
 # ==============================================================================
-# WORKER ENGINE (stocksprite)
+# DOWNLOADER WORKER SERVICE (stocksprite/downloader)
 # ==============================================================================
 # Run Unit Tests
-docker exec -it stocksprite-app npm test
+docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader test
 
-# Run Integration Tests
-docker exec -it stocksprite-app npm run test:integration
-
-# Run ESLint
-docker exec -it stocksprite-app npm run lint
+# Run Build & Lint
+docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader run build
+docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader run lint
 ```
 
 ---
