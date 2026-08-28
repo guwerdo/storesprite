@@ -1,4 +1,3 @@
-import type { MappingRuleDefinition } from "../config/mapping-rules.js";
 import {
   MappingDto,
   CreateMappingDto,
@@ -11,5 +10,4 @@ export interface IMappingService {
   createMapping(userId: string, dto: CreateMappingDto): Promise<MappingDto>;
   updateMapping(id: string, userId: string, dto: UpdateMappingDto): Promise<MappingDto | null>;
   deleteMapping(id: string, userId: string): Promise<boolean>;
-  getRules(): MappingRuleDefinition[];
 }

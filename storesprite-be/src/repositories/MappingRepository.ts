@@ -34,11 +34,6 @@ export class MappingRepository implements IMappingRepository {
     return this._em.findOne(Mapping, { id, user: { id: userId } });
   }
 
-  public async getById(id: string): Promise<Mapping | null> {
-    this._logger?.info("Fetching mapping by ID", { id });
-    return this._em.findOne(Mapping, { id });
-  }
-
   public async getByConnectionIdAndUserId(connectionId: string, userId: string): Promise<Mapping | null> {
     this._logger?.info("Fetching mapping by connection ID and user ID", { connectionId, userId });
     return this._em.findOne(Mapping, {

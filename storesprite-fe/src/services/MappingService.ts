@@ -6,7 +6,6 @@ import type {
   ICreateMappingPayload,
   IUpdateMappingPayload,
   IMappingsApiResponse,
-  IMappingApiResponse,
   IMappingMutationResponse,
   IMappingRulesResponse,
 } from '../types/Mapping.interface.js';
@@ -21,12 +20,6 @@ export class MappingService implements IMappingService {
 
   public async getMappings(token: string): Promise<IMappingsApiResponse> {
     return this._httpClient.get<IMappingsApiResponse>('/client/stocksprite/mappings', {
-      Authorization: `Bearer ${token}`,
-    });
-  }
-
-  public async getMapping(token: string, id: string): Promise<IMappingApiResponse> {
-    return this._httpClient.get<IMappingApiResponse>(`/client/stocksprite/mappings/${id}`, {
       Authorization: `Bearer ${token}`,
     });
   }

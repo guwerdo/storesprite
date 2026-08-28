@@ -18,7 +18,6 @@ import AddIcon from '@mui/icons-material/Add';
 import SchemaIcon from '@mui/icons-material/Schema';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import type { IMapping } from '../../../types/Mapping.interface.js';
-import { getMappingStatus } from './mappingStatus.js';
 
 export interface MappingListProps {
   mappings: IMapping[];
@@ -36,7 +35,7 @@ export default function MappingList({
   const getStatusBadge = (
     mapping: IMapping
   ): { label: string; color: 'success' | 'default' } => {
-    return getMappingStatus(mapping) === 'active'
+    return mapping.enabled
       ? { label: t('stocksprite.mappings.form.statusBadges.active'), color: 'success' }
       : { label: t('stocksprite.mappings.form.statusBadges.inactive'), color: 'default' };
   };

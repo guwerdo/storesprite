@@ -43,10 +43,6 @@ export interface IMappingsApiResponse {
   mappings: IMapping[];
 }
 
-export interface IMappingApiResponse {
-  mapping: IMapping;
-}
-
 export interface IMappingMutationResponse {
   success: boolean;
   mapping?: IMapping;

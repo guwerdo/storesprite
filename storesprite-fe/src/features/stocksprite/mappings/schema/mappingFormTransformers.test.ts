@@ -50,8 +50,8 @@ describe('mappingFormTransformers', () => {
     const payload = toApiPayload(form, rulesDict);
 
     expect(payload.stockMappings[0].warehouseId).toBe(1);
-    expect(payload.stockMappings[0].rules[0].params.value).toBe(3);
-    expect(payload.skuRules[0].params.from).toBe(' ');
+    expect(payload.stockMappings[0].rules?.[0]?.params.value).toBe(3);
+    expect(payload.skuRules?.[0]?.params.from).toBe(' ');
   });
 
   it('drops empty rules', () => {

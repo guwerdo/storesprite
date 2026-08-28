@@ -26,11 +26,8 @@ export default function StockMappingsSection({
 
   const watched = useWatch({ control, name: 'stockMappings' }) as StockMappingFormValue[] | undefined;
 
-  const isColumnUsedByOther = (col: string, currentIndex: number): boolean =>
-    (watched ?? []).some((item, i) => i !== currentIndex && item.column === col);
-
-  const isWarehouseUsedByOther = (warehouseId: number, currentIndex: number): boolean =>
-    (watched ?? []).some((item, i) => i !== currentIndex && item.warehouseId === String(warehouseId));
+  const isUsedByOther = <T,>(pick: (item: StockMappingFormValue) => T, currentIndex: number, value: T): boolean =>
+    (watched ?? []).some((item, i) => i !== currentIndex && pick(item) === value);
 
   const handleAdd = (): void => {
     append(emptyStockMappingFormValue());
@@ -62,7 +59,7 @@ export default function StockMappingsSection({
                   {...f}
                 >
                   {columns.map((c) => (
-                    <MenuItem key={c} value={c} disabled={isColumnUsedByOther(c, index)}>
+                    <MenuItem key={c} value={c} disabled={isUsedByOther((item) => item.column, index, c)}>
                       {c}
                     </MenuItem>
                   ))}
@@ -82,7 +79,7 @@ export default function StockMappingsSection({
                   {...f}
                 >
                   {warehouses.map((w) => (
-                    <MenuItem key={w.id} value={String(w.id)} disabled={isWarehouseUsedByOther(w.id, index)}>
+                    <MenuItem key={w.id} value={String(w.id)} disabled={isUsedByOther((item) => item.warehouseId, index, String(w.id))}>
                       {w.name} ({w.id})
                     </MenuItem>
                   ))}

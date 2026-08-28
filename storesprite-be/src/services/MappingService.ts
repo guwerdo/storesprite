@@ -45,7 +45,7 @@ export class MappingService implements IMappingService {
 
     this._assertValidName(dto.name);
     await this._assertTestedConnection(dto.connectionId, userId);
-    this._assertValidSkuField(dto.skuField);
+    this._assertNonEmpty(dto.skuField, "SKU field is required");
 
     const stockMappings = this._validator.validateStockMappings(dto.stockMappings);
     const skuRules = this._validator.validateMappingRules(dto.skuRules ?? []);
@@ -81,7 +81,7 @@ export class MappingService implements IMappingService {
       await this._assertNoMappingForConnection(dto.connectionId, userId, id);
     }
     if (dto.skuField !== undefined) {
-      this._assertValidSkuField(dto.skuField);
+      this._assertNonEmpty(dto.skuField, "SKU field is required");
     }
 
     let stockMappings: StockMappingItem[] | undefined;
@@ -111,10 +111,6 @@ export class MappingService implements IMappingService {
   public async deleteMapping(id: string, userId: string): Promise<boolean> {
     this._logger?.info("Service deleting mapping", { id, userId });
     return this._repository.delete(id, userId);
-  }
-
-  public getRules(): MappingRuleDefinition[] {
-    return MAPPING_RULES;
   }
 
   private _mapToDto(entity: Mapping): MappingDto {
@@ -215,18 +211,16 @@ export class MappingService implements IMappingService {
     }
   }
 
-  private _assertValidName(name: string): void {
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      throw new Error("Mapping name is required");
-    }
-    if (name.length > 255) {
-      throw new Error("Mapping name cannot exceed 255 characters");
+  private _assertNonEmpty(value: string, message: string): void {
+    if (!value.trim()) {
+      throw new Error(message);
     }
   }
 
-  private _assertValidSkuField(skuField: string): void {
-    if (!skuField || typeof skuField !== "string" || skuField.trim().length === 0) {
-      throw new Error("SKU field is required");
+  private _assertValidName(name: string): void {
+    this._assertNonEmpty(name, "Mapping name is required");
+    if (name.length > 255) {
+      throw new Error("Mapping name cannot exceed 255 characters");
     }
   }
 }

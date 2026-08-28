@@ -57,6 +57,7 @@ describe('SettingsPage', () => {
     };
     mockUnasService = {
       login: loginSpy,
+      getWarehouses: vi.fn().mockResolvedValue({ warehouses: [] }),
     };
 
     testContainer = new Container();

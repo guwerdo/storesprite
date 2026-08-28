@@ -13,7 +13,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Controller, useFieldArray, useFormContext, useWatch, type FieldArrayPath } from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext, useWatch, type FieldArrayPath, type FieldPath } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
 import type { IMappingRuleDefinition } from '../../../../types/Mapping.interface.js';
 import { computePreview } from '../rulePreview.js';
@@ -47,11 +47,6 @@ export default function RulesEditor({ name, group, rulesDict, sample }: RulesEdi
     setExpanded(true);
   };
 
-  const getParamDefs = (op: string) => {
-    const def = groupRules.find((r) => r.op === op);
-    return def?.params ?? [];
-  };
-
   return (
     <Box sx={{ ml: 2, mt: 1, borderLeft: '2px solid', borderColor: 'divider', pl: 1.5 }}>
       <Button
@@ -71,7 +66,6 @@ export default function RulesEditor({ name, group, rulesDict, sample }: RulesEdi
             index={index}
             count={fields.length}
             groupRules={groupRules}
-            getParamDefs={getParamDefs}
             onRemove={() => remove(index)}
             onMoveUp={() => move(index, index - 1)}
             onMoveDown={() => move(index, index + 1)}
@@ -103,23 +97,22 @@ interface RuleRowProps {
   index: number;
   count: number;
   groupRules: IMappingRuleDefinition[];
-  getParamDefs: (op: string) => IMappingRuleDefinition['params'];
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
 }
 
-function RuleRow({ name, index, count, groupRules, getParamDefs, onRemove, onMoveUp, onMoveDown }: RuleRowProps): React.JSX.Element {
+function RuleRow({ name, index, count, groupRules, onRemove, onMoveUp, onMoveDown }: RuleRowProps): React.JSX.Element {
   const { t } = useAppTranslation();
   const { control, register } = useFormContext<MappingFormValues>();
 
-  const op = useWatch({ control, name: `${name}.op` as FieldArrayPath<MappingFormValues> }) as string | undefined;
-  const paramDefs = getParamDefs(op ?? '');
+  const op = useWatch({ control, name: `${name}.op` as FieldPath<MappingFormValues> }) as unknown as string | undefined;
+  const paramDefs = groupRules.find((r) => r.op === op)?.params ?? [];
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', py: 0.25 }}>
       <Controller
-        name={`${name}.op` as FieldArrayPath<MappingFormValues>}
+        name={`${name}.op` as FieldPath<MappingFormValues>}
         control={control}
         render={({ field }) => (
           <TextField select size="small" label={t('stocksprite.mappings.rules.op')} sx={{ minWidth: 140 }} {...field}>
@@ -139,7 +132,7 @@ function RuleRow({ name, index, count, groupRules, getParamDefs, onRemove, onMov
           type={p.type === 'number' ? 'number' : 'text'}
           label={t(`stocksprite.mappings.rules.params.${p.name}`)}
           sx={{ width: 110 }}
-          {...register(`${name}.params.${p.name}` as FieldArrayPath<MappingFormValues>)}
+          {...register(`${name}.params.${p.name}` as FieldPath<MappingFormValues>)}
         />
       ))}
 

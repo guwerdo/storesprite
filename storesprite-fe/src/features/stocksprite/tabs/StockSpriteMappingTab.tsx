@@ -103,22 +103,14 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
       if (savedMapping) {
         setSelectedMapping(savedMapping);
         setViewMode('EDIT');
+        setMappings((prev) =>
+          prev.some((m) => m.id === savedMapping.id)
+            ? prev.map((m) => (m.id === savedMapping.id ? savedMapping : m))
+            : [savedMapping, ...prev]
+        );
       } else {
         setSelectedMapping(null);
         setViewMode('LIST');
-      }
-
-      try {
-        const listResponse = await mappingService.getMappings(token);
-        setMappings(listResponse.mappings ?? []);
-        if (savedMapping) {
-          const fresh = (listResponse.mappings ?? []).find((m) => m.id === savedMapping?.id);
-          if (fresh) {
-            setSelectedMapping(fresh);
-          }
-        }
-      } catch {
-        // Silently ignore background list refresh error if save succeeded
       }
     } catch (err: unknown) {
       setSnackbar({

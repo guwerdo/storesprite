@@ -90,17 +90,19 @@ export default function MappingForm({
       if (!token) return;
 
       try {
-        const warehouseResponse = await unasService.getWarehouses(token);
-        if (mounted) setWarehouses(warehouseResponse.warehouses ?? []);
+        const [warehouseResponse, rulesResponse] = await Promise.all([
+          unasService.getWarehouses(token),
+          mappingService.getRules(token),
+        ]);
+        if (mounted) {
+          setWarehouses(warehouseResponse.warehouses ?? []);
+          setRulesDict(rulesResponse.rules ?? []);
+        }
       } catch {
-        if (mounted) setWarehouses([]);
-      }
-
-      try {
-        const rulesResponse = await mappingService.getRules(token);
-        if (mounted) setRulesDict(rulesResponse.rules ?? []);
-      } catch {
-        if (mounted) setRulesDict([]);
+        if (mounted) {
+          setWarehouses([]);
+          setRulesDict([]);
+        }
       }
     };
     void loadOptions();
@@ -115,10 +117,15 @@ export default function MappingForm({
     selectedConnection.testResult?.success === true &&
     (selectedConnection.testResult.columns?.length ?? 0) > 0;
 
-  const mappedConnectionIds = new Set(
-    mappings.filter((m) => m.id !== initialMapping?.id).map((m) => m.connectionId)
+  const selectableConnections = useMemo(
+    () => {
+      const mappedConnectionIds = new Set(
+        mappings.filter((m) => m.id !== initialMapping?.id).map((m) => m.connectionId)
+      );
+      return connections.filter((c) => !mappedConnectionIds.has(c.id));
+    },
+    [connections, mappings, initialMapping]
   );
-  const selectableConnections = connections.filter((c) => !mappedConnectionIds.has(c.id));
 
   const onSubmit = (values: MappingFormValues): void => {
     void onSave(toApiPayload(values, rulesDict));

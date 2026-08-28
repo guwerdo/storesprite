@@ -30,7 +30,6 @@ describe('StockSpriteMappingTab', () => {
   beforeEach(() => {
     mockMappingService = {
       getMappings: vi.fn().mockResolvedValue({ mappings: [] }),
-      getMapping: vi.fn().mockResolvedValue({ mapping: null }),
       createMapping: vi.fn().mockResolvedValue({ success: true }),
       updateMapping: vi.fn().mockResolvedValue({ success: true }),
       deleteMapping: vi.fn().mockResolvedValue({ success: true }),
