@@ -39,7 +39,7 @@ describe("Connections API Integration Tests", () => {
     it("should return 401 Unauthorized when Bearer token is missing", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
       });
 
       expect(response.statusCode).toBe(401);
@@ -48,11 +48,11 @@ describe("Connections API Integration Tests", () => {
     });
   });
 
-  describe("GET /api/client/connections", () => {
+  describe("GET /api/client/stocksprite/connections", () => {
     it("should return empty list when no connections exist for user", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -64,12 +64,12 @@ describe("Connections API Integration Tests", () => {
     });
   });
 
-  describe("POST & GET /api/client/connections CRUD Operations", () => {
+  describe("POST & GET /api/client/stocksprite/connections CRUD Operations", () => {
     it("should create HTTP connection with Bearer credentials, fetch, update and delete", async () => {
       // 1. Create HTTP / CSV connection with Bearer credentials
       const createResponse = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -113,7 +113,7 @@ describe("Connections API Integration Tests", () => {
       // 2. Fetch connection by ID
       const getResponse = await app.inject({
         method: "GET",
-        url: `/api/client/connections/${connectionId}`,
+        url: `/api/client/stocksprite/connections/${connectionId}`,
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -131,7 +131,7 @@ describe("Connections API Integration Tests", () => {
       // 3. Update connection name and credentials
       const updateResponse = await app.inject({
         method: "PUT",
-        url: `/api/client/connections/${connectionId}`,
+        url: `/api/client/stocksprite/connections/${connectionId}`,
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -157,7 +157,7 @@ describe("Connections API Integration Tests", () => {
       // 4. Delete connection
       const deleteResponse = await app.inject({
         method: "DELETE",
-        url: `/api/client/connections/${connectionId}`,
+        url: `/api/client/stocksprite/connections/${connectionId}`,
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -168,7 +168,7 @@ describe("Connections API Integration Tests", () => {
       // 5. Verify deleted
       const verifyResponse = await app.inject({
         method: "GET",
-        url: `/api/client/connections/${connectionId}`,
+        url: `/api/client/stocksprite/connections/${connectionId}`,
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -180,7 +180,7 @@ describe("Connections API Integration Tests", () => {
     it("should create SFTP connection with SSH Private Key credentials", async () => {
       const createResponse = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -224,7 +224,7 @@ describe("Connections API Integration Tests", () => {
     it("should reject connection when name is empty", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -245,7 +245,7 @@ describe("Connections API Integration Tests", () => {
     it("should reject connection when name exceeds 255 characters", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -266,7 +266,7 @@ describe("Connections API Integration Tests", () => {
     it("should reject invalid schema payload with 400 status code", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -294,7 +294,7 @@ describe("Connections API Integration Tests", () => {
     it("should return 404 when updating non-existent connection", async () => {
       const response = await app.inject({
         method: "PUT",
-        url: "/api/client/connections/11111111-2222-3333-4444-555555555555",
+        url: "/api/client/stocksprite/connections/11111111-2222-3333-4444-555555555555",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -311,7 +311,7 @@ describe("Connections API Integration Tests", () => {
     it("should return 404 when deleting non-existent connection", async () => {
       const response = await app.inject({
         method: "DELETE",
-        url: "/api/client/connections/11111111-2222-3333-4444-555555555555",
+        url: "/api/client/stocksprite/connections/11111111-2222-3333-4444-555555555555",
         headers: {
           authorization: "Bearer mock_jwt_user_conn",
         },
@@ -328,7 +328,7 @@ describe("Connections API Integration Tests", () => {
       // 1. Create connection
       const createRes = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: { authorization: "Bearer mock_jwt_user_conn" },
         payload: {
           name: "Test Feed",
@@ -343,7 +343,7 @@ describe("Connections API Integration Tests", () => {
       // 2. Trigger run-test (Expect 202 Accepted)
       const testRes = await app.inject({
         method: "POST",
-        url: `/api/client/connections/${connId}/run-test`,
+        url: `/api/client/stocksprite/connections/${connId}/run-test`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
       });
       expect(testRes.statusCode).toBe(202);
@@ -351,7 +351,7 @@ describe("Connections API Integration Tests", () => {
       // 3. Get test-result (Expect 200 with testResult)
       const getResultRes = await app.inject({
         method: "GET",
-        url: `/api/client/connections/${connId}/test-result`,
+        url: `/api/client/stocksprite/connections/${connId}/test-result`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
       });
       expect(getResultRes.statusCode).toBe(200);
@@ -361,7 +361,7 @@ describe("Connections API Integration Tests", () => {
       // 4. Invalidate test-result (Expect 204 No Content)
       const deleteResultRes = await app.inject({
         method: "DELETE",
-        url: `/api/client/connections/${connId}/test-result`,
+        url: `/api/client/stocksprite/connections/${connId}/test-result`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
       });
       expect(deleteResultRes.statusCode).toBe(204);
@@ -369,7 +369,7 @@ describe("Connections API Integration Tests", () => {
       // 5. Verify test-result is now null
       const checkRes = await app.inject({
         method: "GET",
-        url: `/api/client/connections/${connId}/test-result`,
+        url: `/api/client/stocksprite/connections/${connId}/test-result`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
       });
       expect(JSON.parse(checkRes.payload).testResult).toBeNull();
@@ -379,7 +379,7 @@ describe("Connections API Integration Tests", () => {
       // 1. Create connection
       const createRes = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: { authorization: "Bearer mock_jwt_user_conn" },
         payload: {
           name: "Conflict Feed",
@@ -394,14 +394,14 @@ describe("Connections API Integration Tests", () => {
       // 2. Trigger run-test
       await app.inject({
         method: "POST",
-        url: `/api/client/connections/${connId}/run-test`,
+        url: `/api/client/stocksprite/connections/${connId}/run-test`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
       });
 
       // 3. Attempt update immediately (Expect 409 Conflict)
       const updateRes = await app.inject({
         method: "PUT",
-        url: `/api/client/connections/${connId}`,
+        url: `/api/client/stocksprite/connections/${connId}`,
         headers: { authorization: "Bearer mock_jwt_user_conn" },
         payload: { name: "Renamed While Testing" },
       });

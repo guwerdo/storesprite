@@ -6,12 +6,14 @@ import type { ISettingService } from '../types/SettingService.interface.js';
 import type { IConnectionService } from '../types/ConnectionService.interface.js';
 import type { ISocketService } from '../types/SocketService.interface.js';
 import type { IUnasService } from '../types/UnasService.interface.js';
+import type { IMappingService } from '../types/MappingService.interface.js';
 import { AxiosClient } from '../services/AxiosClient.js';
 import { MockHttpClient } from '../services/MockHttpClient.js';
 import { SettingService } from '../services/SettingService.js';
 import { ConnectionService } from '../services/ConnectionService.js';
 import { SocketService } from '../services/SocketService.js';
 import { UnasService } from '../services/UnasService.js';
+import { MappingService } from '../services/MappingService.js';
 
 const container = new Container();
 
@@ -20,6 +22,7 @@ container.bind<ISettingService>(TYPES.ISettingService).to(SettingService).inSing
 container.bind<IConnectionService>(TYPES.IConnectionService).to(ConnectionService).inSingletonScope();
 container.bind<ISocketService>(TYPES.ISocketService).to(SocketService).inSingletonScope();
 container.bind<IUnasService>(TYPES.IUnasService).to(UnasService).inSingletonScope();
+container.bind<IMappingService>(TYPES.IMappingService).to(MappingService).inSingletonScope();
 
 const useMock = (import.meta.env.VITE_USE_MOCK_CLIENT as string | undefined) === 'true';
 if (useMock) {

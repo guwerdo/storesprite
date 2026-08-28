@@ -87,7 +87,7 @@ describe('ConnectionService', () => {
     connectionService = new ConnectionService(mockHttpClient);
   });
 
-  it('calls GET /client/connections with Bearer token', async () => {
+  it('calls GET /client/stocksprite/connections with Bearer token', async () => {
     // Arrange
     const responseData: IConnectionsApiResponse = {
       connections: [
@@ -111,13 +111,13 @@ describe('ConnectionService', () => {
     const result = await connectionService.getConnections('jwt_token_123');
 
     // Assert
-    expect(getSpy).toHaveBeenCalledWith('/client/connections', {
+    expect(getSpy).toHaveBeenCalledWith('/client/stocksprite/connections', {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(responseData);
   });
 
-  it('calls POST /client/connections/:id/run-test with Bearer token', async () => {
+  it('calls POST /client/stocksprite/connections/:id/run-test with Bearer token', async () => {
     // Arrange
     postSpy.mockResolvedValue(undefined);
 
@@ -126,13 +126,13 @@ describe('ConnectionService', () => {
 
     // Assert
     expect(postSpy).toHaveBeenCalledWith(
-      '/client/connections/conn_test_id/run-test',
+      '/client/stocksprite/connections/conn_test_id/run-test',
       {},
       { Authorization: 'Bearer jwt_token_123' },
     );
   });
 
-  it('calls GET /client/connections/:id/test-result with Bearer token', async () => {
+  it('calls GET /client/stocksprite/connections/:id/test-result with Bearer token', async () => {
     // Arrange
     const resultPayload = {
       testResult: {
@@ -151,13 +151,13 @@ describe('ConnectionService', () => {
     const result = await connectionService.getTestResult('jwt_token_123', 'conn_test_id');
 
     // Assert
-    expect(getSpy).toHaveBeenCalledWith('/client/connections/conn_test_id/test-result', {
+    expect(getSpy).toHaveBeenCalledWith('/client/stocksprite/connections/conn_test_id/test-result', {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(resultPayload);
   });
 
-  it('calls DELETE /client/connections/:id/test-result with Bearer token', async () => {
+  it('calls DELETE /client/stocksprite/connections/:id/test-result with Bearer token', async () => {
     // Arrange
     deleteSpy.mockResolvedValue(undefined);
 
@@ -166,7 +166,7 @@ describe('ConnectionService', () => {
 
     // Assert
     expect(deleteSpy).toHaveBeenCalledWith(
-      '/client/connections/conn_test_id/test-result',
+      '/client/stocksprite/connections/conn_test_id/test-result',
       { Authorization: 'Bearer jwt_token_123' },
     );
   });

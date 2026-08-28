@@ -19,6 +19,7 @@ import {
   SftpCredentials,
   ConnectionTestResult,
 } from "../types/DataConnectionRepository.interface.js";
+import { StockMappingItem, MappingRule } from "../types/MappingRepository.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 
 export class SchemaValidationError extends Error {
@@ -41,6 +42,8 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   private readonly _validateHttpCredentials: ValidateFunction<HttpCredentials>;
   private readonly _validateSftpCredentials: ValidateFunction<SftpCredentials>;
   private readonly _validateTestResult: ValidateFunction<ConnectionTestResult>;
+  private readonly _validateStockMappings: ValidateFunction<StockMappingItem[]>;
+  private readonly _validateMappingRules: ValidateFunction<MappingRule[]>;
 
   constructor(
     @inject(TYPES.Logger)
@@ -57,11 +60,26 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
     this._validateHttpCredentials = this._compileSchema<HttpCredentials>("connection-credentials-http.schema.json");
     this._validateSftpCredentials = this._compileSchema<SftpCredentials>("connection-credentials-sftp.schema.json");
     this._validateTestResult = this._compileSchema<ConnectionTestResult>("connection-test-result.schema.json");
+    this._validateStockMappings = this._compileSchema<StockMappingItem[]>("stock-mapping-items.schema.json");
+    this._validateMappingRules = this._compileSchema<MappingRule[]>("mapping-rules.schema.json");
   }
 
   public validateTestResult(testResult: unknown): ConnectionTestResult {
     this._requireObject(testResult, "Test result");
     return this._assertValid(this._validateTestResult, testResult, "connection test result", { testResult });
+  }
+
+  public validateStockMappings(items: unknown): StockMappingItem[] {
+    this._requireObject(items, "Stock mappings");
+    return this._assertValid(this._validateStockMappings, items, "stock mappings", { items });
+  }
+
+  public validateMappingRules(rules: unknown): MappingRule[] {
+    if (rules === null || rules === undefined) {
+      return [];
+    }
+    this._requireObject(rules, "Mapping rules");
+    return this._assertValid(this._validateMappingRules, rules, "mapping rules", { rules });
   }
 
   public validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig {

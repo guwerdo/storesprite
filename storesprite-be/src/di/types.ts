@@ -2,6 +2,7 @@ export { User } from "../entities/User.js";
 export { Language } from "../entities/Language.js";
 export { UserSetting } from "../entities/UserSetting.js";
 export { DataConnection } from "../entities/DataConnection.js";
+export { Mapping } from "../entities/Mapping.js";
 export type { IUserRepository } from "../types/UserRepository.interface.js";
 export type { IUserService } from "../types/UserService.interface.js";
 export type { ISettingRepository } from "../types/SettingRepository.interface.js";
@@ -15,6 +16,13 @@ export type {
   DataFormatConfig,
 } from "../types/DataConnectionRepository.interface.js";
 export type { IDataConnectionService } from "../types/DataConnectionService.interface.js";
+export type {
+  IMappingRepository,
+  MappingDto,
+  CreateMappingDto,
+  UpdateMappingDto,
+} from "../types/MappingRepository.interface.js";
+export type { IMappingService } from "../types/MappingService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 export type { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
 export type { IUnasService } from "../types/UnasService.interface.js";
@@ -28,6 +36,8 @@ export const TYPES = {
   ISettingService: Symbol.for("ISettingService"),
   IDataConnectionRepository: Symbol.for("IDataConnectionRepository"),
   IDataConnectionService: Symbol.for("IDataConnectionService"),
+  IMappingRepository: Symbol.for("IMappingRepository"),
+  IMappingService: Symbol.for("IMappingService"),
   IJsonSchemaValidator: Symbol.for("IJsonSchemaValidator"),
   IConnectionTestRunnerService: Symbol.for("IConnectionTestRunnerService"),
   IUnasService: Symbol.for("IUnasService"),

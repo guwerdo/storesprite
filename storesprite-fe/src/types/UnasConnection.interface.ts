@@ -15,3 +15,13 @@ export interface IUnasConnection {
 export interface IUnasLoginResponse {
   connection: IUnasConnection;
 }
+
+export interface IWarehouse {
+  id: number;
+  name: string;
+  publicName: string;
+}
+
+export interface IUnasWarehouseResponse {
+  warehouses: IWarehouse[];
+}

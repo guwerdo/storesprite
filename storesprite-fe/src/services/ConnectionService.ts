@@ -20,19 +20,19 @@ export class ConnectionService implements IConnectionService {
   ) {}
 
   public async getConnections(token: string): Promise<IConnectionsApiResponse> {
-    return this._httpClient.get<IConnectionsApiResponse>('/client/connections', {
+    return this._httpClient.get<IConnectionsApiResponse>('/client/stocksprite/connections', {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async getConnection(token: string, id: string): Promise<IConnectionApiResponse> {
-    return this._httpClient.get<IConnectionApiResponse>(`/client/connections/${id}`, {
+    return this._httpClient.get<IConnectionApiResponse>(`/client/stocksprite/connections/${id}`, {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async createConnection(token: string, payload: ICreateConnectionPayload): Promise<IConnectionMutationResponse> {
-    return this._httpClient.post<IConnectionMutationResponse>('/client/connections', payload, {
+    return this._httpClient.post<IConnectionMutationResponse>('/client/stocksprite/connections', payload, {
       Authorization: `Bearer ${token}`,
     });
   }
@@ -42,31 +42,31 @@ export class ConnectionService implements IConnectionService {
     id: string,
     payload: IUpdateConnectionPayload
   ): Promise<IConnectionMutationResponse> {
-    return this._httpClient.put<IConnectionMutationResponse>(`/client/connections/${id}`, payload, {
+    return this._httpClient.put<IConnectionMutationResponse>(`/client/stocksprite/connections/${id}`, payload, {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async deleteConnection(token: string, id: string): Promise<IConnectionMutationResponse> {
-    return this._httpClient.delete<IConnectionMutationResponse>(`/client/connections/${id}`, {
+    return this._httpClient.delete<IConnectionMutationResponse>(`/client/stocksprite/connections/${id}`, {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async runTest(token: string, id: string): Promise<void> {
-    await this._httpClient.post(`/client/connections/${id}/run-test`, {}, {
+    await this._httpClient.post(`/client/stocksprite/connections/${id}/run-test`, {}, {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async getTestResult(token: string, id: string): Promise<IConnectionTestResultResponse> {
-    return this._httpClient.get<IConnectionTestResultResponse>(`/client/connections/${id}/test-result`, {
+    return this._httpClient.get<IConnectionTestResultResponse>(`/client/stocksprite/connections/${id}/test-result`, {
       Authorization: `Bearer ${token}`,
     });
   }
 
   public async invalidateConnection(token: string, id: string): Promise<void> {
-    await this._httpClient.delete(`/client/connections/${id}/test-result`, {
+    await this._httpClient.delete(`/client/stocksprite/connections/${id}/test-result`, {
       Authorization: `Bearer ${token}`,
     });
   }

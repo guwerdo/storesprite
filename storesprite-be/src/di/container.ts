@@ -11,6 +11,8 @@ import { SettingService } from "../services/SettingService.js";
 import { SettingRepository } from "../repositories/SettingRepository.js";
 import { DataConnectionService } from "../services/DataConnectionService.js";
 import { DataConnectionRepository } from "../repositories/DataConnectionRepository.js";
+import { MappingService } from "../services/MappingService.js";
+import { MappingRepository } from "../repositories/MappingRepository.js";
 import { ConnectionTestRunnerService } from "../services/ConnectionTestRunnerService.js";
 import { UnasClientFactory } from "../services/UnasClientFactory.js";
 import { UnasService } from "../services/UnasService.js";
@@ -55,6 +57,8 @@ export function createContainer(orm?: MikroORM): Container {
   container.bind(TYPES.ISettingService).to(SettingService).inRequestScope();
   container.bind(TYPES.IDataConnectionRepository).to(DataConnectionRepository).inRequestScope();
   container.bind(TYPES.IDataConnectionService).to(DataConnectionService).inRequestScope();
+  container.bind(TYPES.IMappingRepository).to(MappingRepository).inRequestScope();
+  container.bind(TYPES.IMappingService).to(MappingService).inRequestScope();
 
   return container;
 }

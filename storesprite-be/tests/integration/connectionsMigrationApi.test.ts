@@ -57,12 +57,12 @@ describe("Migration & Data Connections Integration Tests", () => {
     });
   });
 
-  describe("Live Database REST CRUD Operations (/api/client/connections)", () => {
+  describe("Live Database REST CRUD Operations (/api/client/stocksprite/connections)", () => {
     it("should create HTTP connection, persist in DB, and retrieve via GET", async () => {
       // 1. Create HTTP / CSV connection
       const createResponse = await app.inject({
         method: "POST",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer live_test_jwt_1",
         },
@@ -107,7 +107,7 @@ describe("Migration & Data Connections Integration Tests", () => {
       // 3. Retrieve list from REST endpoint
       const listResponse = await app.inject({
         method: "GET",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer live_test_jwt_1",
         },
@@ -121,7 +121,7 @@ describe("Migration & Data Connections Integration Tests", () => {
       // 4. Update connection
       const updateResponse = await app.inject({
         method: "PUT",
-        url: `/api/client/connections/${connId}`,
+        url: `/api/client/stocksprite/connections/${connId}`,
         headers: {
           authorization: "Bearer live_test_jwt_1",
         },
@@ -137,7 +137,7 @@ describe("Migration & Data Connections Integration Tests", () => {
       // 5. Delete connection
       const deleteResponse = await app.inject({
         method: "DELETE",
-        url: `/api/client/connections/${connId}`,
+        url: `/api/client/stocksprite/connections/${connId}`,
         headers: {
           authorization: "Bearer live_test_jwt_1",
         },
@@ -148,7 +148,7 @@ describe("Migration & Data Connections Integration Tests", () => {
       // 6. Verify table is empty
       const verifyListResponse = await app.inject({
         method: "GET",
-        url: "/api/client/connections",
+        url: "/api/client/stocksprite/connections",
         headers: {
           authorization: "Bearer live_test_jwt_1",
         },
