@@ -47,4 +47,10 @@ export class MappingService implements IMappingService {
       Authorization: `Bearer ${token}`,
     });
   }
+
+  public async runMapping(token: string, id: string): Promise<{ success: boolean }> {
+    return this._httpClient.post<{ success: boolean }>(`/client/stocksprite/mappings/${id}/run`, {}, {
+      Authorization: `Bearer ${token}`,
+    });
+  }
 }

@@ -394,8 +394,8 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "enabled": {
-          "name": "enabled",
+        "schedule_enabled": {
+          "name": "schedule_enabled",
           "type": "bool",
           "unsigned": false,
           "autoincrement": false,
@@ -409,6 +409,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
+        },
+        "schedule": {
+          "name": "schedule",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         },
         "sku_field": {
           "name": "sku_field",
@@ -494,17 +510,6 @@
       "name": "mappings",
       "schema": "public",
       "indexes": [
-        {
-          "columnNames": [
-            "user_id",
-            "enabled"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_mappings_user_enabled",
-          "unique": false,
-          "primary": false
-        },
         {
           "columnNames": [
             "user_id"
@@ -698,6 +703,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "json"
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": "'Europe/Budapest'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "user_settings",

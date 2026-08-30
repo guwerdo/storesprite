@@ -84,7 +84,6 @@ describe("Mappings API Integration Tests", () => {
       headers: { authorization: "Bearer mock_jwt_user_map" },
       payload: {
         name: "Cromwell",
-        enabled: true,
         connectionId,
         skuField: "part",
         skuRules: [{ op: "replace-all", params: { from: " ", to: "_" } }],
@@ -168,5 +167,45 @@ describe("Mappings API Integration Tests", () => {
     });
     expect(second.statusCode).toBe(400);
     expect(JSON.parse(second.payload).error).toContain("Only one mapping");
+  });
+
+  it("sets a schedule on a mapping and runs it", async () => {
+    const connectionId = await seedTestedConnection("mock_jwt_user_map");
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/client/stocksprite/mappings",
+      headers: { authorization: "Bearer mock_jwt_user_map" },
+      payload: { name: "Scheduled", connectionId, skuField: "part", stockMappings: [] },
+    });
+    expect(createResponse.statusCode).toBe(201);
+    const mappingId = JSON.parse(createResponse.payload).mapping.id;
+
+    const schedule = { frequency: "daily", times: [9, 17], daysOfWeek: [1, 2, 3, 4, 5] };
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: `/api/client/stocksprite/mappings/${mappingId}`,
+      headers: { authorization: "Bearer mock_jwt_user_map" },
+      payload: { scheduleEnabled: true, schedule },
+    });
+    expect(updateResponse.statusCode).toBe(200);
+    const updateBody = JSON.parse(updateResponse.payload);
+    expect(updateBody.mapping.scheduleEnabled).toBe(true);
+    expect(updateBody.mapping.schedule).toEqual(schedule);
+
+    const runResponse = await app.inject({
+      method: "POST",
+      url: `/api/client/stocksprite/mappings/${mappingId}/run`,
+      headers: { authorization: "Bearer mock_jwt_user_map" },
+    });
+    expect(runResponse.statusCode).toBe(202);
+  });
+
+  it("returns 404 when running a missing mapping", async () => {
+    const runResponse = await app.inject({
+      method: "POST",
+      url: "/api/client/stocksprite/mappings/00000000-0000-0000-0000-000000000000/run",
+      headers: { authorization: "Bearer mock_jwt_user_map" },
+    });
+    expect(runResponse.statusCode).toBe(404);
   });
 });

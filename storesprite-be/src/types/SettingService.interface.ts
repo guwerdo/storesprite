@@ -7,12 +7,14 @@ export interface UserSettingsDto {
   unasApiEndpoint?: string | null;
   languageId?: number | null;
   unasConnection?: UnasConnectionRecord | null;
+  timezone?: string | null;
 }
 
 export interface SaveUserSettingsDto {
   unasApiKey?: string | null;
   unasApiEndpoint?: string | null;
   languageId?: number | null;
+  timezone?: string | null;
 }
 
 export interface ISettingService {

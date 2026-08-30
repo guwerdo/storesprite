@@ -111,6 +111,7 @@ describe('SettingsPage', () => {
         unasApiKey: 'updated_key',
         unasApiEndpoint: 'https://custom.unas.eu/shop/',
         languageId: 2,
+        timezone: 'Europe/Budapest',
       });
       expect(
         screen.getByText(/user settings saved|felhasználói beállítások sikeresen mentve/i),

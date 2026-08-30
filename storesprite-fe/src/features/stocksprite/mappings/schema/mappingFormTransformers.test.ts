@@ -10,7 +10,6 @@ const rulesDict: IMappingRuleDefinition[] = [
 
 const makeForm = (overrides: Partial<MappingFormValues> = {}): MappingFormValues => ({
   name: 'Cromwell',
-  enabled: false,
   connectionId: 'c1',
   skuField: 'part',
   skuRules: [],
@@ -23,7 +22,7 @@ describe('mappingFormTransformers', () => {
     const mapping: IMapping = {
       id: '1',
       name: 'Cromwell',
-      enabled: true,
+      scheduleEnabled: false,
       connectionId: 'c1',
       skuField: 'part',
       skuRules: [{ op: 'replace-all', params: { from: ' ', to: '_' } }],

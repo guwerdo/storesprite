@@ -41,7 +41,6 @@ export function toFormValues(mapping?: IMapping | null): MappingFormValues {
 
   return {
     name: asString(mapping.name),
-    enabled: mapping.enabled === true,
     connectionId: asString(mapping.connectionId),
     skuField: asString(mapping.skuField),
     skuRules: (mapping.skuRules ?? []).map((r) => ruleToForm(r)),
@@ -56,7 +55,6 @@ export function toFormValues(mapping?: IMapping | null): MappingFormValues {
 export function toApiPayload(values: MappingFormValues, rulesDict: IMappingRuleDefinition[]): ICreateMappingPayload {
   return {
     name: values.name.trim(),
-    enabled: values.enabled,
     connectionId: values.connectionId,
     skuField: values.skuField.trim(),
     skuRules: values.skuRules

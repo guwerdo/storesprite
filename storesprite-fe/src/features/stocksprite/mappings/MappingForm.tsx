@@ -10,7 +10,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Switch,
   TextField,
   Typography,
   FormHelperText,
@@ -167,19 +166,6 @@ export default function MappingForm({
                 helperText={formState.errors.name?.message}
                 {...methods.register('name')}
               />
-
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                  {t('stocksprite.mappings.form.active')}
-                </Typography>
-                <Controller
-                  name="enabled"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
-                  )}
-                />
-              </Box>
             </Box>
 
             <Box sx={{ mt: 2 }}>

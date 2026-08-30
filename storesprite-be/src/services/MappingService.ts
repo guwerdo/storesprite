@@ -8,6 +8,7 @@ import {
   UpdateMappingDto,
   StockMappingItem,
   MappingRule,
+  MappingSchedule,
 } from "../types/MappingRepository.interface.js";
 import { IMappingService } from "../types/MappingService.interface.js";
 import { IDataConnectionRepository } from "../types/DataConnectionRepository.interface.js";
@@ -97,12 +98,24 @@ export class MappingService implements IMappingService {
       this._validateRuleList(skuRules, "sku");
     }
 
+    let schedule: MappingSchedule | null | undefined;
+    if (dto.schedule !== undefined) {
+      schedule = dto.schedule === null ? null : this._validateSchedule(dto.schedule);
+    }
+
+    const scheduleEnabled = dto.scheduleEnabled ?? existing.scheduleEnabled;
+    const resultingSchedule = schedule !== undefined ? schedule : existing.schedule;
+    if (scheduleEnabled && (resultingSchedule === null || resultingSchedule === undefined)) {
+      throw new Error("Cannot enable a schedule without a schedule configuration");
+    }
+
     const updated = await this._repository.update(id, userId, {
       ...dto,
       name: dto.name !== undefined ? dto.name.trim() : undefined,
       skuField: dto.skuField !== undefined ? dto.skuField.trim() : undefined,
       stockMappings,
       skuRules: skuRules !== undefined ? (skuRules.length > 0 ? skuRules : null) : undefined,
+      schedule,
     });
 
     return updated ? this._mapToDto(updated) : null;
@@ -113,12 +126,23 @@ export class MappingService implements IMappingService {
     return this._repository.delete(id, userId);
   }
 
+  public async runMapping(id: string, userId: string): Promise<boolean> {
+    this._logger?.info("Service running mapping", { id, userId });
+    const mapping = await this._repository.getByIdAndUserId(id, userId);
+    if (!mapping) {
+      return false;
+    }
+    this._logger?.info("Mapping run requested (execution not yet implemented)", { id, userId });
+    return true;
+  }
+
   private _mapToDto(entity: Mapping): MappingDto {
     return {
       id: entity.id,
       userId: entity.user?.id,
       name: entity.name,
-      enabled: entity.enabled,
+      scheduleEnabled: entity.scheduleEnabled,
+      schedule: entity.schedule ?? null,
       connectionId: entity.connection?.id,
       skuField: entity.skuField,
       skuRules: entity.skuRules ?? null,
@@ -222,5 +246,88 @@ export class MappingService implements IMappingService {
     if (name.length > 255) {
       throw new Error("Mapping name cannot exceed 255 characters");
     }
+  }
+
+  private _validateSchedule(schedule: MappingSchedule): MappingSchedule {
+    if (!schedule || typeof schedule !== "object") {
+      throw new Error("Schedule must be an object");
+    }
+    const s = schedule as unknown as Record<string, unknown>;
+    switch (s.frequency) {
+      case "once": {
+        const date = s.date;
+        if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          throw new Error("Schedule 'once' requires a valid date (YYYY-MM-DD)");
+        }
+        if (Number.isNaN(new Date(date).getTime())) {
+          throw new Error("Schedule 'once' has an invalid date");
+        }
+        const time = s.time;
+        if (!Number.isInteger(time) || (time as number) < 0 || (time as number) > 23) {
+          throw new Error("Schedule 'once' requires an hour (0-23)");
+        }
+        return { frequency: "once", date, time: time as number };
+      }
+      case "daily": {
+        const times = this._validateHours(s.times);
+        const daysOfWeek = this._validateOptionalDaysOfWeek(s.daysOfWeek);
+        return daysOfWeek ? { frequency: "daily", times, daysOfWeek } : { frequency: "daily", times };
+      }
+      case "monthly": {
+        const dayOfMonth = s.dayOfMonth;
+        if (!Number.isInteger(dayOfMonth) || (dayOfMonth as number) < 1 || (dayOfMonth as number) > 31) {
+          throw new Error("Schedule 'monthly' requires a day of month (1-31)");
+        }
+        const time = s.time;
+        if (!Number.isInteger(time) || (time as number) < 0 || (time as number) > 23) {
+          throw new Error("Schedule 'monthly' requires an hour (0-23)");
+        }
+        return { frequency: "monthly", dayOfMonth: dayOfMonth as number, time: time as number };
+      }
+      default:
+        throw new Error(`Unknown schedule frequency: ${String(s.frequency)}`);
+    }
+  }
+
+  private _validateHours(value: unknown): number[] {
+    if (!Array.isArray(value) || value.length === 0) {
+      throw new Error("Schedule requires at least one hour");
+    }
+    const hours = value as number[];
+    const seen = new Set<number>();
+    for (const h of hours) {
+      if (!Number.isInteger(h) || h < 0 || h > 23) {
+        throw new Error("Schedule hours must be integers in 0-23");
+      }
+      if (seen.has(h)) {
+        throw new Error("Schedule hours must not contain duplicates");
+      }
+      seen.add(h);
+    }
+    return hours;
+  }
+
+  private _validateOptionalDaysOfWeek(value: unknown): number[] | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+    if (!Array.isArray(value)) {
+      throw new Error("Schedule daysOfWeek must be an array");
+    }
+    if (value.length === 0) {
+      return undefined; // empty = every day
+    }
+    const days = value as number[];
+    const seen = new Set<number>();
+    for (const d of days) {
+      if (!Number.isInteger(d) || d < 0 || d > 6) {
+        throw new Error("Schedule daysOfWeek must be integers in 0-6");
+      }
+      if (seen.has(d)) {
+        throw new Error("Schedule daysOfWeek must not contain duplicates");
+      }
+      seen.add(d);
+    }
+    return days;
   }
 }

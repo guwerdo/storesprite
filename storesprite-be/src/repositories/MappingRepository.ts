@@ -59,7 +59,6 @@ export class MappingRepository implements IMappingRepository {
       data.name,
       data.skuField,
       data.stockMappings,
-      data.enabled ?? false,
       data.skuRules ?? null
     );
 
@@ -79,8 +78,11 @@ export class MappingRepository implements IMappingRepository {
     if (data.name !== undefined) {
       mapping.name = data.name;
     }
-    if (data.enabled !== undefined) {
-      mapping.enabled = data.enabled;
+    if (data.scheduleEnabled !== undefined) {
+      mapping.scheduleEnabled = data.scheduleEnabled;
+    }
+    if (data.schedule !== undefined) {
+      mapping.schedule = data.schedule;
     }
     if (data.skuField !== undefined) {
       mapping.skuField = data.skuField;

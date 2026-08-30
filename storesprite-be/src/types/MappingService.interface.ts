@@ -10,4 +10,5 @@ export interface IMappingService {
   createMapping(userId: string, dto: CreateMappingDto): Promise<MappingDto>;
   updateMapping(id: string, userId: string, dto: UpdateMappingDto): Promise<MappingDto | null>;
   deleteMapping(id: string, userId: string): Promise<boolean>;
+  runMapping(id: string, userId: string): Promise<boolean>;
 }

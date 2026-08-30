@@ -4,6 +4,7 @@ import { DataConnection } from "./DataConnection.js";
 import type {
   MappingRule,
   StockMappingItem,
+  MappingSchedule,
 } from "../types/MappingRepository.interface.js";
 
 @Entity({ tableName: "mappings" })
@@ -21,7 +22,10 @@ export class Mapping {
   name!: string;
 
   @Property({ type: "boolean", default: false })
-  enabled = false;
+  scheduleEnabled = false;
+
+  @Property({ type: "jsonb", nullable: true })
+  schedule?: MappingSchedule | null;
 
   @Property({ type: "varchar", length: 255 })
   skuField!: string;
@@ -44,7 +48,6 @@ export class Mapping {
     name: string,
     skuField: string,
     stockMappings: StockMappingItem[],
-    enabled = false,
     skuRules?: MappingRule[] | null
   ) {
     this.user = user;
@@ -52,7 +55,6 @@ export class Mapping {
     this.name = name;
     this.skuField = skuField;
     this.stockMappings = stockMappings;
-    this.enabled = enabled;
     this.skuRules = skuRules ?? null;
   }
 }

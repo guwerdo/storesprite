@@ -10,6 +10,7 @@ export interface IUserSettings {
   unasApiEndpoint?: string | null;
   languageId: number | null;
   unasConnection?: IUnasConnection | null;
+  timezone?: string | null;
 }
 
 export interface ISettingsApiResponse {
@@ -21,6 +22,7 @@ export interface ISaveSettingsRequest {
   unasApiKey: string;
   unasApiEndpoint?: string | null;
   languageId: number | null;
+  timezone?: string | null;
 }
 
 export interface ISaveSettingsResponse {

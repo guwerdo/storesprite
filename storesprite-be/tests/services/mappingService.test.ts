@@ -110,4 +110,157 @@ describe("MappingService Unit Tests", () => {
       })
     ).rejects.toThrow("Only one mapping can be created per connection");
   });
+
+  describe("updateMapping schedule", () => {
+    const makeExistingMapping = (): Mapping => {
+      const mapping = new Mapping(mockUser, makeTestedConnection(), "Cromwell", "sku", []);
+      mapping.id = "m1";
+      return mapping;
+    };
+
+    it("validates and persists a daily schedule", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+      repositoryMock.update.mockResolvedValue(existing);
+
+      await service.updateMapping("m1", "user_123", {
+        scheduleEnabled: true,
+        schedule: { frequency: "daily", times: [9, 17], daysOfWeek: [1, 2, 3, 4, 5] },
+      });
+
+      expect(repositoryMock.update).toHaveBeenCalledWith(
+        "m1",
+        "user_123",
+        expect.objectContaining({
+          scheduleEnabled: true,
+          schedule: { frequency: "daily", times: [9, 17], daysOfWeek: [1, 2, 3, 4, 5] },
+        })
+      );
+    });
+
+    it("rejects enabling a schedule without a configuration", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", { scheduleEnabled: true })
+      ).rejects.toThrow("Cannot enable a schedule without a schedule configuration");
+    });
+
+    it("rejects an unknown schedule frequency", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", {
+          scheduleEnabled: true,
+          schedule: { frequency: "yearly" } as any,
+        })
+      ).rejects.toThrow("Unknown schedule frequency: yearly");
+    });
+
+    it("rejects a monthly schedule with an invalid day", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", {
+          scheduleEnabled: true,
+          schedule: { frequency: "monthly", dayOfMonth: 0, time: 9 },
+        })
+      ).rejects.toThrow("Schedule 'monthly' requires a day of month (1-31)");
+    });
+
+    it("rejects duplicate hours", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", {
+          scheduleEnabled: true,
+          schedule: { frequency: "daily", times: [9, 9] },
+        })
+      ).rejects.toThrow("Schedule hours must not contain duplicates");
+    });
+
+    it("validates and persists a once schedule", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+      repositoryMock.update.mockResolvedValue(existing);
+
+      await service.updateMapping("m1", "user_123", {
+        scheduleEnabled: true,
+        schedule: { frequency: "once", date: "2026-09-15", time: 14 },
+      });
+
+      expect(repositoryMock.update).toHaveBeenCalledWith(
+        "m1",
+        "user_123",
+        expect.objectContaining({
+          scheduleEnabled: true,
+          schedule: { frequency: "once", date: "2026-09-15", time: 14 },
+        })
+      );
+    });
+
+    it("rejects a once schedule with an invalid date", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", {
+          scheduleEnabled: true,
+          schedule: { frequency: "once", date: "not-a-date", time: 14 },
+        })
+      ).rejects.toThrow("Schedule 'once' requires a valid date");
+    });
+
+    it("rejects a once schedule with an out-of-range hour", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(
+        service.updateMapping("m1", "user_123", {
+          scheduleEnabled: true,
+          schedule: { frequency: "once", date: "2026-09-15", time: 25 },
+        })
+      ).rejects.toThrow("Schedule 'once' requires an hour");
+    });
+
+    it("normalizes an empty daysOfWeek to every day", async () => {
+      const existing = makeExistingMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+      repositoryMock.update.mockResolvedValue(existing);
+
+      await service.updateMapping("m1", "user_123", {
+        scheduleEnabled: true,
+        schedule: { frequency: "daily", times: [9], daysOfWeek: [] },
+      });
+
+      expect(repositoryMock.update).toHaveBeenCalledWith(
+        "m1",
+        "user_123",
+        expect.objectContaining({
+          scheduleEnabled: true,
+          schedule: { frequency: "daily", times: [9] },
+        })
+      );
+    });
+  });
+
+  describe("runMapping", () => {
+    it("returns true when the mapping exists", async () => {
+      const existing = new Mapping(mockUser, makeTestedConnection(), "Cromwell", "sku", []);
+      existing.id = "m1";
+      repositoryMock.getByIdAndUserId.mockResolvedValue(existing);
+
+      await expect(service.runMapping("m1", "user_123")).resolves.toBe(true);
+    });
+
+    it("returns false when the mapping is missing", async () => {
+      repositoryMock.getByIdAndUserId.mockResolvedValue(null);
+
+      await expect(service.runMapping("missing", "user_123")).resolves.toBe(false);
+    });
+  });
 });

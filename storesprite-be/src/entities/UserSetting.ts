@@ -3,6 +3,7 @@ import { User } from "./User.js";
 import { Language } from "./Language.js";
 import type { UnasConnectionRecord } from "../types/UnasConnection.interface.js";
 import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
+import { DEFAULT_TIMEZONE } from "../config/timezone.constants.js";
 
 @Entity({ tableName: "user_settings" })
 export class UserSetting {
@@ -24,6 +25,9 @@ export class UserSetting {
   @Property({ type: "jsonb", nullable: true })
   unasConnection?: UnasConnectionRecord | null;
 
+  @Property({ type: "varchar", length: 64, nullable: true, default: DEFAULT_TIMEZONE })
+  timezone?: string | null = DEFAULT_TIMEZONE;
+
   @Property({ type: "timestamptz", defaultRaw: "CURRENT_TIMESTAMP" })
   createdAt: Date = new Date();
 
@@ -35,7 +39,8 @@ export class UserSetting {
     unasApiKey?: string | null,
     language?: Language | null,
     unasApiEndpoint?: string | null,
-    unasConnection?: UnasConnectionRecord | null
+    unasConnection?: UnasConnectionRecord | null,
+    timezone?: string | null
   ) {
     this.user = user;
     this.unasApiKey = unasApiKey;
@@ -44,5 +49,8 @@ export class UserSetting {
       this.unasApiEndpoint = unasApiEndpoint;
     }
     this.unasConnection = unasConnection ?? null;
+    if (timezone !== undefined) {
+      this.timezone = timezone;
+    }
   }
 }

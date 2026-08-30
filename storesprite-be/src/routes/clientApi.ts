@@ -18,6 +18,7 @@ import {
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
 import { UnasConfigError, UnasHttpError, UnasTransportError } from "@storesprite/unas-json-client";
 import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
+import { DEFAULT_TIMEZONE } from "../config/timezone.constants.js";
 import { MAPPING_RULES } from "../config/mapping-rules.js";
 
 declare module "fastify" {
@@ -138,6 +139,7 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
           unasApiKey: body.unasApiKey ?? null,
           unasApiEndpoint: body.unasApiEndpoint ?? null,
           languageId: body.languageId ?? null,
+          timezone: body.timezone ?? null,
         });
 
         return {
@@ -146,6 +148,7 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
             unasApiKey: saved.unasApiKey ?? null,
             unasApiEndpoint: saved.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
             languageId: saved.language?.id ?? null,
+            timezone: saved.timezone ?? DEFAULT_TIMEZONE,
           },
         };
       } catch (err: unknown) {
@@ -558,6 +561,33 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
       } catch (err: unknown) {
         logger.error("Failed to delete mapping", { id, userId, error: Util.stringifyError(err) });
         return reply.code(500).send({ error: "Failed to delete mapping" });
+      }
+    }
+  );
+
+  // Protected route: POST /api/client/stocksprite/mappings/:id/run - Trigger a mapping run (stub)
+  fastify.post(
+    "/stocksprite/mappings/:id/run",
+    { config: { auth: true } },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const { id } = request.params;
+      const mappingService = request.server.container.get<IMappingService>(TYPES.IMappingService);
+      const logger = request.server.container.get<Logger>(TYPES.Logger);
+
+      try {
+        const ok = await mappingService.runMapping(id, userId);
+        if (!ok) {
+          return reply.code(404).send({ error: "Mapping not found" });
+        }
+        return reply.code(202).send({ success: true });
+      } catch (err: unknown) {
+        logger.error("Failed to trigger mapping run", { id, userId, error: Util.stringifyError(err) });
+        return reply.code(500).send({ error: "Failed to trigger mapping run" });
       }
     }
   );

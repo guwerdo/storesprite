@@ -28,7 +28,7 @@ export class SettingRepository implements ISettingRepository {
 
   async upsert(
     userId: string,
-    data: { unasApiKey?: string | null; unasApiEndpoint?: string | null; languageId?: number | null }
+    data: { unasApiKey?: string | null; unasApiEndpoint?: string | null; languageId?: number | null; timezone?: string | null }
   ): Promise<UserSetting> {
     this._logger?.info("Upserting user settings", { userId, languageId: data.languageId });
 
@@ -49,6 +49,9 @@ export class SettingRepository implements ISettingRepository {
       if (data.languageId !== undefined) {
         existing.language = language;
       }
+      if (data.timezone !== undefined) {
+        existing.timezone = data.timezone;
+      }
       existing.updatedAt = new Date();
       await this._em.flush();
       this._logger?.info("User settings updated successfully", { userId, settingId: existing.id });
@@ -65,7 +68,9 @@ export class SettingRepository implements ISettingRepository {
       user,
       data.unasApiKey,
       language,
-      data.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT
+      data.unasApiEndpoint ?? DEFAULT_UNAS_API_ENDPOINT,
+      undefined,
+      data.timezone
     );
     await this._em.persistAndFlush(newSetting);
     this._logger?.info("New user settings created successfully", { userId, settingId: newSetting.id });

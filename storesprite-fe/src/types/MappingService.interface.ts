@@ -12,4 +12,5 @@ export interface IMappingService {
   updateMapping(token: string, id: string, payload: IUpdateMappingPayload): Promise<IMappingMutationResponse>;
   deleteMapping(token: string, id: string): Promise<IMappingMutationResponse>;
   getRules(token: string): Promise<IMappingRulesResponse>;
+  runMapping(token: string, id: string): Promise<{ success: boolean }>;
 }

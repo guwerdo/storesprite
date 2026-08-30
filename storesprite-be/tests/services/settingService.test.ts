@@ -38,6 +38,7 @@ describe("SettingService", () => {
         unasApiEndpoint: "https://api.unas.eu/shop/",
         languageId: 2,
         unasConnection: null,
+        timezone: "Europe/Budapest",
       });
     });
 

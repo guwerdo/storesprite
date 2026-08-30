@@ -9,10 +9,16 @@ export interface IStockMappingItem {
   rules?: IMappingRule[];
 }
 
+export type IMappingSchedule =
+  | { frequency: 'once'; date: string; time: number }
+  | { frequency: 'daily'; times: number[]; daysOfWeek?: number[] }
+  | { frequency: 'monthly'; dayOfMonth: number; time: number };
+
 export interface IMapping {
   id: string;
   name: string;
-  enabled: boolean;
+  scheduleEnabled: boolean;
+  schedule?: IMappingSchedule | null;
   connectionId: string;
   skuField: string;
   skuRules?: IMappingRule[] | null;
@@ -27,7 +33,6 @@ export interface ICreateMappingPayload {
   skuField: string;
   skuRules?: IMappingRule[] | null;
   stockMappings: IStockMappingItem[];
-  enabled?: boolean;
 }
 
 export interface IUpdateMappingPayload {
@@ -36,7 +41,8 @@ export interface IUpdateMappingPayload {
   skuField?: string;
   skuRules?: IMappingRule[] | null;
   stockMappings?: IStockMappingItem[];
-  enabled?: boolean;
+  scheduleEnabled?: boolean;
+  schedule?: IMappingSchedule | null;
 }
 
 export interface IMappingsApiResponse {

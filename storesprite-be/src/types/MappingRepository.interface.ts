@@ -20,11 +20,17 @@ export interface StockMappingItem {
 export type StockMappingItems = StockMappingItem[];
 export type MappingRules = MappingRule[];
 
+export type MappingSchedule =
+  | { frequency: "once"; date: string; time: number }
+  | { frequency: "daily"; times: number[]; daysOfWeek?: number[] }
+  | { frequency: "monthly"; dayOfMonth: number; time: number };
+
 export interface MappingDto {
   id: string;
   userId?: string;
   name: string;
-  enabled: boolean;
+  scheduleEnabled: boolean;
+  schedule?: MappingSchedule | null;
   connectionId: string;
   skuField: string;
   skuRules?: MappingRule[] | null;
@@ -39,7 +45,6 @@ export interface CreateMappingDto {
   skuField: string;
   skuRules?: MappingRule[] | null;
   stockMappings: StockMappingItem[];
-  enabled?: boolean;
 }
 
 export interface UpdateMappingDto {
@@ -48,7 +53,8 @@ export interface UpdateMappingDto {
   skuField?: string;
   skuRules?: MappingRule[] | null;
   stockMappings?: StockMappingItem[];
-  enabled?: boolean;
+  scheduleEnabled?: boolean;
+  schedule?: MappingSchedule | null;
 }
 
 export interface IMappingRepository {

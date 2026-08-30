@@ -40,11 +40,25 @@ export default function SettingsPage(): React.JSX.Element {
 
   const DEFAULT_UNAS_API_ENDPOINT = 'https://api.unas.eu/shop/';
 
+  const TIMEZONES = [
+    'Europe/Budapest',
+    'Europe/Vienna',
+    'Europe/Bratislava',
+    'Europe/Prague',
+    'Europe/Warsaw',
+    'Europe/Bucharest',
+    'Europe/Zagreb',
+    'Europe/Belgrade',
+    'Europe/Ljubljana',
+    'Europe/Berlin',
+  ];
+
   const [unasApiEndpoint, setUnasApiEndpoint] = useState<string>(DEFAULT_UNAS_API_ENDPOINT);
   const [unasApiEndpointTouched, setUnasApiEndpointTouched] = useState<boolean>(false);
   const [unasApiKey, setUnasApiKey] = useState<string>('');
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [selectedLanguageId, setSelectedLanguageId] = useState<number | ''>('');
+  const [selectedTimezone, setSelectedTimezone] = useState<string>('Europe/Budapest');
   const [languages, setLanguages] = useState<ILanguage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -118,6 +132,10 @@ export default function SettingsPage(): React.JSX.Element {
         });
         setUnasConnection(response.settings?.unasConnection ?? null);
 
+        if (response.settings?.timezone) {
+          setSelectedTimezone(response.settings.timezone);
+        }
+
         if (response.settings?.languageId) {
           setSelectedLanguageId(response.settings.languageId);
           const activeLang = availableLanguages.find((l) => l.id === response.settings?.languageId);
@@ -174,6 +192,7 @@ export default function SettingsPage(): React.JSX.Element {
         unasApiKey,
         unasApiEndpoint: unasApiEndpoint.trim(),
         languageId: selectedLanguageId === '' ? null : Number(selectedLanguageId),
+        timezone: selectedTimezone,
       });
 
       setSnackbar({
@@ -309,6 +328,23 @@ export default function SettingsPage(): React.JSX.Element {
                   {languages.map((lang) => (
                     <MenuItem key={lang.id} value={lang.id}>
                       {t(`languages.${lang.code.toLowerCase()}`) || lang.code}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth size="small">
+                <InputLabel id="timezone-select-label">{t('settings.timezone')}</InputLabel>
+                <Select
+                  labelId="timezone-select-label"
+                  id="timezone-select"
+                  value={selectedTimezone}
+                  label={t('settings.timezone')}
+                  onChange={(e) => setSelectedTimezone(e.target.value)}
+                >
+                  {TIMEZONES.map((tz) => (
+                    <MenuItem key={tz} value={tz}>
+                      {tz}
                     </MenuItem>
                   ))}
                 </Select>

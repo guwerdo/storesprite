@@ -97,6 +97,7 @@ describe("Settings API Integration Tests (Isolated Test Database)", () => {
         unasApiKey: "test_unas_api_key_12345",
         unasApiEndpoint: "https://custom.unas.eu/shop/",
         languageId: huLang!.id,
+        timezone: "Europe/Budapest",
       });
 
       // 3. Verify subsequent GET request returns the persisted settings
@@ -115,6 +116,7 @@ describe("Settings API Integration Tests (Isolated Test Database)", () => {
         unasApiEndpoint: "https://custom.unas.eu/shop/",
         languageId: huLang!.id,
         unasConnection: null,
+        timezone: "Europe/Budapest",
       });
 
       // 4. Verify directly in database via MikroORM
@@ -127,6 +129,30 @@ describe("Settings API Integration Tests (Isolated Test Database)", () => {
       expect(savedSetting).not.toBeNull();
       expect(savedSetting?.unasApiEndpoint).toBe("https://custom.unas.eu/shop/");
       expect(savedSetting?.language?.code).toBe("hu");
+    });
+
+    it("should save and persist a timezone", async () => {
+      const putResponse = await app.inject({
+        method: "PUT",
+        url: "/api/client/settings",
+        headers: { authorization: "Bearer mock_jwt_token_user_1" },
+        payload: {
+          unasApiKey: "tz_key_12345",
+          timezone: "Europe/Vienna",
+        },
+      });
+
+      expect(putResponse.statusCode).toBe(200);
+      const putBody = JSON.parse(putResponse.payload);
+      expect(putBody.settings.timezone).toBe("Europe/Vienna");
+
+      const getResponse = await app.inject({
+        method: "GET",
+        url: "/api/client/settings",
+        headers: { authorization: "Bearer mock_jwt_token_user_1" },
+      });
+      expect(getResponse.statusCode).toBe(200);
+      expect(JSON.parse(getResponse.payload).settings.timezone).toBe("Europe/Vienna");
     });
   });
 });
