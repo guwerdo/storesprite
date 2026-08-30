@@ -549,6 +549,17 @@
         },
         {
           "columnNames": [
+            "user_id",
+            "schedule_enabled"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "idx_mappings_user_schedule_enabled",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -569,7 +580,14 @@
           "primary": false
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "mappings_schedule_enabled_requires_schedule",
+          "columnName": "schedule",
+          "definition": "CHECK (((schedule_enabled = false) OR (schedule IS NOT NULL)))",
+          "expression": "(schedule_enabled = false) OR (schedule IS NOT NULL)"
+        }
+      ],
       "foreignKeys": {
         "mappings_connection_id_fkey": {
           "columnNames": [

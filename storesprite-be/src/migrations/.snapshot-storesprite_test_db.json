@@ -353,7 +353,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": true,
+          "unique": false,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -512,11 +512,12 @@
       "indexes": [
         {
           "columnNames": [
-            "user_id"
+            "user_id",
+            "schedule_enabled"
           ],
-          "composite": false,
+          "composite": true,
           "constraint": false,
-          "keyName": "idx_mappings_user_id",
+          "keyName": "idx_mappings_user_schedule_enabled",
           "unique": false,
           "primary": false
         },
@@ -529,20 +530,16 @@
           "keyName": "mappings_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "user_id",
-            "connection_id"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "uq_mappings_user_connection",
-          "unique": true,
-          "primary": false
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "mappings_schedule_enabled_requires_schedule",
+          "columnName": "schedule",
+          "definition": "CHECK (((schedule_enabled = false) OR (schedule IS NOT NULL)))",
+          "expression": "(schedule_enabled = false) OR (schedule IS NOT NULL)"
+        }
+      ],
       "foreignKeys": {
         "mappings_connection_id_foreign": {
           "columnNames": [
