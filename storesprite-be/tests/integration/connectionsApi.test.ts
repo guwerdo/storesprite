@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Connections API Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;
@@ -11,10 +12,7 @@ describe("Connections API Integration Tests", () => {
     app = buildApp({ logger: false });
     await app.ready();
 
-    if (app.orm) {
-      const generator = app.orm.getSchemaGenerator();
-      await generator.updateSchema();
-    }
+    await resetTestDatabase(app);
   });
 
   beforeEach(async () => {

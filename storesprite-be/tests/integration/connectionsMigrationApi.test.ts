@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { DataConnection } from "../../src/entities/DataConnection.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Migration & Data Connections Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;
@@ -11,11 +12,7 @@ describe("Migration & Data Connections Integration Tests", () => {
     app = buildApp({ logger: false });
     await app.ready();
 
-    if (app.orm) {
-      const migrator = app.orm.getMigrator();
-      // Run all pending migrations on test database including Migration20260820000005_AddDataConnectionsTable
-      await migrator.up();
-    }
+    await resetTestDatabase(app);
   });
 
   beforeEach(async () => {

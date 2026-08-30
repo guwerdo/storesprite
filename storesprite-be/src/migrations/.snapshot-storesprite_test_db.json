@@ -67,8 +67,11 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "HTTP",
+            "SFTP"
+          ],
+          "mappedType": "enum"
         },
         "data_format": {
           "name": "data_format",
@@ -83,8 +86,11 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "CSV",
+            "XML"
+          ],
+          "mappedType": "enum"
         },
         "data_format_config": {
           "name": "data_format_config",
@@ -113,7 +119,7 @@
           "length": null,
           "precision": null,
           "scale": null,
-          "default": "false",
+          "default": "true",
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
@@ -136,22 +142,6 @@
         },
         "credentials": {
           "name": "credentials",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
-        },
-        "test_result": {
-          "name": "test_result",
           "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,
@@ -197,6 +187,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "test_result": {
+          "name": "test_result",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "data_connections",
@@ -211,21 +217,42 @@
           "keyName": "data_connections_pkey",
           "unique": true,
           "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "is_active"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "idx_data_connections_user_active",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "idx_data_connections_user_id",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "data_connections_user_id_foreign": {
+        "data_connections_user_id_fkey": {
           "columnNames": [
             "user_id"
           ],
-          "constraintName": "data_connections_user_id_foreign",
+          "constraintName": "data_connections_user_id_fkey",
           "localTableName": "public.data_connections",
           "referencedTableName": "public.users",
           "referencedColumnNames": [
             "id"
           ],
-          "updateRule": "cascade",
+          "updateRule": "no action",
           "deleteRule": "cascade"
         }
       },
@@ -353,7 +380,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -393,38 +420,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "string"
-        },
-        "schedule_enabled": {
-          "name": "schedule_enabled",
-          "type": "bool",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
-        "schedule": {
-          "name": "schedule",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
         },
         "sku_field": {
           "name": "sku_field",
@@ -505,11 +500,53 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "schedule_enabled": {
+          "name": "schedule_enabled",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "schedule": {
+          "name": "schedule",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "mappings",
       "schema": "public",
       "indexes": [
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "idx_mappings_user_id",
+          "unique": false,
+          "primary": false
+        },
         {
           "columnNames": [
             "user_id",
@@ -530,6 +567,17 @@
           "keyName": "mappings_pkey",
           "unique": true,
           "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "connection_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "uq_mappings_user_connection",
+          "unique": true,
+          "primary": false
         }
       ],
       "checks": [
@@ -541,30 +589,30 @@
         }
       ],
       "foreignKeys": {
-        "mappings_connection_id_foreign": {
+        "mappings_connection_id_fkey": {
           "columnNames": [
             "connection_id"
           ],
-          "constraintName": "mappings_connection_id_foreign",
+          "constraintName": "mappings_connection_id_fkey",
           "localTableName": "public.mappings",
           "referencedTableName": "public.data_connections",
           "referencedColumnNames": [
             "id"
           ],
-          "updateRule": "cascade",
+          "updateRule": "no action",
           "deleteRule": "cascade"
         },
-        "mappings_user_id_foreign": {
+        "mappings_user_id_fkey": {
           "columnNames": [
             "user_id"
           ],
-          "constraintName": "mappings_user_id_foreign",
+          "constraintName": "mappings_user_id_fkey",
           "localTableName": "public.mappings",
           "referencedTableName": "public.users",
           "referencedColumnNames": [
             "id"
           ],
-          "updateRule": "cascade",
+          "updateRule": "no action",
           "deleteRule": "cascade"
         }
       },
@@ -621,22 +669,6 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "unas_api_endpoint": {
-          "name": "unas_api_endpoint",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": "'https://api.unas.eu/shop/'",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
         "language_id": {
           "name": "language_id",
           "type": "int4",
@@ -684,6 +716,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "unas_api_endpoint": {
+          "name": "unas_api_endpoint",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": "'https://api.unas.eu/shop/'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
         "unas_connection": {
           "name": "unas_connection",

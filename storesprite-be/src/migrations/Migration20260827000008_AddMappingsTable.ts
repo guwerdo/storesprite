@@ -22,10 +22,6 @@ export class Migration20260827000008_AddMappingsTable extends Migration {
     `);
 
     this.addSql(`
-      ALTER TABLE "mappings" ADD COLUMN IF NOT EXISTS "enabled" BOOLEAN NOT NULL DEFAULT false;
-    `);
-
-    this.addSql(`
       CREATE INDEX IF NOT EXISTS "idx_mappings_user_enabled" ON "mappings"("user_id", "enabled");
     `);
 

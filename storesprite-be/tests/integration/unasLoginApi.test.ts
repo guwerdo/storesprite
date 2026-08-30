@@ -8,6 +8,7 @@ import type { IUnasClientFactory } from "../../src/types/UnasClientFactory.inter
 import { User } from "../../src/entities/User.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
 import { makeLoginResponse, makeUnasConnectionRecord, makeWebshopInfo } from "../helpers/unasFixtures.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("UNAS login API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
@@ -18,11 +19,7 @@ describe("UNAS login API Integration Tests (Isolated Test Database)", () => {
     app = buildApp({ logger: false });
     await app.ready();
 
-    // Ensure schema and tables exist in test database
-    if (app.orm) {
-      const generator = app.orm.getSchemaGenerator();
-      await generator.updateSchema();
-    }
+    await resetTestDatabase(app);
 
     // Stub the UNAS client factory so no real UNAS HTTP call is made
     const stubFactory: IUnasClientFactory = {

@@ -4,6 +4,7 @@ import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
 import { Language } from "../../src/entities/Language.js";
 import { UserSetting } from "../../src/entities/UserSetting.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Settings API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
@@ -12,11 +13,7 @@ describe("Settings API Integration Tests (Isolated Test Database)", () => {
     app = buildApp({ logger: false });
     await app.ready();
 
-    // Ensure schema and tables exist in test database
-    if (app.orm) {
-      const generator = app.orm.getSchemaGenerator();
-      await generator.updateSchema();
-    }
+    await resetTestDatabase(app);
   });
 
   beforeEach(async () => {
