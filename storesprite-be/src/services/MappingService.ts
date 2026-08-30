@@ -262,14 +262,10 @@ export class MappingService implements IMappingService {
         if (Number.isNaN(new Date(date).getTime())) {
           throw new Error("Schedule 'once' has an invalid date");
         }
-        const time = s.time;
-        if (!Number.isInteger(time) || (time as number) < 0 || (time as number) > 23) {
-          throw new Error("Schedule 'once' requires an hour (0-23)");
-        }
-        return { frequency: "once", date, time: time as number };
+        return { frequency: "once", date, time: this._validateHour(s.time, "once") };
       }
       case "daily": {
-        const times = this._validateHours(s.times);
+        const times = this._validateIntArray(s.times, "hours", 0, 23);
         const daysOfWeek = this._validateOptionalDaysOfWeek(s.daysOfWeek);
         return daysOfWeek ? { frequency: "daily", times, daysOfWeek } : { frequency: "daily", times };
       }
@@ -278,33 +274,36 @@ export class MappingService implements IMappingService {
         if (!Number.isInteger(dayOfMonth) || (dayOfMonth as number) < 1 || (dayOfMonth as number) > 31) {
           throw new Error("Schedule 'monthly' requires a day of month (1-31)");
         }
-        const time = s.time;
-        if (!Number.isInteger(time) || (time as number) < 0 || (time as number) > 23) {
-          throw new Error("Schedule 'monthly' requires an hour (0-23)");
-        }
-        return { frequency: "monthly", dayOfMonth: dayOfMonth as number, time: time as number };
+        return { frequency: "monthly", dayOfMonth: dayOfMonth as number, time: this._validateHour(s.time, "monthly") };
       }
       default:
         throw new Error(`Unknown schedule frequency: ${String(s.frequency)}`);
     }
   }
 
-  private _validateHours(value: unknown): number[] {
+  private _validateHour(value: unknown, label: string): number {
+    if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 23) {
+      throw new Error(`Schedule '${label}' requires an hour (0-23)`);
+    }
+    return value as number;
+  }
+
+  private _validateIntArray(value: unknown, label: string, min: number, max: number): number[] {
     if (!Array.isArray(value) || value.length === 0) {
-      throw new Error("Schedule requires at least one hour");
+      throw new Error(`Schedule ${label} must be a non-empty array`);
     }
-    const hours = value as number[];
+    const items = value as number[];
     const seen = new Set<number>();
-    for (const h of hours) {
-      if (!Number.isInteger(h) || h < 0 || h > 23) {
-        throw new Error("Schedule hours must be integers in 0-23");
+    for (const item of items) {
+      if (!Number.isInteger(item) || item < min || item > max) {
+        throw new Error(`Schedule ${label} must be integers in ${min}-${max}`);
       }
-      if (seen.has(h)) {
-        throw new Error("Schedule hours must not contain duplicates");
+      if (seen.has(item)) {
+        throw new Error(`Schedule ${label} must not contain duplicates`);
       }
-      seen.add(h);
+      seen.add(item);
     }
-    return hours;
+    return items;
   }
 
   private _validateOptionalDaysOfWeek(value: unknown): number[] | undefined {
@@ -317,17 +316,6 @@ export class MappingService implements IMappingService {
     if (value.length === 0) {
       return undefined; // empty = every day
     }
-    const days = value as number[];
-    const seen = new Set<number>();
-    for (const d of days) {
-      if (!Number.isInteger(d) || d < 0 || d > 6) {
-        throw new Error("Schedule daysOfWeek must be integers in 0-6");
-      }
-      if (seen.has(d)) {
-        throw new Error("Schedule daysOfWeek must not contain duplicates");
-      }
-      seen.add(d);
-    }
-    return days;
+    return this._validateIntArray(value, "daysOfWeek", 0, 6);
   }
 }

@@ -41,6 +41,7 @@ export interface ScheduleFormProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1);
 const WEEKDAYS: { value: number; key: string }[] = [
   { value: 1, key: 'mon' },
   { value: 2, key: 'tue' },
@@ -52,6 +53,28 @@ const WEEKDAYS: { value: number; key: string }[] = [
 ];
 
 const formatHour = (hour: number): string => `${String(hour).padStart(2, '0')}:00`;
+
+interface HourSelectProps {
+  value: number;
+  onChange: (hour: number) => void;
+  labelId?: string;
+  label?: string;
+}
+
+function HourSelect({ value, onChange, labelId, label }: HourSelectProps): React.JSX.Element {
+  return (
+    <FormControl sx={{ minWidth: 140 }}>
+      {label && <InputLabel id={labelId}>{label}</InputLabel>}
+      <Select labelId={labelId} label={label} value={value} onChange={(e) => onChange(Number(e.target.value))}>
+        {HOURS.map((h) => (
+          <MenuItem key={h} value={h}>
+            {formatHour(h)}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
 
 export default function ScheduleForm({
   initialMapping,
@@ -85,19 +108,18 @@ export default function ScheduleForm({
   const [saved, setSaved] = useState<boolean>(isEditing);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
 
-  const addableConnections = useMemo(
-    () =>
-      connections.filter((c) => {
-        const mapping = mappings.find((m) => m.connectionId === c.id);
-        return (
-          c.testResult?.success === true &&
-          (c.testResult.columns?.length ?? 0) > 0 &&
-          !!mapping &&
-          mapping.schedule == null
-        );
-      }),
-    [connections, mappings]
-  );
+  const addableConnections = useMemo(() => {
+    const mappingByConnectionId = new Map(mappings.map((m) => [m.connectionId, m]));
+    return connections.filter((c) => {
+      const mapping = mappingByConnectionId.get(c.id);
+      return (
+        c.testResult?.success === true &&
+        (c.testResult.columns?.length ?? 0) > 0 &&
+        !!mapping &&
+        mapping.schedule == null
+      );
+    });
+  }, [connections, mappings]);
 
   const mappingId = useMemo(() => {
     if (isEditing) {
@@ -276,24 +298,15 @@ export default function ScheduleForm({
                     InputLabelProps={{ shrink: true }}
                     sx={{ minWidth: 200 }}
                   />
-                  <FormControl sx={{ minWidth: 140 }}>
-                    <InputLabel id="once-time-label">{t('stocksprite.schedule.time')}</InputLabel>
-                    <Select
-                      labelId="once-time-label"
-                      label={t('stocksprite.schedule.time')}
-                      value={onceTime}
-                      onChange={(e) => {
-                        setSaved(false);
-                        setOnceTime(Number(e.target.value));
-                      }}
-                    >
-                      {HOURS.map((h) => (
-                        <MenuItem key={h} value={h}>
-                          {formatHour(h)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <HourSelect
+                    labelId="once-time-label"
+                    label={t('stocksprite.schedule.time')}
+                    value={onceTime}
+                    onChange={(h) => {
+                      setSaved(false);
+                      setOnceTime(h);
+                    }}
+                  />
                 </Box>
               )}
 
@@ -304,21 +317,14 @@ export default function ScheduleForm({
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center', mb: 2 }}>
                     {dailyTimes.map((hour, index) => (
-                      <FormControl key={index} sx={{ minWidth: 120 }}>
-                        <Select
-                          value={hour}
-                          onChange={(e) => {
-                            setSaved(false);
-                            setDailyTimes((prev) => prev.map((h, i) => (i === index ? Number(e.target.value) : h)));
-                          }}
-                        >
-                          {HOURS.map((h) => (
-                            <MenuItem key={h} value={h}>
-                              {formatHour(h)}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                      <HourSelect
+                        key={index}
+                        value={hour}
+                        onChange={(h) => {
+                          setSaved(false);
+                          setDailyTimes((prev) => prev.map((x, i) => (i === index ? h : x)));
+                        }}
+                      />
                     ))}
                     <Button size="small" onClick={addHour} sx={{ textTransform: 'none' }}>
                       {t('stocksprite.schedule.addHour')}
@@ -372,31 +378,22 @@ export default function ScheduleForm({
                         setMonthlyDayOfMonth(Number(e.target.value));
                       }}
                     >
-                      {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      {DAYS_OF_MONTH.map((d) => (
                         <MenuItem key={d} value={d}>
                           {d}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
-                  <FormControl sx={{ minWidth: 140 }}>
-                    <InputLabel id="monthly-time-label">{t('stocksprite.schedule.time')}</InputLabel>
-                    <Select
-                      labelId="monthly-time-label"
-                      label={t('stocksprite.schedule.time')}
-                      value={monthlyTime}
-                      onChange={(e) => {
-                        setSaved(false);
-                        setMonthlyTime(Number(e.target.value));
-                      }}
-                    >
-                      {HOURS.map((h) => (
-                        <MenuItem key={h} value={h}>
-                          {formatHour(h)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <HourSelect
+                    labelId="monthly-time-label"
+                    label={t('stocksprite.schedule.time')}
+                    value={monthlyTime}
+                    onChange={(h) => {
+                      setSaved(false);
+                      setMonthlyTime(h);
+                    }}
+                  />
                 </Box>
               )}
             </>

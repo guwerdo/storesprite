@@ -154,5 +154,16 @@ describe("Settings API Integration Tests (Isolated Test Database)", () => {
       expect(getResponse.statusCode).toBe(200);
       expect(JSON.parse(getResponse.payload).settings.timezone).toBe("Europe/Vienna");
     });
+
+    it("rejects an invalid timezone", async () => {
+      const putResponse = await app.inject({
+        method: "PUT",
+        url: "/api/client/settings",
+        headers: { authorization: "Bearer mock_jwt_token_user_1" },
+        payload: { unasApiKey: "tz_key_12345", timezone: "Invalid/Timezone" },
+      });
+
+      expect(putResponse.statusCode).toBe(400);
+    });
   });
 });

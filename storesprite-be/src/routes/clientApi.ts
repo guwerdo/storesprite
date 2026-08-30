@@ -18,7 +18,7 @@ import {
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
 import { UnasConfigError, UnasHttpError, UnasTransportError } from "@storesprite/unas-json-client";
 import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
-import { DEFAULT_TIMEZONE } from "../config/timezone.constants.js";
+import { DEFAULT_TIMEZONE, ALLOWED_TIMEZONES } from "../config/timezone.constants.js";
 import { MAPPING_RULES } from "../config/mapping-rules.js";
 
 declare module "fastify" {
@@ -134,12 +134,17 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
       const body = (request.body || {}) as SaveUserSettingsDto;
       const settingService = request.server.container.get<ISettingService>(TYPES.ISettingService);
 
+      const timezone = body.timezone ?? null;
+      if (timezone !== null && !ALLOWED_TIMEZONES.includes(timezone)) {
+        return reply.code(400).send({ error: `Invalid timezone: ${timezone}` });
+      }
+
       try {
         const saved = await settingService.saveUserSettings(userId, {
           unasApiKey: body.unasApiKey ?? null,
           unasApiEndpoint: body.unasApiEndpoint ?? null,
           languageId: body.languageId ?? null,
-          timezone: body.timezone ?? null,
+          timezone,
         });
 
         return {
