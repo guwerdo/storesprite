@@ -20,10 +20,41 @@ export interface StockMappingItem {
 export type StockMappingItems = StockMappingItem[];
 export type MappingRules = MappingRule[];
 
+/** @asType integer @minimum 0 @maximum 23 */
+export type ScheduleHour = number;
+
+/** @asType integer @minimum 0 @maximum 6 */
+export type ScheduleDayOfWeek = number;
+
+/** @asType integer @minimum 1 @maximum 31 */
+export type ScheduleDayOfMonth = number;
+
 export type MappingSchedule =
-  | { frequency: "once"; date: string; time: number }
-  | { frequency: "daily"; times: number[]; daysOfWeek?: number[] }
-  | { frequency: "monthly"; dayOfMonth: number; time: number };
+  | {
+      frequency: "once";
+      /**
+       * @format date
+       */
+      date: string;
+      time: ScheduleHour;
+    }
+  | {
+      frequency: "daily";
+      /**
+       * @minItems 1
+       * @uniqueItems true
+       */
+      times: ScheduleHour[];
+      /**
+       * @uniqueItems true
+       */
+      daysOfWeek?: ScheduleDayOfWeek[];
+    }
+  | {
+      frequency: "monthly";
+      dayOfMonth: ScheduleDayOfMonth;
+      time: ScheduleHour;
+    };
 
 export interface MappingDto {
   id: string;
