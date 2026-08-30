@@ -4,7 +4,7 @@ import {
   ConnectionCredentials,
   ConnectionTestResult,
 } from "./DataConnectionRepository.interface.js";
-import { StockMappingItem, MappingRule } from "./MappingRepository.interface.js";
+import { StockMappingItem, MappingRule, MappingSchedule } from "./MappingRepository.interface.js";
 import { DataConnectionChannel, DataConnectionFormat } from "../entities/DataConnection.js";
 
 export interface IJsonSchemaValidator {
@@ -14,4 +14,5 @@ export interface IJsonSchemaValidator {
   validateTestResult(testResult: unknown): ConnectionTestResult;
   validateStockMappings(items: unknown): StockMappingItem[];
   validateMappingRules(rules: unknown): MappingRule[];
+  validateSchedule(schedule: unknown): MappingSchedule;
 }

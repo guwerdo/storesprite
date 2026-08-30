@@ -19,7 +19,7 @@ import {
   SftpCredentials,
   ConnectionTestResult,
 } from "../types/DataConnectionRepository.interface.js";
-import { StockMappingItem, MappingRule } from "../types/MappingRepository.interface.js";
+import { StockMappingItem, MappingRule, MappingSchedule } from "../types/MappingRepository.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 
 export class SchemaValidationError extends Error {
@@ -44,6 +44,7 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   private readonly _validateTestResult: ValidateFunction<ConnectionTestResult>;
   private readonly _validateStockMappings: ValidateFunction<StockMappingItem[]>;
   private readonly _validateMappingRules: ValidateFunction<MappingRule[]>;
+  private readonly _validateSchedule: ValidateFunction<MappingSchedule>;
 
   constructor(
     @inject(TYPES.Logger)
@@ -62,6 +63,7 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
     this._validateTestResult = this._compileSchema<ConnectionTestResult>("connection-test-result.schema.json");
     this._validateStockMappings = this._compileSchema<StockMappingItem[]>("stock-mapping-items.schema.json");
     this._validateMappingRules = this._compileSchema<MappingRule[]>("mapping-rules.schema.json");
+    this._validateSchedule = this._compileSchema<MappingSchedule>("mapping-schedule.schema.json");
   }
 
   public validateTestResult(testResult: unknown): ConnectionTestResult {
@@ -80,6 +82,11 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
     }
     this._requireObject(rules, "Mapping rules");
     return this._assertValid(this._validateMappingRules, rules, "mapping rules", { rules });
+  }
+
+  public validateSchedule(schedule: unknown): MappingSchedule {
+    this._requireObject(schedule, "Schedule");
+    return this._assertValid(this._validateSchedule, schedule, "schedule", { schedule });
   }
 
   public validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig {

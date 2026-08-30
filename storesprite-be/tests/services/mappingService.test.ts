@@ -156,7 +156,7 @@ describe("MappingService Unit Tests", () => {
           scheduleEnabled: true,
           schedule: { frequency: "yearly" } as any,
         })
-      ).rejects.toThrow("Unknown schedule frequency: yearly");
+      ).rejects.toThrow("Invalid schedule");
     });
 
     it("rejects a monthly schedule with an invalid day", async () => {
@@ -168,7 +168,7 @@ describe("MappingService Unit Tests", () => {
           scheduleEnabled: true,
           schedule: { frequency: "monthly", dayOfMonth: 0, time: 9 },
         })
-      ).rejects.toThrow("Schedule 'monthly' requires a day of month (1-31)");
+      ).rejects.toThrow("Invalid schedule");
     });
 
     it("rejects duplicate hours", async () => {
@@ -180,7 +180,7 @@ describe("MappingService Unit Tests", () => {
           scheduleEnabled: true,
           schedule: { frequency: "daily", times: [9, 9] },
         })
-      ).rejects.toThrow("Schedule hours must not contain duplicates");
+      ).rejects.toThrow("Invalid schedule");
     });
 
     it("validates and persists a once schedule", async () => {
@@ -212,7 +212,7 @@ describe("MappingService Unit Tests", () => {
           scheduleEnabled: true,
           schedule: { frequency: "once", date: "not-a-date", time: 14 },
         })
-      ).rejects.toThrow("Schedule 'once' requires a valid date");
+      ).rejects.toThrow("Invalid schedule");
     });
 
     it("rejects a once schedule with an out-of-range hour", async () => {
@@ -224,7 +224,7 @@ describe("MappingService Unit Tests", () => {
           scheduleEnabled: true,
           schedule: { frequency: "once", date: "2026-09-15", time: 25 },
         })
-      ).rejects.toThrow("Schedule 'once' requires an hour");
+      ).rejects.toThrow("Invalid schedule");
     });
 
     it("normalizes an empty daysOfWeek to every day", async () => {

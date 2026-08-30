@@ -100,7 +100,7 @@ export class MappingService implements IMappingService {
 
     let schedule: MappingSchedule | null | undefined;
     if (dto.schedule !== undefined) {
-      schedule = dto.schedule === null ? null : this._validateSchedule(dto.schedule);
+      schedule = dto.schedule === null ? null : this._normalizeSchedule(this._validator.validateSchedule(dto.schedule));
     }
 
     const scheduleEnabled = dto.scheduleEnabled ?? existing.scheduleEnabled;
@@ -248,74 +248,10 @@ export class MappingService implements IMappingService {
     }
   }
 
-  private _validateSchedule(schedule: MappingSchedule): MappingSchedule {
-    if (!schedule || typeof schedule !== "object") {
-      throw new Error("Schedule must be an object");
+  private _normalizeSchedule(schedule: MappingSchedule): MappingSchedule {
+    if (schedule.frequency === "daily" && schedule.daysOfWeek && schedule.daysOfWeek.length === 0) {
+      return { frequency: "daily", times: schedule.times };
     }
-    const s = schedule as unknown as Record<string, unknown>;
-    switch (s.frequency) {
-      case "once": {
-        const date = s.date;
-        if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-          throw new Error("Schedule 'once' requires a valid date (YYYY-MM-DD)");
-        }
-        if (Number.isNaN(new Date(date).getTime())) {
-          throw new Error("Schedule 'once' has an invalid date");
-        }
-        return { frequency: "once", date, time: this._validateHour(s.time, "once") };
-      }
-      case "daily": {
-        const times = this._validateIntArray(s.times, "hours", 0, 23);
-        const daysOfWeek = this._validateOptionalDaysOfWeek(s.daysOfWeek);
-        return daysOfWeek ? { frequency: "daily", times, daysOfWeek } : { frequency: "daily", times };
-      }
-      case "monthly": {
-        const dayOfMonth = s.dayOfMonth;
-        if (!Number.isInteger(dayOfMonth) || (dayOfMonth as number) < 1 || (dayOfMonth as number) > 31) {
-          throw new Error("Schedule 'monthly' requires a day of month (1-31)");
-        }
-        return { frequency: "monthly", dayOfMonth: dayOfMonth as number, time: this._validateHour(s.time, "monthly") };
-      }
-      default:
-        throw new Error(`Unknown schedule frequency: ${String(s.frequency)}`);
-    }
-  }
-
-  private _validateHour(value: unknown, label: string): number {
-    if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 23) {
-      throw new Error(`Schedule '${label}' requires an hour (0-23)`);
-    }
-    return value as number;
-  }
-
-  private _validateIntArray(value: unknown, label: string, min: number, max: number): number[] {
-    if (!Array.isArray(value) || value.length === 0) {
-      throw new Error(`Schedule ${label} must be a non-empty array`);
-    }
-    const items = value as number[];
-    const seen = new Set<number>();
-    for (const item of items) {
-      if (!Number.isInteger(item) || item < min || item > max) {
-        throw new Error(`Schedule ${label} must be integers in ${min}-${max}`);
-      }
-      if (seen.has(item)) {
-        throw new Error(`Schedule ${label} must not contain duplicates`);
-      }
-      seen.add(item);
-    }
-    return items;
-  }
-
-  private _validateOptionalDaysOfWeek(value: unknown): number[] | undefined {
-    if (value === undefined || value === null) {
-      return undefined;
-    }
-    if (!Array.isArray(value)) {
-      throw new Error("Schedule daysOfWeek must be an array");
-    }
-    if (value.length === 0) {
-      return undefined; // empty = every day
-    }
-    return this._validateIntArray(value, "daysOfWeek", 0, 6);
+    return schedule;
   }
 }
