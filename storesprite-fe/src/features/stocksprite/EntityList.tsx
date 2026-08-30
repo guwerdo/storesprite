@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   Paper,
   Table,
   TableBody,
@@ -15,55 +14,73 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import type { IMapping } from '../../../types/Mapping.interface.js';
 
-export interface ScheduleListProps {
-  schedules: IMapping[];
-  onAddNew: () => void;
-  onSelectMapping: (mapping: IMapping) => void;
+export interface EntityListColumn<T> {
+  header: string;
+  render: (item: T) => React.ReactNode;
 }
 
-export default function ScheduleList({
-  schedules,
-  onAddNew,
-  onSelectMapping,
-}: ScheduleListProps): React.JSX.Element {
-  const { t } = useAppTranslation();
+export interface EntityListProps<T> {
+  title: string;
+  subtitle: string;
+  addLabel: string;
+  emptyLabel: string;
+  icon: React.ReactElement;
+  nameHeader: string;
+  items: T[];
+  onAdd: () => void;
+  onSelect: (item: T) => void;
+  getKey: (item: T) => string;
+  getName: (item: T) => string;
+  extraColumns?: EntityListColumn<T>[];
+}
 
+export default function EntityList<T>({
+  title,
+  subtitle,
+  addLabel,
+  emptyLabel,
+  icon,
+  nameHeader,
+  items,
+  onAdd,
+  onSelect,
+  getKey,
+  getName,
+  extraColumns = [],
+}: EntityListProps<T>): React.JSX.Element {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ScheduleIcon color="primary" />
-            {t('stocksprite.schedule.title')}
+            {icon}
+            {title}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('stocksprite.schedule.subtitle')}
+            {subtitle}
           </Typography>
         </Box>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={onAddNew}
+          onClick={onAdd}
           sx={{ textTransform: 'none', fontWeight: 600, px: 3, py: 1, borderRadius: 2 }}
         >
-          {t('stocksprite.schedule.addSchedule')}
+          {addLabel}
         </Button>
       </Box>
 
-      {schedules.length === 0 ? (
+      {items.length === 0 ? (
         <Card variant="outlined" sx={{ borderRadius: 2, textAlign: 'center', py: 6, bgcolor: 'background.paper' }}>
           <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <ScheduleIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
+            {React.cloneElement(icon, { sx: { fontSize: 48, color: 'text.disabled' } })}
             <Typography variant="h6" color="text.secondary">
-              {t('stocksprite.schedule.empty')}
+              {emptyLabel}
             </Typography>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={onAddNew} sx={{ textTransform: 'none', mt: 1 }}>
-              {t('stocksprite.schedule.addSchedule')}
+            <Button variant="outlined" startIcon={<AddIcon />} onClick={onAdd} sx={{ textTransform: 'none', mt: 1 }}>
+              {addLabel}
             </Button>
           </CardContent>
         </Card>
@@ -72,30 +89,30 @@ export default function ScheduleList({
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: 'action.hover' }}>
-                <TableCell sx={{ fontWeight: 600 }}>{t('stocksprite.schedule.name')}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{t('stocksprite.schedule.enabled')}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{nameHeader}</TableCell>
+                {extraColumns.map((c, i) => (
+                  <TableCell key={i} sx={{ fontWeight: 600 }}>
+                    {c.header}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {schedules.map((mapping) => (
+              {items.map((item) => (
                 <TableRow
-                  key={mapping.id}
+                  key={getKey(item)}
                   hover
-                  onClick={() => onSelectMapping(mapping)}
+                  onClick={() => onSelect(item)}
                   sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell>
                     <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {mapping.name}
+                      {getName(item)}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      color={mapping.scheduleEnabled ? 'success' : 'default'}
-                      label={mapping.scheduleEnabled ? t('common.enabled') : t('common.disabled')}
-                    />
-                  </TableCell>
+                  {extraColumns.map((c, i) => (
+                    <TableCell key={i}>{c.render(item)}</TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>

@@ -1,18 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, CircularProgress } from '@mui/material';
 import { useAuth } from '@clerk/clerk-react';
+import SchemaIcon from '@mui/icons-material/Schema';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import ToastNotification from '../../../components/ToastNotification.js';
+import EntityList from '../EntityList.js';
+import { useTabController } from '../useTabController.js';
+import MappingForm from '../mappings/MappingForm.js';
 import type { IMappingService } from '../../../types/MappingService.interface.js';
 import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
 import type { IMapping, ICreateMappingPayload } from '../../../types/Mapping.interface.js';
 import type { IDataConnection } from '../../../types/DataConnection.interface.js';
-import MappingList from '../mappings/MappingList.js';
-import MappingForm from '../mappings/MappingForm.js';
-
-type ViewMode = 'LIST' | 'ADD' | 'EDIT';
 
 export default function StockSpriteMappingTab(): React.JSX.Element {
   const { t } = useAppTranslation();
@@ -20,18 +18,24 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
   const mappingService = useInjection<IMappingService>(TYPES.IMappingService);
   const connectionService = useInjection<IConnectionService>(TYPES.IConnectionService);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [mappings, setMappings] = useState<IMapping[]>([]);
   const [connections, setConnections] = useState<IDataConnection[]>([]);
-  const [selectedMapping, setSelectedMapping] = useState<IMapping | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({ open: false, message: '', severity: 'success' });
+
+  const {
+    viewMode,
+    selected,
+    saving,
+    setViewMode,
+    setSelected,
+    setLoading,
+    setSaving,
+    setError,
+    setSnackbar,
+    handleAddNew,
+    handleSelect,
+    handleCancel,
+    renderContent,
+  } = useTabController<IMapping>();
 
   const fetchData = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -53,30 +57,11 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [mappingService, connectionService, getToken]);
+  }, [mappingService, connectionService, getToken, setLoading, setError]);
 
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
-
-  const handleAddNew = (): void => {
-    setSelectedMapping(null);
-    setViewMode('ADD');
-  };
-
-  const handleSelectMapping = (mapping: IMapping): void => {
-    setSelectedMapping(mapping);
-    setViewMode('EDIT');
-  };
-
-  const handleCancel = (): void => {
-    setSelectedMapping(null);
-    setViewMode('LIST');
-  };
-
-  const handleCloseSnackbar = (): void => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
 
   const handleSave = async (payload: ICreateMappingPayload): Promise<void> => {
     setSaving(true);
@@ -87,8 +72,8 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
       }
 
       let savedMapping: IMapping | null = null;
-      if (viewMode === 'EDIT' && selectedMapping?.id) {
-        const response = await mappingService.updateMapping(token, selectedMapping.id, payload);
+      if (viewMode === 'EDIT' && selected?.id) {
+        const response = await mappingService.updateMapping(token, selected.id, payload);
         savedMapping = response.mapping ?? null;
       } else {
         const response = await mappingService.createMapping(token, payload);
@@ -101,7 +86,7 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
         severity: 'success',
       });
       if (savedMapping) {
-        setSelectedMapping(savedMapping);
+        setSelected(savedMapping);
         setViewMode('EDIT');
         setMappings((prev) =>
           prev.some((m) => m.id === savedMapping.id)
@@ -109,7 +94,7 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
             : [savedMapping, ...prev]
         );
       } else {
-        setSelectedMapping(null);
+        setSelected(null);
         setViewMode('LIST');
       }
     } catch (err: unknown) {
@@ -138,7 +123,7 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
         severity: 'success',
       });
       setViewMode('LIST');
-      setSelectedMapping(null);
+      setSelected(null);
       await fetchData();
     } catch (err: unknown) {
       setSnackbar({
@@ -151,42 +136,28 @@ export default function StockSpriteMappingTab(): React.JSX.Element {
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {viewMode === 'LIST' ? (
-        <MappingList mappings={mappings} onAddNew={handleAddNew} onSelectMapping={handleSelectMapping} />
-      ) : (
-        <MappingForm
-          initialMapping={selectedMapping}
-          connections={connections}
-          mappings={mappings}
-          onSave={handleSave}
-          onDelete={viewMode === 'EDIT' ? handleDelete : undefined}
-          onCancel={handleCancel}
-          saving={saving}
-        />
-      )}
-
-      <ToastNotification
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-      />
-    </Box>
+  return renderContent(
+    <EntityList
+      title={t('stocksprite.mappings.title')}
+      subtitle={t('stocksprite.mappings.subtitle')}
+      addLabel={t('stocksprite.mappings.addMapping')}
+      emptyLabel={t('stocksprite.mappings.empty')}
+      icon={<SchemaIcon color="primary" />}
+      nameHeader={t('stocksprite.mappings.table.name')}
+      items={mappings}
+      onAdd={handleAddNew}
+      onSelect={handleSelect}
+      getKey={(m) => m.id}
+      getName={(m) => m.name}
+    />,
+    <MappingForm
+      initialMapping={selected}
+      connections={connections}
+      mappings={mappings}
+      onSave={handleSave}
+      onDelete={viewMode === 'EDIT' ? handleDelete : undefined}
+      onCancel={handleCancel}
+      saving={saving}
+    />
   );
 }

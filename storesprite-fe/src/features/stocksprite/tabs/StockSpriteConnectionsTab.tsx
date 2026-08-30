@@ -1,40 +1,46 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, CircularProgress } from '@mui/material';
+import { Chip } from '@mui/material';
 import { useAuth } from '@clerk/clerk-react';
+import CableIcon from '@mui/icons-material/Cable';
+import LanguageIcon from '@mui/icons-material/Language';
+import StorageIcon from '@mui/icons-material/Storage';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import ToastNotification from '../../../components/ToastNotification.js';
-import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
-import type {
-  IDataConnection,
-  ICreateConnectionPayload,
-} from '../../../types/DataConnection.interface.js';
-import ConnectionList from '../connections/ConnectionList.js';
+import EntityList from '../EntityList.js';
+import { useTabController } from '../useTabController.js';
 import ConnectionForm from '../connections/ConnectionForm.js';
+import { getConnectionStatus } from '../connections/connectionStatus.js';
+import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
+import type { IDataConnection, ICreateConnectionPayload } from '../../../types/DataConnection.interface.js';
 
-type ViewMode = 'LIST' | 'ADD' | 'EDIT';
+interface StatusBadge {
+  label: string;
+  color: 'warning' | 'success' | 'info' | 'error' | 'default';
+}
 
 export default function StockSpriteConnectionsTab(): React.JSX.Element {
   const { t } = useAppTranslation();
   const { getToken } = useAuth();
   const connectionService = useInjection<IConnectionService>(TYPES.IConnectionService);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [connections, setConnections] = useState<IDataConnection[]>([]);
-  const [selectedConnection, setSelectedConnection] = useState<IDataConnection | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+
+  const {
+    viewMode,
+    selected,
+    saving,
+    setViewMode,
+    setSelected,
+    setLoading,
+    setSaving,
+    setError,
+    setSnackbar,
+    handleAddNew,
+    handleSelect,
+    handleCancel,
+    renderContent,
+  } = useTabController<IDataConnection>();
 
   const fetchConnections = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -52,29 +58,27 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [connectionService, getToken]);
+  }, [connectionService, getToken, setLoading, setError]);
 
   useEffect(() => {
     void fetchConnections();
   }, [fetchConnections]);
 
-  const handleAddNew = (): void => {
-    setSelectedConnection(null);
-    setViewMode('ADD');
-  };
-
-  const handleSelectConnection = (connection: IDataConnection): void => {
-    setSelectedConnection(connection);
-    setViewMode('EDIT');
-  };
-
-  const handleCancel = (): void => {
-    setSelectedConnection(null);
-    setViewMode('LIST');
-  };
-
-  const handleCloseSnackbar = (): void => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
+  const getStatusBadge = (conn: IDataConnection): StatusBadge => {
+    switch (getConnectionStatus(conn)) {
+      case 'active':
+        return { label: t('stocksprite.connections.form.statusBadges.active'), color: 'success' };
+      case 'activeTesting':
+        return { label: t('stocksprite.connections.form.statusBadges.activeTesting'), color: 'warning' };
+      case 'inactiveTesting':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveTesting'), color: 'warning' };
+      case 'inactive':
+        return { label: t('stocksprite.connections.form.statusBadges.inactive'), color: 'info' };
+      case 'error':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveError'), color: 'error' };
+      case 'untested':
+        return { label: t('stocksprite.connections.form.statusBadges.inactiveUntested'), color: 'default' };
+    }
   };
 
   const handleSave = async (payload: ICreateConnectionPayload): Promise<void> => {
@@ -86,8 +90,8 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
       }
 
       let savedConnection: IDataConnection | null = null;
-      if (viewMode === 'EDIT' && selectedConnection?.id) {
-        const response = await connectionService.updateConnection(token, selectedConnection.id, payload);
+      if (viewMode === 'EDIT' && selected?.id) {
+        const response = await connectionService.updateConnection(token, selected.id, payload);
         savedConnection = response.connection ?? null;
       } else {
         const response = await connectionService.createConnection(token, payload);
@@ -100,10 +104,10 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         severity: 'success',
       });
       if (savedConnection) {
-        setSelectedConnection(savedConnection);
+        setSelected(savedConnection);
         setViewMode('EDIT');
       } else {
-        setSelectedConnection(null);
+        setSelected(null);
         setViewMode('LIST');
       }
       // Refresh connections list in the background without triggering full tab loading spinner
@@ -113,7 +117,7 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         if (savedConnection) {
           const fresh = (listResponse.connections || []).find((c) => c.id === savedConnection.id);
           if (fresh) {
-            setSelectedConnection(fresh);
+            setSelected(fresh);
           }
         }
       } catch {
@@ -145,7 +149,7 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
         severity: 'success',
       });
       setViewMode('LIST');
-      setSelectedConnection(null);
+      setSelected(null);
       await fetchConnections();
     } catch (err: unknown) {
       setSnackbar({
@@ -158,44 +162,53 @@ export default function StockSpriteConnectionsTab(): React.JSX.Element {
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {viewMode === 'LIST' ? (
-        <ConnectionList
-          connections={connections}
-          onAddNew={handleAddNew}
-          onSelectConnection={handleSelectConnection}
-        />
-      ) : (
-        <ConnectionForm
-          initialConnection={selectedConnection}
-          onSave={handleSave}
-          onDelete={viewMode === 'EDIT' ? handleDelete : undefined}
-          onCancel={handleCancel}
-          saving={saving}
-        />
-      )}
-
-      <ToastNotification
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-      />
-    </Box>
+  return renderContent(
+    <EntityList
+      title={t('stocksprite.tabs.connections')}
+      subtitle={t('stocksprite.connections.form.subtitle')}
+      addLabel={t('stocksprite.connections.addNew')}
+      emptyLabel={t('stocksprite.connections.empty')}
+      icon={<CableIcon color="primary" />}
+      nameHeader={t('stocksprite.connections.table.name')}
+      items={connections}
+      onAdd={handleAddNew}
+      onSelect={handleSelect}
+      getKey={(c) => c.id}
+      getName={(c) => c.name}
+      extraColumns={[
+        {
+          header: t('stocksprite.connections.table.channel'),
+          render: (conn) => (
+            <Chip
+              size="small"
+              icon={conn.channel === 'HTTP' ? <LanguageIcon fontSize="small" /> : <StorageIcon fontSize="small" />}
+              label={conn.channel}
+              color={conn.channel === 'HTTP' ? 'info' : 'secondary'}
+              variant="outlined"
+            />
+          ),
+        },
+        {
+          header: t('stocksprite.connections.table.format'),
+          render: (conn) => (
+            <Chip size="small" label={conn.dataFormat} color={conn.dataFormat === 'CSV' ? 'success' : 'warning'} variant="outlined" />
+          ),
+        },
+        {
+          header: t('stocksprite.connections.table.status'),
+          render: (conn) => {
+            const badge = getStatusBadge(conn);
+            return <Chip size="small" label={badge.label} color={badge.color} />;
+          },
+        },
+      ]}
+    />,
+    <ConnectionForm
+      initialConnection={selected}
+      onSave={handleSave}
+      onDelete={viewMode === 'EDIT' ? handleDelete : undefined}
+      onCancel={handleCancel}
+      saving={saving}
+    />
   );
 }

@@ -1,18 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress } from '@mui/material';
+import { Chip } from '@mui/material';
 import { useAuth } from '@clerk/clerk-react';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import ToastNotification from '../../../components/ToastNotification.js';
+import EntityList from '../EntityList.js';
+import { useTabController } from '../useTabController.js';
+import ScheduleForm from '../schedule/ScheduleForm.js';
 import type { IMappingService } from '../../../types/MappingService.interface.js';
 import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
 import type { IMapping, IMappingSchedule } from '../../../types/Mapping.interface.js';
 import type { IDataConnection } from '../../../types/DataConnection.interface.js';
-import ScheduleList from '../schedule/ScheduleList.js';
-import ScheduleForm from '../schedule/ScheduleForm.js';
-
-type ViewMode = 'LIST' | 'ADD' | 'EDIT';
 
 export default function StockSpriteScheduleTab(): React.JSX.Element {
   const { t } = useAppTranslation();
@@ -20,18 +19,23 @@ export default function StockSpriteScheduleTab(): React.JSX.Element {
   const mappingService = useInjection<IMappingService>(TYPES.IMappingService);
   const connectionService = useInjection<IConnectionService>(TYPES.IConnectionService);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [mappings, setMappings] = useState<IMapping[]>([]);
   const [connections, setConnections] = useState<IDataConnection[]>([]);
-  const [selectedMapping, setSelectedMapping] = useState<IMapping | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({ open: false, message: '', severity: 'success' });
+
+  const {
+    selected,
+    saving,
+    setViewMode,
+    setSelected,
+    setLoading,
+    setSaving,
+    setError,
+    setSnackbar,
+    handleAddNew,
+    handleSelect,
+    handleCancel,
+    renderContent,
+  } = useTabController<IMapping>();
 
   const fetchData = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -53,32 +57,13 @@ export default function StockSpriteScheduleTab(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [mappingService, connectionService, getToken]);
+  }, [mappingService, connectionService, getToken, setLoading, setError]);
 
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
 
   const schedules = useMemo(() => mappings.filter((m) => m.schedule != null), [mappings]);
-
-  const handleAddNew = (): void => {
-    setSelectedMapping(null);
-    setViewMode('ADD');
-  };
-
-  const handleSelectMapping = (mapping: IMapping): void => {
-    setSelectedMapping(mapping);
-    setViewMode('EDIT');
-  };
-
-  const handleCancel = (): void => {
-    setSelectedMapping(null);
-    setViewMode('LIST');
-  };
-
-  const handleCloseSnackbar = (): void => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
 
   const handleSave = async (
     mappingId: string,
@@ -94,7 +79,7 @@ export default function StockSpriteScheduleTab(): React.JSX.Element {
       const savedMapping = response.mapping ?? null;
       setSnackbar({ open: true, message: t('stocksprite.schedule.savedSuccess'), severity: 'success' });
       if (savedMapping) {
-        setSelectedMapping(savedMapping);
+        setSelected(savedMapping);
         setViewMode('EDIT');
         setMappings((prev) =>
           prev.some((m) => m.id === savedMapping.id)
@@ -128,7 +113,7 @@ export default function StockSpriteScheduleTab(): React.JSX.Element {
         setMappings((prev) => prev.map((m) => (m.id === clearedMapping.id ? clearedMapping : m)));
       }
       setViewMode('LIST');
-      setSelectedMapping(null);
+      setSelected(null);
     } catch (err: unknown) {
       setSnackbar({
         open: true,
@@ -159,43 +144,37 @@ export default function StockSpriteScheduleTab(): React.JSX.Element {
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {viewMode === 'LIST' ? (
-        <ScheduleList schedules={schedules} onAddNew={handleAddNew} onSelectMapping={handleSelectMapping} />
-      ) : (
-        <ScheduleForm
-          initialMapping={selectedMapping}
-          connections={connections}
-          mappings={mappings}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onRun={handleRun}
-          onCancel={handleCancel}
-          saving={saving}
-        />
-      )}
-
-      <ToastNotification
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-      />
-    </Box>
+  return renderContent(
+    <EntityList
+      title={t('stocksprite.schedule.title')}
+      subtitle={t('stocksprite.schedule.subtitle')}
+      addLabel={t('stocksprite.schedule.addSchedule')}
+      emptyLabel={t('stocksprite.schedule.empty')}
+      icon={<ScheduleIcon color="primary" />}
+      nameHeader={t('stocksprite.schedule.name')}
+      items={schedules}
+      onAdd={handleAddNew}
+      onSelect={handleSelect}
+      getKey={(m) => m.id}
+      getName={(m) => m.name}
+      extraColumns={[
+        {
+          header: t('stocksprite.schedule.enabled'),
+          render: (m) => (
+            <Chip size="small" color={m.scheduleEnabled ? 'success' : 'default'} label={m.scheduleEnabled ? t('common.enabled') : t('common.disabled')} />
+          ),
+        },
+      ]}
+    />,
+    <ScheduleForm
+      initialMapping={selected}
+      connections={connections}
+      mappings={mappings}
+      onSave={handleSave}
+      onDelete={handleDelete}
+      onRun={handleRun}
+      onCancel={handleCancel}
+      saving={saving}
+    />
   );
 }
