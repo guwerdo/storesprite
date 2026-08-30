@@ -52,6 +52,19 @@ const WEEKDAYS: { value: number; key: string }[] = [
   { value: 0, key: 'sun' },
 ];
 
+const DEFAULT_SCHEDULE: IMappingSchedule = { frequency: 'daily', times: [9] };
+
+const makeDefaultSchedule = (frequency: ScheduleFrequency): IMappingSchedule => {
+  switch (frequency) {
+    case 'once':
+      return { frequency: 'once', date: '', time: 9 };
+    case 'monthly':
+      return { frequency: 'monthly', dayOfMonth: 1, time: 9 };
+    case 'daily':
+      return DEFAULT_SCHEDULE;
+  }
+};
+
 const formatHour = (hour: number): string => `${String(hour).padStart(2, '0')}:00`;
 
 interface HourSelectProps {
@@ -89,24 +102,17 @@ export default function ScheduleForm({
   const { t } = useAppTranslation();
 
   const isEditing = !!initialMapping?.id;
-
   const initialSchedule = initialMapping?.schedule ?? null;
 
   const [connectionId, setConnectionId] = useState<string>(initialMapping?.connectionId ?? '');
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(initialMapping?.scheduleEnabled ?? false);
-  const [frequency, setFrequency] = useState<ScheduleFrequency>(initialSchedule?.frequency ?? 'daily');
-  const [onceDate, setOnceDate] = useState<string>(initialSchedule?.frequency === 'once' ? initialSchedule.date : '');
-  const [onceTime, setOnceTime] = useState<number>(initialSchedule?.frequency === 'once' ? initialSchedule.time : 9);
-  const [dailyTimes, setDailyTimes] = useState<number[]>(initialSchedule?.frequency === 'daily' ? initialSchedule.times : [9]);
-  const [dailyDaysOfWeek, setDailyDaysOfWeek] = useState<number[]>(
-    initialSchedule?.frequency === 'daily' && initialSchedule.daysOfWeek ? initialSchedule.daysOfWeek : []
+  const [schedule, setSchedule] = useState<IMappingSchedule>(initialSchedule ?? DEFAULT_SCHEDULE);
+  const [savedSnapshot, setSavedSnapshot] = useState<string>(() =>
+    JSON.stringify({ scheduleEnabled: initialMapping?.scheduleEnabled ?? false, schedule: initialSchedule ?? DEFAULT_SCHEDULE })
   );
-  const [monthlyDayOfMonth, setMonthlyDayOfMonth] = useState<number>(
-    initialSchedule?.frequency === 'monthly' ? initialSchedule.dayOfMonth : 1
-  );
-  const [monthlyTime, setMonthlyTime] = useState<number>(initialSchedule?.frequency === 'monthly' ? initialSchedule.time : 9);
-  const [saved, setSaved] = useState<boolean>(isEditing);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+
+  const dirty = JSON.stringify({ scheduleEnabled, schedule }) !== savedSnapshot;
 
   const addableConnections = useMemo(() => {
     const mappingByConnectionId = new Map(mappings.map((m) => [m.connectionId, m]));
@@ -132,27 +138,14 @@ export default function ScheduleForm({
     ? connections.find((c) => c.id === initialMapping?.connectionId)?.name ?? initialMapping?.connectionId ?? ''
     : connections.find((c) => c.id === connectionId)?.name ?? '';
 
-  const buildSchedule = (): IMappingSchedule => {
-    switch (frequency) {
-      case 'once':
-        return { frequency: 'once', date: onceDate, time: onceTime };
-      case 'daily':
-        return dailyDaysOfWeek.length > 0
-          ? { frequency: 'daily', times: dailyTimes, daysOfWeek: dailyDaysOfWeek }
-          : { frequency: 'daily', times: dailyTimes };
-      case 'monthly':
-        return { frequency: 'monthly', dayOfMonth: monthlyDayOfMonth, time: monthlyTime };
-    }
-  };
-
-  const scheduleInvalid = scheduleEnabled && frequency === 'once' && !onceDate;
+  const scheduleInvalid = scheduleEnabled && schedule.frequency === 'once' && !schedule.date;
   const canSave = !!mappingId && !scheduleInvalid && !saving;
 
   const handleSave = async (): Promise<void> => {
     if (!mappingId) return;
     try {
-      await onSave(mappingId, { scheduleEnabled, schedule: buildSchedule() });
-      setSaved(true);
+      await onSave(mappingId, { scheduleEnabled, schedule });
+      setSavedSnapshot(JSON.stringify({ scheduleEnabled, schedule }));
     } catch {
       // parent shows the error toast
     }
@@ -179,26 +172,31 @@ export default function ScheduleForm({
   };
 
   const toggleDay = (day: number): void => {
-    setSaved(false);
-    setDailyDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+    setSchedule((prev) => {
+      if (prev.frequency !== 'daily') return prev;
+      const current = prev.daysOfWeek ?? [];
+      const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
+      return { ...prev, daysOfWeek: next.length > 0 ? next : undefined };
+    });
   };
 
   const applyWeekdays = (): void => {
-    setSaved(false);
-    setDailyDaysOfWeek([1, 2, 3, 4, 5]);
+    setSchedule((prev) => (prev.frequency === 'daily' ? { ...prev, daysOfWeek: [1, 2, 3, 4, 5] } : prev));
   };
 
   const addHour = (): void => {
-    setSaved(false);
-    setDailyTimes((prev) => {
-      const last = prev[prev.length - 1] ?? 8;
-      return [...prev, (last + 1) % 24];
+    setSchedule((prev) => {
+      if (prev.frequency !== 'daily') return prev;
+      const last = prev.times[prev.times.length - 1] ?? 8;
+      return { ...prev, times: [...prev.times, (last + 1) % 24] };
     });
   };
 
   const removeHour = (index: number): void => {
-    setSaved(false);
-    setDailyTimes((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+    setSchedule((prev) => {
+      if (prev.frequency !== 'daily') return prev;
+      return { ...prev, times: prev.times.length > 1 ? prev.times.filter((_, i) => i !== index) : prev.times };
+    });
   };
 
   return (
@@ -233,10 +231,7 @@ export default function ScheduleForm({
                 labelId="schedule-connection-label"
                 label={t('stocksprite.schedule.connection')}
                 value={connectionId}
-                onChange={(e) => {
-                  setSaved(false);
-                  setConnectionId(e.target.value);
-                }}
+                onChange={(e) => setConnectionId(e.target.value)}
               >
                 {addableConnections.length === 0 && (
                   <MenuItem value="" disabled>
@@ -258,13 +253,7 @@ export default function ScheduleForm({
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   {t('stocksprite.schedule.enable')}
                 </Typography>
-                <Switch
-                  checked={scheduleEnabled}
-                  onChange={(e) => {
-                    setSaved(false);
-                    setScheduleEnabled(e.target.checked);
-                  }}
-                />
+                <Switch checked={scheduleEnabled} onChange={(e) => setScheduleEnabled(e.target.checked)} />
               </Box>
 
               <FormControl component="fieldset" fullWidth sx={{ mb: 2 }}>
@@ -273,11 +262,8 @@ export default function ScheduleForm({
                 </Typography>
                 <RadioGroup
                   row
-                  value={frequency}
-                  onChange={(e) => {
-                    setSaved(false);
-                    setFrequency(e.target.value as ScheduleFrequency);
-                  }}
+                  value={schedule.frequency}
+                  onChange={(e) => setSchedule(makeDefaultSchedule(e.target.value as ScheduleFrequency))}
                 >
                   <FormControlLabel value="once" control={<Radio />} label={t('stocksprite.schedule.once')} />
                   <FormControlLabel value="daily" control={<Radio />} label={t('stocksprite.schedule.daily')} />
@@ -285,52 +271,47 @@ export default function ScheduleForm({
                 </RadioGroup>
               </FormControl>
 
-              {frequency === 'once' && (
+              {schedule.frequency === 'once' && (
                 <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   <TextField
                     label={t('stocksprite.schedule.date')}
                     type="date"
-                    value={onceDate}
-                    onChange={(e) => {
-                      setSaved(false);
-                      setOnceDate(e.target.value);
-                    }}
+                    value={schedule.date}
+                    onChange={(e) => setSchedule((prev) => (prev.frequency === 'once' ? { frequency: 'once', date: e.target.value, time: prev.time } : prev))}
                     InputLabelProps={{ shrink: true }}
                     sx={{ minWidth: 200 }}
                   />
                   <HourSelect
                     labelId="once-time-label"
                     label={t('stocksprite.schedule.time')}
-                    value={onceTime}
-                    onChange={(h) => {
-                      setSaved(false);
-                      setOnceTime(h);
-                    }}
+                    value={schedule.time}
+                    onChange={(h) => setSchedule((prev) => (prev.frequency === 'once' ? { frequency: 'once', date: prev.date, time: h } : prev))}
                   />
                 </Box>
               )}
 
-              {frequency === 'daily' && (
+              {schedule.frequency === 'daily' && (
                 <Box>
                   <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
                     {t('stocksprite.schedule.hours')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center', mb: 2 }}>
-                    {dailyTimes.map((hour, index) => (
+                    {schedule.times.map((hour, index) => (
                       <HourSelect
                         key={index}
                         value={hour}
-                        onChange={(h) => {
-                          setSaved(false);
-                          setDailyTimes((prev) => prev.map((x, i) => (i === index ? h : x)));
-                        }}
+                        onChange={(h) =>
+                          setSchedule((prev) =>
+                            prev.frequency === 'daily' ? { ...prev, times: prev.times.map((x, i) => (i === index ? h : x)) } : prev
+                          )
+                        }
                       />
                     ))}
                     <Button size="small" onClick={addHour} sx={{ textTransform: 'none' }}>
                       {t('stocksprite.schedule.addHour')}
                     </Button>
-                    {dailyTimes.length > 1 && (
-                      <Button size="small" color="error" onClick={() => removeHour(dailyTimes.length - 1)} sx={{ textTransform: 'none' }}>
+                    {schedule.times.length > 1 && (
+                      <Button size="small" color="error" onClick={() => removeHour(schedule.times.length - 1)} sx={{ textTransform: 'none' }}>
                         {t('stocksprite.schedule.removeHour')}
                       </Button>
                     )}
@@ -351,7 +332,7 @@ export default function ScheduleForm({
                         control={
                           <Checkbox
                             size="small"
-                            checked={dailyDaysOfWeek.includes(day.value)}
+                            checked={(schedule.daysOfWeek ?? []).includes(day.value)}
                             onChange={() => toggleDay(day.value)}
                           />
                         }
@@ -359,24 +340,23 @@ export default function ScheduleForm({
                       />
                     ))}
                   </Box>
-                  {dailyDaysOfWeek.length === 0 && (
+                  {(schedule.daysOfWeek ?? []).length === 0 && (
                     <FormHelperText>{t('stocksprite.schedule.daysOfWeekHelper')}</FormHelperText>
                   )}
                 </Box>
               )}
 
-              {frequency === 'monthly' && (
+              {schedule.frequency === 'monthly' && (
                 <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   <FormControl sx={{ minWidth: 160 }}>
                     <InputLabel id="monthly-day-label">{t('stocksprite.schedule.dayOfMonth')}</InputLabel>
                     <Select
                       labelId="monthly-day-label"
                       label={t('stocksprite.schedule.dayOfMonth')}
-                      value={monthlyDayOfMonth}
-                      onChange={(e) => {
-                        setSaved(false);
-                        setMonthlyDayOfMonth(Number(e.target.value));
-                      }}
+                      value={schedule.dayOfMonth}
+                      onChange={(e) =>
+                        setSchedule((prev) => (prev.frequency === 'monthly' ? { ...prev, dayOfMonth: Number(e.target.value) } : prev))
+                      }
                     >
                       {DAYS_OF_MONTH.map((d) => (
                         <MenuItem key={d} value={d}>
@@ -388,11 +368,8 @@ export default function ScheduleForm({
                   <HourSelect
                     labelId="monthly-time-label"
                     label={t('stocksprite.schedule.time')}
-                    value={monthlyTime}
-                    onChange={(h) => {
-                      setSaved(false);
-                      setMonthlyTime(h);
-                    }}
+                    value={schedule.time}
+                    onChange={(h) => setSchedule((prev) => (prev.frequency === 'monthly' ? { ...prev, time: h } : prev))}
                   />
                 </Box>
               )}
@@ -419,7 +396,7 @@ export default function ScheduleForm({
             color="primary"
             startIcon={<PlayArrowIcon />}
             onClick={() => void handleRun()}
-            disabled={!saved || !mappingId || saving}
+            disabled={dirty || !mappingId || saving}
             sx={{ textTransform: 'none' }}
           >
             {t('stocksprite.schedule.runNow')}
