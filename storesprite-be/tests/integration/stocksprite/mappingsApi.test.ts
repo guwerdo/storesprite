@@ -4,7 +4,7 @@ import { buildApp } from "../../../src/app.js";
 import { User } from "../../../src/entities/user/User.js";
 import { DataConnection } from "../../../src/entities/stocksprite/DataConnection.js";
 import { Mapping } from "../../../src/entities/stocksprite/Mapping.js";
-import { resetTestDatabase } from "../../helpers/testDatabase.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Mappings API Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;

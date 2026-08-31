@@ -18,7 +18,7 @@ After launching the Docker container stack via `docker compose up -d`, enter the
   ```bash
   npm test
   ```
-  *Runs isolated unit tests using `vitest.config.ts` without touching the database.*
+  *Runs the `tests/unit/` suite using `vitest.config.ts` without touching the database.*
 
 * **Run ESLint Type-Aware Strict Check**:
   ```bash
@@ -30,7 +30,7 @@ After launching the Docker container stack via `docker compose up -d`, enter the
   ```bash
   npm run test:integration
   ```
-  *Runs integration tests against the isolated `storesprite_test_db` database using `vitest.integration.config.ts`, automatically wiping/truncating test tables before each test.*
+  *Runs the `tests/integration/` suite against the isolated `storesprite_test_db` database using `vitest.integration.config.ts`, automatically wiping/truncating test tables before each test.*
 
 * **Build Production Dist Output**:
   ```bash

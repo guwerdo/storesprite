@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildApp } from "../../../src/app.js";
-import { resetTestDatabase } from "../../helpers/testDatabase.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Scheduler API integration tests", () => {
   let app: ReturnType<typeof buildApp>;

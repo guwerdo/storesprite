@@ -7,8 +7,8 @@ import { TYPES } from "../../../src/di/index.js";
 import type { IUnasClientFactory } from "../../../src/types/unas/UnasClientFactory.interface.js";
 import { User } from "../../../src/entities/user/User.js";
 import { UserSetting } from "../../../src/entities/user/UserSetting.js";
-import { makeLoginResponse, makeUnasConnectionRecord, makeWebshopInfo } from "../../helpers/unasFixtures.js";
-import { resetTestDatabase } from "../../helpers/testDatabase.js";
+import { makeLoginResponse, makeUnasConnectionRecord, makeWebshopInfo } from "../../unit/helpers/unasFixtures.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("UNAS login API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;

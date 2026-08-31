@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../../../src/app.js";
 import { User } from "../../../src/entities/user/User.js";
 import { DataConnection } from "../../../src/entities/stocksprite/DataConnection.js";
-import { resetTestDatabase } from "../../helpers/testDatabase.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Migration & Data Connections Integration Tests", () => {
   let app: ReturnType<typeof buildApp>;

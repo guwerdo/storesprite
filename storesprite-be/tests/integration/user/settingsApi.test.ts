@@ -4,7 +4,7 @@ import { buildApp } from "../../../src/app.js";
 import { User } from "../../../src/entities/user/User.js";
 import { Language } from "../../../src/entities/user/Language.js";
 import { UserSetting } from "../../../src/entities/user/UserSetting.js";
-import { resetTestDatabase } from "../../helpers/testDatabase.js";
+import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Settings API Integration Tests (Isolated Test Database)", () => {
   let app: ReturnType<typeof buildApp>;
