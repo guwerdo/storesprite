@@ -8,7 +8,7 @@ import type { ISocketService } from '../types/SocketService.interface.js';
 import type { IUnasService } from '../types/unas/UnasService.interface.js';
 import type { IMappingService } from '../types/stocksprite/MappingService.interface.js';
 import { AxiosClient } from '../services/AxiosClient.js';
-import { MockHttpClient } from '../services/MockHttpClient.js';
+import { MockHttpClient } from '../services/mocks/MockHttpClient.js';
 import { SettingService } from '../services/user/SettingService.js';
 import { ConnectionService } from '../services/stocksprite/ConnectionService.js';
 import { SocketService } from '../services/SocketService.js';
@@ -24,6 +24,7 @@ container.bind<ISocketService>(TYPES.ISocketService).to(SocketService).inSinglet
 container.bind<IUnasService>(TYPES.IUnasService).to(UnasService).inSingletonScope();
 container.bind<IMappingService>(TYPES.IMappingService).to(MappingService).inSingletonScope();
 
+// Dev/demo mode: swap the real HTTP client for the no-op mock.
 const useMock = (import.meta.env.VITE_USE_MOCK_CLIENT as string | undefined) === 'true';
 if (useMock) {
   container.rebind<IHttpClient>(TYPES.IHttpClient).to(MockHttpClient).inSingletonScope();

@@ -36,8 +36,9 @@ The folder roots hold **cross-cutting** infrastructure used by every domain:
 
 - `types/` root — shared contracts: `HttpClient`, `SocketService`, `Navigation`,
   `Theme`, `Header`, `Auth`, `Container`, `I18n`, `UserMenu`, `TabbedPageLayout`.
-- `services/` root — HTTP/Socket transport: `AxiosClient`, `MockHttpClient`,
-  `SocketService`.
+- `services/` root — production HTTP/Socket transport: `AxiosClient`,
+  `SocketService`. Dev/test doubles live in `services/mocks/` (e.g.
+  `MockHttpClient`, bound only when `VITE_USE_MOCK_CLIENT=true`).
 
 ## Feature → domain mapping
 
@@ -66,6 +67,19 @@ Worked example — **StoreChat**: it's used by one feature only, so it moved out
 `types/` into `features/store-chat/types/`. **SettingService** is used by two
 features, so it stays in `types/user/` + `services/user/` (the `user` domain is
 exactly this case: one service, two screens).
+
+## Shared components (`components/`)
+
+Shared `components/` stays **flat** while the count is small. When the number of
+shared components passes **~12**, split them into purpose groups:
+
+- `components/layout/` — `Layout`, `Header`, `TabbedPageLayout`, `UserMenu`
+- `components/feedback/` — `ToastNotification`, `ConfirmDialog`
+- `components/form/` — `PasswordVisibilityToggle`
+- `components/auth/` — `AuthGuard`
+
+(These group names are a proposal; the exact split is decided when the trigger
+is hit.)
 
 ## Conventions
 
