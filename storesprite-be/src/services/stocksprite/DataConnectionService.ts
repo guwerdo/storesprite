@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
-import { DataConnection } from "../entities/DataConnection.js";
+import { DataConnection } from "../../entities/stocksprite/DataConnection.js";
 import {
   IDataConnectionRepository,
   DataConnectionDto,
@@ -9,11 +9,11 @@ import {
   ConnectionConfig,
   DataFormatConfig,
   ConnectionTestResult,
-} from "../types/DataConnectionRepository.interface.js";
-import { IDataConnectionService } from "../types/DataConnectionService.interface.js";
-import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
-import { TYPES } from "../di/types.js";
-import { Util } from "../utils/index.js";
+} from "../../types/stocksprite/DataConnectionRepository.interface.js";
+import { IDataConnectionService } from "../../types/stocksprite/DataConnectionService.interface.js";
+import { IJsonSchemaValidator } from "../../types/JsonSchemaValidator.interface.js";
+import { TYPES } from "../../di/types.js";
+import { Util } from "../../utils/index.js";
 
 @injectable()
 export class DataConnectionService implements IDataConnectionService {

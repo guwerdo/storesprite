@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
-import { Mapping } from "../entities/Mapping.js";
+import { Mapping } from "../../entities/stocksprite/Mapping.js";
 import {
   IMappingRepository,
   MappingDto,
@@ -9,12 +9,12 @@ import {
   StockMappingItem,
   MappingRule,
   MappingSchedule,
-} from "../types/MappingRepository.interface.js";
-import { IMappingService } from "../types/MappingService.interface.js";
-import { IDataConnectionRepository } from "../types/DataConnectionRepository.interface.js";
-import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
-import { MAPPING_RULES, MappingRuleGroup, MappingRuleDefinition } from "../config/mapping-rules.js";
-import { TYPES } from "../di/types.js";
+} from "../../types/stocksprite/MappingRepository.interface.js";
+import { IMappingService } from "../../types/stocksprite/MappingService.interface.js";
+import { IDataConnectionRepository } from "../../types/stocksprite/DataConnectionRepository.interface.js";
+import { IJsonSchemaValidator } from "../../types/JsonSchemaValidator.interface.js";
+import { MAPPING_RULES, MappingRuleGroup, MappingRuleDefinition } from "../../config/stocksprite/mapping-rules.js";
+import { TYPES } from "../../di/types.js";
 
 @injectable()
 export class MappingService implements IMappingService {

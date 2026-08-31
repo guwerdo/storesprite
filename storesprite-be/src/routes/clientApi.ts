@@ -19,7 +19,7 @@ import { Util, type ClerkSessionClaims } from "../utils/index.js";
 import { UnasConfigError, UnasHttpError, UnasTransportError } from "@storesprite/unas-json-client";
 import { DEFAULT_UNAS_API_ENDPOINT } from "../config/unas.constants.js";
 import { DEFAULT_TIMEZONE, ALLOWED_TIMEZONES } from "../config/timezone.constants.js";
-import { MAPPING_RULES } from "../config/mapping-rules.js";
+import { MAPPING_RULES } from "../config/stocksprite/mapping-rules.js";
 
 declare module "fastify" {
   interface FastifyRequest {

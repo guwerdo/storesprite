@@ -3,8 +3,8 @@ import { Migrator } from "@mikro-orm/migrations";
 import { User } from "../entities/User.js";
 import { Language } from "../entities/Language.js";
 import { UserSetting } from "../entities/UserSetting.js";
-import { DataConnection } from "../entities/DataConnection.js";
-import { Mapping } from "../entities/Mapping.js";
+import { DataConnection } from "../entities/stocksprite/DataConnection.js";
+import { Mapping } from "../entities/stocksprite/Mapping.js";
 import dotenv from "dotenv";
 
 dotenv.config();

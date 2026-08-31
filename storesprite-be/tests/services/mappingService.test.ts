@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { describe, it, expect, beforeEach } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { MappingService } from "../../src/services/MappingService.js";
-import { IMappingRepository } from "../../src/types/MappingRepository.interface.js";
-import { IDataConnectionRepository } from "../../src/types/DataConnectionRepository.interface.js";
-import { DataConnection } from "../../src/entities/DataConnection.js";
+import { MappingService } from "../../src/services/stocksprite/MappingService.js";
+import { IMappingRepository } from "../../src/types/stocksprite/MappingRepository.interface.js";
+import { IDataConnectionRepository } from "../../src/types/stocksprite/DataConnectionRepository.interface.js";
+import { DataConnection } from "../../src/entities/stocksprite/DataConnection.js";
 import { User } from "../../src/entities/User.js";
-import { Mapping } from "../../src/entities/Mapping.js";
+import { Mapping } from "../../src/entities/stocksprite/Mapping.js";
 import { JsonSchemaValidator } from "../../src/utils/JsonSchemaValidator.js";
 
 describe("MappingService Unit Tests", () => {

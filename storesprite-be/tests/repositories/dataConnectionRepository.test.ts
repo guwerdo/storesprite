@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { EntityManager } from "@mikro-orm/postgresql";
-import { DataConnectionRepository } from "../../src/repositories/DataConnectionRepository.js";
-import { DataConnection } from "../../src/entities/DataConnection.js";
+import { DataConnectionRepository } from "../../src/repositories/stocksprite/DataConnectionRepository.js";
+import { DataConnection } from "../../src/entities/stocksprite/DataConnection.js";
 import { User } from "../../src/entities/User.js";
 
 describe("DataConnectionRepository", () => {

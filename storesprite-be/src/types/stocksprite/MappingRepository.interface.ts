@@ -1,4 +1,4 @@
-import { Mapping } from "../entities/Mapping.js";
+import { Mapping } from "../../entities/stocksprite/Mapping.js";
 
 export interface MappingRule {
   op: string;

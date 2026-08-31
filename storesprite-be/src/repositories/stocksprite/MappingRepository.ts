@@ -1,15 +1,15 @@
 import { injectable, inject } from "inversify";
 import { EntityManager } from "@mikro-orm/postgresql";
 import type { Logger } from "log4js";
-import { User } from "../entities/User.js";
-import { DataConnection } from "../entities/DataConnection.js";
-import { Mapping } from "../entities/Mapping.js";
+import { User } from "../../entities/User.js";
+import { DataConnection } from "../../entities/stocksprite/DataConnection.js";
+import { Mapping } from "../../entities/stocksprite/Mapping.js";
 import {
   IMappingRepository,
   CreateMappingDto,
   UpdateMappingDto,
-} from "../types/MappingRepository.interface.js";
-import { TYPES } from "../di/types.js";
+} from "../../types/stocksprite/MappingRepository.interface.js";
+import { TYPES } from "../../di/types.js";
 
 @injectable()
 export class MappingRepository implements IMappingRepository {

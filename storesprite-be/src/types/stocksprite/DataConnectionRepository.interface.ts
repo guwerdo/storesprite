@@ -1,4 +1,4 @@
-import { DataConnection, DataConnectionChannel, DataConnectionFormat } from "../entities/DataConnection.js";
+import { DataConnection, DataConnectionChannel, DataConnectionFormat } from "../../entities/stocksprite/DataConnection.js";
 
 // Transport Layer Config
 export interface HttpConnectionConfig {

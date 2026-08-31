@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
-import { TYPES } from "../di/types.js";
-import { Util } from "../utils/index.js";
-import { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
+import { TYPES } from "../../di/types.js";
+import { Util } from "../../utils/index.js";
+import { IConnectionTestRunnerService } from "../../types/stocksprite/ConnectionTestRunnerService.interface.js";
 
 @injectable()
 export class ConnectionTestRunnerService implements IConnectionTestRunnerService {

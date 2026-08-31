@@ -3,9 +3,9 @@ import {
   DataFormatConfig,
   ConnectionCredentials,
   ConnectionTestResult,
-} from "./DataConnectionRepository.interface.js";
-import { StockMappingItem, MappingRule, MappingSchedule } from "./MappingRepository.interface.js";
-import { DataConnectionChannel, DataConnectionFormat } from "../entities/DataConnection.js";
+} from "./stocksprite/DataConnectionRepository.interface.js";
+import { StockMappingItem, MappingRule, MappingSchedule } from "./stocksprite/MappingRepository.interface.js";
+import { DataConnectionChannel, DataConnectionFormat } from "../entities/stocksprite/DataConnection.js";
 
 export interface IJsonSchemaValidator {
   validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig;

@@ -1,8 +1,8 @@
 export { User } from "../entities/User.js";
 export { Language } from "../entities/Language.js";
 export { UserSetting } from "../entities/UserSetting.js";
-export { DataConnection } from "../entities/DataConnection.js";
-export { Mapping } from "../entities/Mapping.js";
+export { DataConnection } from "../entities/stocksprite/DataConnection.js";
+export { Mapping } from "../entities/stocksprite/Mapping.js";
 export type { IUserRepository } from "../types/UserRepository.interface.js";
 export type { IUserService } from "../types/UserService.interface.js";
 export type { ISettingRepository } from "../types/SettingRepository.interface.js";
@@ -14,17 +14,17 @@ export type {
   UpdateDataConnectionDto,
   ConnectionConfig,
   DataFormatConfig,
-} from "../types/DataConnectionRepository.interface.js";
-export type { IDataConnectionService } from "../types/DataConnectionService.interface.js";
+} from "../types/stocksprite/DataConnectionRepository.interface.js";
+export type { IDataConnectionService } from "../types/stocksprite/DataConnectionService.interface.js";
 export type {
   IMappingRepository,
   MappingDto,
   CreateMappingDto,
   UpdateMappingDto,
-} from "../types/MappingRepository.interface.js";
-export type { IMappingService } from "../types/MappingService.interface.js";
+} from "../types/stocksprite/MappingRepository.interface.js";
+export type { IMappingService } from "../types/stocksprite/MappingService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
-export type { IConnectionTestRunnerService } from "../types/ConnectionTestRunnerService.interface.js";
+export type { IConnectionTestRunnerService } from "../types/stocksprite/ConnectionTestRunnerService.interface.js";
 export type { IUnasService } from "../types/UnasService.interface.js";
 export type { IUnasClientFactory } from "../types/UnasClientFactory.interface.js";
 

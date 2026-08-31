@@ -1,11 +1,11 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
-import { User } from "./User.js";
+import { User } from "../User.js";
 import { DataConnection } from "./DataConnection.js";
 import type {
   MappingRule,
   StockMappingItem,
   MappingSchedule,
-} from "../types/MappingRepository.interface.js";
+} from "../../types/stocksprite/MappingRepository.interface.js";
 
 @Entity({ tableName: "mappings" })
 export class Mapping {

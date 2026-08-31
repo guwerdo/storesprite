@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import { describe, it, expect, beforeEach } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { DataConnectionService } from "../../src/services/DataConnectionService.js";
+import { DataConnectionService } from "../../src/services/stocksprite/DataConnectionService.js";
 import {
   IDataConnectionRepository,
   CreateDataConnectionDto,
   UpdateDataConnectionDto,
-} from "../../src/types/DataConnectionRepository.interface.js";
-import { DataConnection } from "../../src/entities/DataConnection.js";
+} from "../../src/types/stocksprite/DataConnectionRepository.interface.js";
+import { DataConnection } from "../../src/entities/stocksprite/DataConnection.js";
 import { User } from "../../src/entities/User.js";
 import { JsonSchemaValidator } from "../../src/utils/JsonSchemaValidator.js";
 

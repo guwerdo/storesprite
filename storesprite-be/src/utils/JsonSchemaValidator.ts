@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
-import { DataConnectionChannel, DataConnectionFormat } from "../entities/DataConnection.js";
+import { DataConnectionChannel, DataConnectionFormat } from "../entities/stocksprite/DataConnection.js";
 import {
   ConnectionConfig,
   DataFormatConfig,
@@ -18,8 +18,8 @@ import {
   HttpCredentials,
   SftpCredentials,
   ConnectionTestResult,
-} from "../types/DataConnectionRepository.interface.js";
-import { StockMappingItem, MappingRule, MappingSchedule } from "../types/MappingRepository.interface.js";
+} from "../types/stocksprite/DataConnectionRepository.interface.js";
+import { StockMappingItem, MappingRule, MappingSchedule } from "../types/stocksprite/MappingRepository.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 
 export class SchemaValidationError extends Error {

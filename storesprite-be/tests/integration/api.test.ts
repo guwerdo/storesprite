@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
-import { DataConnection } from "../../src/entities/DataConnection.js";
+import { DataConnection } from "../../src/entities/stocksprite/DataConnection.js";
 import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("API Integration Tests (Isolated Test Database)", () => {

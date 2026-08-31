@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../../src/app.js";
 import { User } from "../../src/entities/User.js";
-import { DataConnection } from "../../src/entities/DataConnection.js";
-import { Mapping } from "../../src/entities/Mapping.js";
+import { DataConnection } from "../../src/entities/stocksprite/DataConnection.js";
+import { Mapping } from "../../src/entities/stocksprite/Mapping.js";
 import { resetTestDatabase } from "../helpers/testDatabase.js";
 
 describe("Mappings API Integration Tests", () => {

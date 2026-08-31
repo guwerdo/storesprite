@@ -1,11 +1,11 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
-import { User } from "./User.js";
+import { User } from "../User.js";
 import type {
   ConnectionConfig,
   DataFormatConfig,
   ConnectionCredentials,
   ConnectionTestResult,
-} from "../types/DataConnectionRepository.interface.js";
+} from "../../types/stocksprite/DataConnectionRepository.interface.js";
 
 export type DataConnectionChannel = "HTTP" | "SFTP";
 export type DataConnectionFormat = "CSV" | "XML";
