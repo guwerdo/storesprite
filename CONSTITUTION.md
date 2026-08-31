@@ -74,7 +74,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
      *(or `npm run test`)*
 
 2. **Backend API & Container Integration Test Mandates**:
-   * **Backend API Integration Tests (`npm run test:integration`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an API test in `tests/integration/`. API tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
+   * **Backend API Integration Tests (`npm run test:integration`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an integration test in `tests/integration/`. Integration tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
    * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/test-integration/` testing the built Docker container against mock backend & datasource servers.
 
 3. **Comprehensive Scenario Coverage Mandate (Happy Path, Edge Cases, Error Cases)**:
