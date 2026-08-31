@@ -65,10 +65,10 @@ build loudly (barrel consumers can't resolve), never silently:
   `utils/stocksprite/schedule-util.ts`), never through `Util`. DI services do not belong in
   `utils/` — `utils/JsonSchemaValidator.ts` is a legacy exception (a DI-bound validator with its
   own interface + `TYPES` binding); put new ones in `services/`.
-- **Fastify augmentation** — `src/types/fastify.d.ts` is the canonical home for
-  `declare module "fastify"` (currently `container`, `io`). Add new decorations there, not in
-  plugin-local `declare module` blocks (the ones in `plugins/inversify.ts` / `socketio.ts` are
-  legacy duplicates).
+- **Fastify augmentation** — `src/types/fastify.d.ts` is the canonical home for all
+  `declare module "fastify"` augmentation (currently `container`, `io`, `orm`, `userClaims`).
+  Add new decorations there, not in plugin-local `declare module` blocks — plugins decorate at
+  runtime (`fastify.decorate`) only and carry no local type augmentation.
 - **`user` ↔ `unas` coupling is intentional** — Unas credentials are stored in the user's
   settings, so `services/unas/UnasService` injects `ISettingService`, and `types/user`
   (`UserSetting`, `SettingRepository`) references `types/unas/UnasConnection`. The two domains

@@ -4,12 +4,6 @@ import type { Logger } from "log4js";
 import { TYPES, IUserService } from "../di/index.js";
 import { Util, type ClerkSessionClaims } from "../utils/index.js";
 
-declare module "fastify" {
-  interface FastifyRequest {
-    userClaims?: ClerkSessionClaims;
-  }
-}
-
 /**
  * Registers the Clerk JWT verification + JIT user provisioning hook.
  * Call this at the /api/client scope so it guards the user-facing client

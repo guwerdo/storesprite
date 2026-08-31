@@ -3,12 +3,6 @@ import { FastifyInstance } from "fastify";
 import { MikroORM } from "@mikro-orm/postgresql";
 import mikroOrmConfig from "../config/mikro-orm.config.js";
 
-declare module "fastify" {
-  interface FastifyInstance {
-    orm: MikroORM;
-  }
-}
-
 export default fp(async (fastify: FastifyInstance) => {
   let orm: MikroORM;
   try {

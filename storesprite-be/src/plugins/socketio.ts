@@ -2,12 +2,6 @@ import fp from "fastify-plugin";
 import { Server } from "socket.io";
 import { FastifyInstance } from "fastify";
 
-declare module "fastify" {
-  interface FastifyInstance {
-    io: Server;
-  }
-}
-
 export default fp((fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void) => {
   const io = new Server(fastify.server, {
     cors: {
