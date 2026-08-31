@@ -532,6 +532,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "json"
+        },
+        "last_run_at": {
+          "name": "last_run_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "name": "mappings",

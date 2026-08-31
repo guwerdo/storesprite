@@ -27,6 +27,9 @@ export class Mapping {
   @Property({ type: "jsonb", nullable: true })
   schedule?: MappingSchedule | null;
 
+  @Property({ type: "timestamptz", nullable: true })
+  lastRunAt?: Date | null;
+
   @Property({ type: "varchar", length: 255 })
   skuField!: string;
 

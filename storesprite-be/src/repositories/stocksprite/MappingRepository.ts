@@ -42,6 +42,15 @@ export class MappingRepository implements IMappingRepository {
     });
   }
 
+  public async getEnabledSchedules(): Promise<Mapping[]> {
+    this._logger?.info("Fetching enabled schedules");
+    return this._em.find(
+      Mapping,
+      { scheduleEnabled: true, schedule: { $ne: null } },
+      { populate: ["user"] }
+    );
+  }
+
   public async create(userId: string, data: CreateMappingDto): Promise<Mapping> {
     this._logger?.info("Creating mapping for user", { userId, name: data.name });
 
@@ -114,5 +123,15 @@ export class MappingRepository implements IMappingRepository {
     await this._em.removeAndFlush(mapping);
     this._logger?.info("Mapping deleted successfully", { id, userId });
     return true;
+  }
+
+  public async markLastRun(id: string, userId: string, date: Date): Promise<void> {
+    const mapping = await this.getByIdAndUserId(id, userId);
+    if (!mapping) {
+      return;
+    }
+    mapping.lastRunAt = date;
+    mapping.updatedAt = new Date();
+    await this._em.flush();
   }
 }

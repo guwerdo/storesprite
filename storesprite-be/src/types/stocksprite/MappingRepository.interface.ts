@@ -92,7 +92,9 @@ export interface IMappingRepository {
   getAllByUserId(userId: string): Promise<Mapping[]>;
   getByIdAndUserId(id: string, userId: string): Promise<Mapping | null>;
   getByConnectionIdAndUserId(connectionId: string, userId: string): Promise<Mapping | null>;
+  getEnabledSchedules(): Promise<Mapping[]>;
   create(userId: string, data: CreateMappingDto): Promise<Mapping>;
   update(id: string, userId: string, data: UpdateMappingDto): Promise<Mapping | null>;
   delete(id: string, userId: string): Promise<boolean>;
+  markLastRun(id: string, userId: string, date: Date): Promise<void>;
 }

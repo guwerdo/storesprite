@@ -6,6 +6,7 @@ import socketioPlugin from "./plugins/socketio.js";
 import clerkWebhooks from "./routes/clerkWebhooks.js";
 import clientApi from "./routes/clientApi.js";
 import internalApi from "./routes/stocksprite/internalApi.js";
+import schedulerApi from "./routes/stocksprite/schedulerApi.js";
 
 export function buildApp(opts: FastifyServerOptions = {}) {
   const app = Fastify(opts);
@@ -27,6 +28,7 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   app.register(clerkWebhooks, { prefix: "/api/clerk" });
   app.register(clientApi, { prefix: "/api/client" });
   app.register(internalApi, { prefix: "/api/internal/stocksprite" });
+  app.register(schedulerApi, { prefix: "/api/internal/stocksprite/scheduler" });
 
   return app;
 }

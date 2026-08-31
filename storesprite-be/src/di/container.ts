@@ -14,6 +14,7 @@ import { DataConnectionRepository } from "../repositories/stocksprite/DataConnec
 import { MappingService } from "../services/stocksprite/MappingService.js";
 import { MappingRepository } from "../repositories/stocksprite/MappingRepository.js";
 import { ConnectionTestRunnerService } from "../services/stocksprite/ConnectionTestRunnerService.js";
+import { SchedulerService } from "../services/stocksprite/SchedulerService.js";
 import { UnasClientFactory } from "../services/UnasClientFactory.js";
 import { UnasService } from "../services/UnasService.js";
 import { JsonSchemaValidator } from "../utils/JsonSchemaValidator.js";
@@ -59,6 +60,7 @@ export function createContainer(orm?: MikroORM): Container {
   container.bind(TYPES.IDataConnectionService).to(DataConnectionService).inRequestScope();
   container.bind(TYPES.IMappingRepository).to(MappingRepository).inRequestScope();
   container.bind(TYPES.IMappingService).to(MappingService).inRequestScope();
+  container.bind(TYPES.ISchedulerService).to(SchedulerService).inRequestScope();
 
   return container;
 }

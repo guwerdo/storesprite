@@ -23,6 +23,7 @@ export type {
   UpdateMappingDto,
 } from "../types/stocksprite/MappingRepository.interface.js";
 export type { IMappingService } from "../types/stocksprite/MappingService.interface.js";
+export type { ISchedulerService } from "../types/stocksprite/SchedulerService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 export type { IConnectionTestRunnerService } from "../types/stocksprite/ConnectionTestRunnerService.interface.js";
 export type { IUnasService } from "../types/UnasService.interface.js";
@@ -38,6 +39,7 @@ export const TYPES = {
   IDataConnectionService: Symbol.for("IDataConnectionService"),
   IMappingRepository: Symbol.for("IMappingRepository"),
   IMappingService: Symbol.for("IMappingService"),
+  ISchedulerService: Symbol.for("ISchedulerService"),
   IJsonSchemaValidator: Symbol.for("IJsonSchemaValidator"),
   IConnectionTestRunnerService: Symbol.for("IConnectionTestRunnerService"),
   IUnasService: Symbol.for("IUnasService"),
