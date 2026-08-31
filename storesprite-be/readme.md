@@ -106,7 +106,7 @@ Endpoints in `storesprite-be` use Fastify per-route metadata for flexible auth c
   - `GET /api/client/me` (requires `Authorization: Bearer <CLERK_JWT>`)
   - *All other `/api/client/*` routes are protected the same way.*
 * **Clerk Webhook (Svix-signed, raw-body verified)**:
-  - `POST /api/clerk/webhooks/clerk` (requires `svix-id` / `svix-timestamp` / `svix-signature` headers)
+  - `POST /api/webhooks/clerk` (requires `svix-id` / `svix-timestamp` / `svix-signature` headers)
 * **Internal API Endpoints (`x-internal-token` header)**:
   - `POST /api/internal/stocksprite/scheduler/run`
   - `GET /api/internal/stocksprite/users/:userId/connections`

@@ -25,7 +25,7 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   app.register(socketioPlugin);
 
   // Register Routes
-  app.register(clerkWebhooks, { prefix: "/api/clerk" });
+  app.register(clerkWebhooks, { prefix: "/api" });
   app.register(clientApi, { prefix: "/api/client" });
   app.register(internalApi, { prefix: "/api/internal/stocksprite" });
   app.register(schedulerApi, { prefix: "/api/internal/stocksprite/scheduler" });

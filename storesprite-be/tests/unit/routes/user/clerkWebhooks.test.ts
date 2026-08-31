@@ -49,7 +49,7 @@ describe("Clerk Webhooks Integration Tests", () => {
     // Act
     const response = await app.inject({
       method: "POST",
-      url: "/api/clerk/webhooks/clerk",
+      url: "/api/webhooks/clerk",
       payload: { type: "user.created" },
     });
 
@@ -62,7 +62,7 @@ describe("Clerk Webhooks Integration Tests", () => {
     // Act
     const response = await app.inject({
       method: "POST",
-      url: "/api/clerk/webhooks/clerk",
+      url: "/api/webhooks/clerk",
       headers: {
         "svix-id": "invalid_id",
         "svix-timestamp": "123456",
@@ -99,7 +99,7 @@ describe("Clerk Webhooks Integration Tests", () => {
     // Act
     const response = await app.inject({
       method: "POST",
-      url: "/api/clerk/webhooks/clerk",
+      url: "/api/webhooks/clerk",
       headers: {
         "content-type": "application/json",
         ...headers,
@@ -140,7 +140,7 @@ describe("Clerk Webhooks Integration Tests", () => {
     // Act
     const response = await app.inject({
       method: "POST",
-      url: "/api/clerk/webhooks/clerk",
+      url: "/api/webhooks/clerk",
       headers: {
         "content-type": "application/json",
         ...headers,
@@ -174,7 +174,7 @@ describe("Clerk Webhooks Integration Tests", () => {
     // Act
     const response = await app.inject({
       method: "POST",
-      url: "/api/clerk/webhooks/clerk",
+      url: "/api/webhooks/clerk",
       headers: {
         "content-type": "application/json",
         ...headers,

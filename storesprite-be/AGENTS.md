@@ -47,7 +47,7 @@ build loudly (barrel consumers can't resolve), never silently:
    never instantiate.
 4. **DI registry** — add the `TYPES.X` symbol **and** re-export the interface/DTO/entity in
    `src/di/types.ts`; bind it in `src/di/container.ts`.
-5. **Routes** — add handlers to the domain's route module (e.g. `routes/stocksprite/clientApi.ts`)
+5. **Routes** — add handlers to the domain's route module (e.g. `routes/stocksprite/connectionsApi.ts`)
    or register a new route plugin from `routes/client/index.ts` / `app.ts`.
 6. **Tests** — unit tests in `tests/unit/<domain>/`; DB integration tests in
    `tests/integration/<domain>/`.
@@ -90,7 +90,7 @@ build loudly (barrel consumers can't resolve), never silently:
 ## 3. Local Design & Route Constraints
 
 1. **Security & Route Boundary Protection**:
-   * `POST /api/clerk/webhooks/clerk`: MUST perform raw body buffer Svix cryptographic signature verification before updating PostgreSQL user records. (Registered with prefix `/api/clerk` + route `/webhooks/clerk`.)
+   * `POST /api/webhooks/clerk`: MUST perform raw body buffer Svix cryptographic signature verification before updating PostgreSQL user records.
    * `/api/client/*`: MUST be protected. Routes opt in/out via `config: { auth: true | false }`; the `registerClerkAuth` onRequest hook (`src/plugins/clerkAuth.ts`) verifies the `Authorization: Bearer <JWT>` and JIT-provisions the user.
    * `/api/internal/stocksprite/*`: MUST be protected via a Fastify `preHandler` hook verifying the `x-internal-token` header.
 2. **No Direct Instantiation or Raw Queries in Routes**:

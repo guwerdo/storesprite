@@ -2,7 +2,8 @@ import { FastifyInstance } from "fastify";
 import { registerClerkAuth } from "../../plugins/clerkAuth.js";
 import userApi from "../user/clientApi.js";
 import unasApi from "../unas/clientApi.js";
-import stockspriteApi from "../stocksprite/clientApi.js";
+import connectionsApi from "../stocksprite/connectionsApi.js";
+import mappingsApi from "../stocksprite/mappingsApi.js";
 import healthApi from "../health.js";
 
 /**
@@ -14,6 +15,7 @@ export default async function clientApi(fastify: FastifyInstance): Promise<void>
 
   await fastify.register(userApi);
   await fastify.register(unasApi);
-  await fastify.register(stockspriteApi);
+  await fastify.register(connectionsApi);
+  await fastify.register(mappingsApi);
   await fastify.register(healthApi);
 }
