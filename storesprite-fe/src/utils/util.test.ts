@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Util } from '../utils/index.js';
+import { Util } from './index.js';
 
 describe('Frontend Util Module', () => {
   describe('formatDate', () => {

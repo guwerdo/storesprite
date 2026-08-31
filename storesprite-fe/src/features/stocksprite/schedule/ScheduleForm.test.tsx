@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ScheduleForm from '../../features/stocksprite/schedule/ScheduleForm.js';
-import type { ScheduleFormProps } from '../../features/stocksprite/schedule/ScheduleForm.js';
-import { I18nProvider } from '../../i18n/I18nProvider.js';
-import type { IMapping } from '../../types/stocksprite/Mapping.interface.js';
-import type { IDataConnection } from '../../types/stocksprite/DataConnection.interface.js';
+import ScheduleForm from './ScheduleForm.js';
+import type { ScheduleFormProps } from './ScheduleForm.js';
+import { I18nProvider } from '../../../i18n/I18nProvider.js';
+import type { IMapping } from '../../../types/stocksprite/Mapping.interface.js';
+import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
 
 const makeMapping = (overrides: Partial<IMapping> = {}): IMapping => ({
   id: 'mapping-1',

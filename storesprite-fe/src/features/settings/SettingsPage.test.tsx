@@ -7,7 +7,7 @@ import { TYPES } from '../../di/types.js';
 import type { ISettingService } from '../../types/user/SettingService.interface.js';
 import type { IUnasService } from '../../types/unas/UnasService.interface.js';
 import type { IUnasConnection } from '../../types/unas/UnasConnection.interface.js';
-import SettingsPage from '../../features/settings/SettingsPage.js';
+import SettingsPage from './SettingsPage.js';
 import { I18nProvider } from '../../i18n/I18nProvider.js';
 
 const mockGetToken = vi.fn().mockResolvedValue('test_token');

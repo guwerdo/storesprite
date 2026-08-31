@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SettingService } from '../../services/user/SettingService.js';
+import { SettingService } from './SettingService.js';
 import { ConnectionService } from '../../services/stocksprite/ConnectionService.js';
 import type { IHttpClient } from '../../types/HttpClient.interface.js';
 import type { ISettingsApiResponse } from '../../types/user/Setting.interface.js';

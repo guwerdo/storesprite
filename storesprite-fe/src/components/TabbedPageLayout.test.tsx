@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import TabbedPageLayout from '../components/TabbedPageLayout.js';
+import TabbedPageLayout from './TabbedPageLayout.js';
 import type { ITabItemConfig } from '../types/TabbedPageLayout.interface.js';
 import { AppThemeProvider } from '../theme/AppThemeProvider.js';
 

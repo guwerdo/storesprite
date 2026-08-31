@@ -3,8 +3,8 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Container } from 'inversify';
-import { ContainerProvider, useInjection } from '../di/ContainerProvider.js';
-import { TYPES } from '../di/types.js';
+import { ContainerProvider, useInjection } from './ContainerProvider.js';
+import { TYPES } from './types.js';
 import type { IHttpClient } from '../types/HttpClient.interface.js';
 
 // A simple component that uses the IHttpClient service via DI

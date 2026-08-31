@@ -2,12 +2,12 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Container } from 'inversify';
-import { ContainerProvider } from '../../di/ContainerProvider.js';
-import { TYPES } from '../../di/types.js';
-import type { IConnectionService } from '../../types/stocksprite/ConnectionService.interface.js';
-import type { ISocketService } from '../../types/SocketService.interface.js';
-import StockSpriteConnectionsTab from '../../features/stocksprite/tabs/StockSpriteConnectionsTab.js';
-import { I18nProvider } from '../../i18n/I18nProvider.js';
+import { ContainerProvider } from '../../../di/ContainerProvider.js';
+import { TYPES } from '../../../di/types.js';
+import type { IConnectionService } from '../../../types/stocksprite/ConnectionService.interface.js';
+import type { ISocketService } from '../../../types/SocketService.interface.js';
+import StockSpriteConnectionsTab from './StockSpriteConnectionsTab.js';
+import { I18nProvider } from '../../../i18n/I18nProvider.js';
 
 const mockGetToken = vi.fn().mockResolvedValue('test_token');
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { en } from '../locales/en.js';
 import { hu } from '../locales/hu.js';
-import { normalizeLanguageCode } from '../i18n/i18n.js';
+import { normalizeLanguageCode } from './i18n.js';
 
 function getKeys(obj: Record<string, unknown>, prefix = ''): string[] {
   return Object.keys(obj).reduce((acc: string[], k: string) => {

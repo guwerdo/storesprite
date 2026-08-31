@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DRAWER_NAV_ITEMS } from '../config/navigation.js';
-import { USER_MENU_ITEMS } from '../config/userMenu.js';
+import { DRAWER_NAV_ITEMS } from './navigation.js';
+import { USER_MENU_ITEMS } from './userMenu.js';
 
 describe('Navigation Configurations', () => {
   it('defines the 4 drawer navigation items in correct order', () => {
