@@ -15,7 +15,7 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import type { IChatMessage } from '../../../types/StoreChat.interface.js';
+import type { IChatMessage } from '../types/StoreChat.interface.js';
 
 export default function StoreChatMainTab(): React.JSX.Element {
   const theme = useTheme();
