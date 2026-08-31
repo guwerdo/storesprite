@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 
-export default function StockSpriteSettingsTab(): React.JSX.Element {
+export default function StockSpriteConfigTab(): React.JSX.Element {
   const { t } = useAppTranslation();
 
   return (
