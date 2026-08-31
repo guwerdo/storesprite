@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'inversify';
-import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { ISettingService } from '../types/SettingService.interface.js';
-import type { ISettingsApiResponse, ISaveSettingsRequest, ISaveSettingsResponse } from '../types/Setting.interface.js';
-import { TYPES } from '../di/types.js';
+import type { IHttpClient } from '../../types/HttpClient.interface.js';
+import type { ISettingService } from '../../types/user/SettingService.interface.js';
+import type { ISettingsApiResponse, ISaveSettingsRequest, ISaveSettingsResponse } from '../../types/user/Setting.interface.js';
+import { TYPES } from '../../di/types.js';
 
 @injectable()
 export class SettingService implements ISettingService {

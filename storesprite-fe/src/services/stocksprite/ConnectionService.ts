@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'inversify';
-import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { IConnectionService } from '../types/ConnectionService.interface.js';
+import type { IHttpClient } from '../../types/HttpClient.interface.js';
+import type { IConnectionService } from '../../types/stocksprite/ConnectionService.interface.js';
 import type {
   ICreateConnectionPayload,
   IUpdateConnectionPayload,
@@ -9,8 +9,8 @@ import type {
   IConnectionApiResponse,
   IConnectionMutationResponse,
   IConnectionTestResultResponse,
-} from '../types/DataConnection.interface.js';
-import { TYPES } from '../di/types.js';
+} from '../../types/stocksprite/DataConnection.interface.js';
+import { TYPES } from '../../di/types.js';
 
 @injectable()
 export class ConnectionService implements IConnectionService {

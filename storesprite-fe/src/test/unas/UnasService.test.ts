@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { UnasService } from '../services/UnasService.js';
-import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { IUnasLoginResponse } from '../types/UnasConnection.interface.js';
+import { UnasService } from '../../services/unas/UnasService.js';
+import type { IHttpClient } from '../../types/HttpClient.interface.js';
+import type { IUnasLoginResponse } from '../../types/unas/UnasConnection.interface.js';
 
 describe('UnasService', () => {
   let postSpy: ReturnType<typeof vi.fn>;

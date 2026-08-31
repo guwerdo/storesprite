@@ -25,10 +25,10 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '@clerk/clerk-react';
 import { useInjection } from '../../di/ContainerProvider.js';
 import { TYPES } from '../../di/types.js';
-import type { ISettingService } from '../../types/SettingService.interface.js';
-import type { ILanguage } from '../../types/Setting.interface.js';
-import type { IUnasService } from '../../types/UnasService.interface.js';
-import type { IUnasConnection } from '../../types/UnasConnection.interface.js';
+import type { ISettingService } from '../../types/user/SettingService.interface.js';
+import type { ILanguage } from '../../types/user/Setting.interface.js';
+import type { IUnasService } from '../../types/unas/UnasService.interface.js';
+import type { IUnasConnection } from '../../types/unas/UnasConnection.interface.js';
 import { UnasConnectionTestPanel } from './components/UnasConnectionTestPanel.js';
 import { useAppTranslation } from '../../i18n/I18nProvider.js';
 

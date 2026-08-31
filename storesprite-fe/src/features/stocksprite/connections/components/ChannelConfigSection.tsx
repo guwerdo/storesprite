@@ -19,7 +19,7 @@ import CableIcon from '@mui/icons-material/Cable';
 import { useFormContext, Controller } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
 import type { ConnectionFormValues } from '../schema/connectionFormSchema.js';
-import type { DataConnectionChannel } from '../../../../types/DataConnection.interface.js';
+import type { DataConnectionChannel } from '../../../../types/stocksprite/DataConnection.interface.js';
 
 export function ChannelConfigSection(): React.JSX.Element {
   const { t } = useAppTranslation();

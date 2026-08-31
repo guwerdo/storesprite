@@ -3,7 +3,7 @@ import type {
   IMappingRule,
   ICreateMappingPayload,
   IMappingRuleDefinition,
-} from '../../../../types/Mapping.interface.js';
+} from '../../../../types/stocksprite/Mapping.interface.js';
 import {
   MappingFormValues,
   defaultMappingFormValues,

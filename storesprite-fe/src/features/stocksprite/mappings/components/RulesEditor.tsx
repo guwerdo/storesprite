@@ -15,7 +15,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Controller, useFieldArray, useFormContext, useWatch, type FieldArrayPath, type FieldPath } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
-import type { IMappingRuleDefinition } from '../../../../types/Mapping.interface.js';
+import type { IMappingRuleDefinition } from '../../../../types/stocksprite/Mapping.interface.js';
 import { computePreview } from '../rulePreview.js';
 import {
   emptyRuleFormValue,

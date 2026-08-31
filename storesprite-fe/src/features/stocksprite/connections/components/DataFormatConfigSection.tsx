@@ -18,7 +18,7 @@ import SchemaOutlinedIcon from '@mui/icons-material/SchemaOutlined';
 import { useFormContext, Controller } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
 import type { ConnectionFormValues } from '../schema/connectionFormSchema.js';
-import type { DataConnectionFormat } from '../../../../types/DataConnection.interface.js';
+import type { DataConnectionFormat } from '../../../../types/stocksprite/DataConnection.interface.js';
 
 export function DataFormatConfigSection(): React.JSX.Element {
   const { t } = useAppTranslation();

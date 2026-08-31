@@ -28,14 +28,14 @@ import { useAuth } from '@clerk/clerk-react';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
+import type { IConnectionService } from '../../../types/stocksprite/ConnectionService.interface.js';
 import type { ISocketService } from '../../../types/SocketService.interface.js';
 import type {
   IDataConnection,
   ICreateConnectionPayload,
   ConnectionTestResult,
   ConnectionTestProgress,
-} from '../../../types/DataConnection.interface.js';
+} from '../../../types/stocksprite/DataConnection.interface.js';
 import {
   type ConnectionFormValues,
   createConnectionFormSchema,

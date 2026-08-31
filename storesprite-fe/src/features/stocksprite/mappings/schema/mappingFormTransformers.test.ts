@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { IMapping, IMappingRuleDefinition } from '../../../../types/Mapping.interface.js';
+import type { IMapping, IMappingRuleDefinition } from '../../../../types/stocksprite/Mapping.interface.js';
 import { MappingFormValues } from './mappingFormSchema.js';
 import { toApiPayload, toFormValues } from './mappingFormTransformers.js';
 

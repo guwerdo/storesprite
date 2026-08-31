@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { IMappingRule } from '../../../types/Mapping.interface.js';
+import type { IMappingRule } from '../../../types/stocksprite/Mapping.interface.js';
 import { computePreview } from './rulePreview.js';
 
 describe('computePreview', () => {

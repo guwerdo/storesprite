@@ -1,4 +1,4 @@
-import type { IUnasConnection } from './UnasConnection.interface.js';
+import type { IUnasConnection } from '../unas/UnasConnection.interface.js';
 
 export interface ILanguage {
   id: number;

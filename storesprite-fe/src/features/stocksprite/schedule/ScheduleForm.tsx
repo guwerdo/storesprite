@@ -23,8 +23,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
-import type { IMapping, IMappingSchedule } from '../../../types/Mapping.interface.js';
-import type { IDataConnection } from '../../../types/DataConnection.interface.js';
+import type { IMapping, IMappingSchedule } from '../../../types/stocksprite/Mapping.interface.js';
+import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
 import ConfirmDialog from '../../../components/ConfirmDialog.js';
 
 type ScheduleFrequency = 'once' | 'daily' | 'monthly';

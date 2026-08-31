@@ -2,18 +2,18 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from './types.js';
 import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { ISettingService } from '../types/SettingService.interface.js';
-import type { IConnectionService } from '../types/ConnectionService.interface.js';
+import type { ISettingService } from '../types/user/SettingService.interface.js';
+import type { IConnectionService } from '../types/stocksprite/ConnectionService.interface.js';
 import type { ISocketService } from '../types/SocketService.interface.js';
-import type { IUnasService } from '../types/UnasService.interface.js';
-import type { IMappingService } from '../types/MappingService.interface.js';
+import type { IUnasService } from '../types/unas/UnasService.interface.js';
+import type { IMappingService } from '../types/stocksprite/MappingService.interface.js';
 import { AxiosClient } from '../services/AxiosClient.js';
 import { MockHttpClient } from '../services/MockHttpClient.js';
-import { SettingService } from '../services/SettingService.js';
-import { ConnectionService } from '../services/ConnectionService.js';
+import { SettingService } from '../services/user/SettingService.js';
+import { ConnectionService } from '../services/stocksprite/ConnectionService.js';
 import { SocketService } from '../services/SocketService.js';
-import { UnasService } from '../services/UnasService.js';
-import { MappingService } from '../services/MappingService.js';
+import { UnasService } from '../services/unas/UnasService.js';
+import { MappingService } from '../services/stocksprite/MappingService.js';
 
 const container = new Container();
 

@@ -11,8 +11,8 @@ import EntityList from '../EntityList.js';
 import { useTabController } from '../useTabController.js';
 import ConnectionForm from '../connections/ConnectionForm.js';
 import { getConnectionStatus } from '../connections/connectionStatus.js';
-import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
-import type { IDataConnection, ICreateConnectionPayload } from '../../../types/DataConnection.interface.js';
+import type { IConnectionService } from '../../../types/stocksprite/ConnectionService.interface.js';
+import type { IDataConnection, ICreateConnectionPayload } from '../../../types/stocksprite/DataConnection.interface.js';
 
 interface StatusBadge {
   label: string;

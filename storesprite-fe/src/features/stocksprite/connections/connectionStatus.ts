@@ -1,7 +1,7 @@
 import type {
   ConnectionTestProgress,
   IDataConnection,
-} from '../../../types/DataConnection.interface.js';
+} from '../../../types/stocksprite/DataConnection.interface.js';
 
 export const TEST_RUN_TIMEOUT_MS = 15 * 60 * 1000;
 

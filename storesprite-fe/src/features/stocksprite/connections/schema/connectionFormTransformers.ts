@@ -8,7 +8,7 @@ import type {
   HttpAuthType,
   SftpAuthType,
   ConnectionCredentials,
-} from '../../../../types/DataConnection.interface.js';
+} from '../../../../types/stocksprite/DataConnection.interface.js';
 import {
   type ConnectionFormValues,
   defaultConnectionFormValues,

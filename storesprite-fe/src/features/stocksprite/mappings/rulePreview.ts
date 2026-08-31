@@ -1,4 +1,4 @@
-import type { IMappingRule } from '../../../types/Mapping.interface.js';
+import type { IMappingRule } from '../../../types/stocksprite/Mapping.interface.js';
 
 /**
  * Applies a single rule to a value for the inline preview. This is a pure,

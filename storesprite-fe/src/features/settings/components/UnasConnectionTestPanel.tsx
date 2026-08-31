@@ -3,7 +3,7 @@ import { Box, Button, Typography, CircularProgress, Link, Stack } from '@mui/mat
 import Info from '@mui/icons-material/Info';
 import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import { Util } from '../../../utils/index.js';
-import type { IUnasConnection } from '../../../types/UnasConnection.interface.js';
+import type { IUnasConnection } from '../../../types/unas/UnasConnection.interface.js';
 import { UnasPermissionsDialog } from './UnasPermissionsDialog.js';
 
 export interface UnasConnectionTestPanelProps {

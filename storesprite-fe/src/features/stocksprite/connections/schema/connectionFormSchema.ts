@@ -4,7 +4,7 @@ import type {
   DataConnectionFormat,
   HttpAuthType,
   SftpAuthType,
-} from '../../../../types/DataConnection.interface.js';
+} from '../../../../types/stocksprite/DataConnection.interface.js';
 
 export interface ConnectionFormValues {
   name: string;

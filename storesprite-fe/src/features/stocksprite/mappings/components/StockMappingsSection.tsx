@@ -4,8 +4,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
-import type { IWarehouse } from '../../../../types/UnasConnection.interface.js';
-import type { IMappingRuleDefinition } from '../../../../types/Mapping.interface.js';
+import type { IWarehouse } from '../../../../types/unas/UnasConnection.interface.js';
+import type { IMappingRuleDefinition } from '../../../../types/stocksprite/Mapping.interface.js';
 import RulesEditor from './RulesEditor.js';
 import { emptyStockMappingFormValue, MappingFormValues, StockMappingFormValue } from '../schema/mappingFormSchema.js';
 

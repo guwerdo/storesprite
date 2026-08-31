@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SettingService } from '../services/SettingService.js';
-import { ConnectionService } from '../services/ConnectionService.js';
-import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { ISettingsApiResponse } from '../types/Setting.interface.js';
+import { SettingService } from '../../services/user/SettingService.js';
+import { ConnectionService } from '../../services/stocksprite/ConnectionService.js';
+import type { IHttpClient } from '../../types/HttpClient.interface.js';
+import type { ISettingsApiResponse } from '../../types/user/Setting.interface.js';
 import type {
   IConnectionsApiResponse,
-} from '../types/DataConnection.interface.js';
+} from '../../types/stocksprite/DataConnection.interface.js';
 
 describe('SettingService', () => {
   let getSpy: ReturnType<typeof vi.fn>;

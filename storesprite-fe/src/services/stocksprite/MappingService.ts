@@ -1,15 +1,15 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'inversify';
-import type { IHttpClient } from '../types/HttpClient.interface.js';
-import type { IMappingService } from '../types/MappingService.interface.js';
+import type { IHttpClient } from '../../types/HttpClient.interface.js';
+import type { IMappingService } from '../../types/stocksprite/MappingService.interface.js';
 import type {
   ICreateMappingPayload,
   IUpdateMappingPayload,
   IMappingsApiResponse,
   IMappingMutationResponse,
   IMappingRulesResponse,
-} from '../types/Mapping.interface.js';
-import { TYPES } from '../di/types.js';
+} from '../../types/stocksprite/Mapping.interface.js';
+import { TYPES } from '../../di/types.js';
 
 @injectable()
 export class MappingService implements IMappingService {

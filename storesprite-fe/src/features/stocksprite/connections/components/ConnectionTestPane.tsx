@@ -23,7 +23,7 @@ import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
 import type {
   ConnectionTestResult,
   ConnectionTestProgress,
-} from '../../../../types/DataConnection.interface.js';
+} from '../../../../types/stocksprite/DataConnection.interface.js';
 
 export interface ConnectionTestPaneProps {
   testResult: ConnectionTestResult | null;

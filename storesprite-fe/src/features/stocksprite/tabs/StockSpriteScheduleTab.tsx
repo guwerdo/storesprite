@@ -8,10 +8,10 @@ import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import EntityList from '../EntityList.js';
 import { useTabController } from '../useTabController.js';
 import ScheduleForm from '../schedule/ScheduleForm.js';
-import type { IMappingService } from '../../../types/MappingService.interface.js';
-import type { IConnectionService } from '../../../types/ConnectionService.interface.js';
-import type { IMapping, IMappingSchedule } from '../../../types/Mapping.interface.js';
-import type { IDataConnection } from '../../../types/DataConnection.interface.js';
+import type { IMappingService } from '../../../types/stocksprite/MappingService.interface.js';
+import type { IConnectionService } from '../../../types/stocksprite/ConnectionService.interface.js';
+import type { IMapping, IMappingSchedule } from '../../../types/stocksprite/Mapping.interface.js';
+import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
 
 export default function StockSpriteScheduleTab(): React.JSX.Element {
   const { t } = useAppTranslation();

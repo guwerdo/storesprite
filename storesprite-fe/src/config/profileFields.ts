@@ -1,4 +1,4 @@
-import type { IProfileUser, IProfileFieldDefinition } from '../types/Profile.interface.js';
+import type { IProfileUser, IProfileFieldDefinition } from '../types/user/Profile.interface.js';
 
 export type { IProfileUser, IProfileFieldDefinition };
 

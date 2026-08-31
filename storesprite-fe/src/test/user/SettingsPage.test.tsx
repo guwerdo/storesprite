@@ -2,13 +2,13 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Container } from 'inversify';
-import { ContainerProvider } from '../di/ContainerProvider.js';
-import { TYPES } from '../di/types.js';
-import type { ISettingService } from '../types/SettingService.interface.js';
-import type { IUnasService } from '../types/UnasService.interface.js';
-import type { IUnasConnection } from '../types/UnasConnection.interface.js';
-import SettingsPage from '../features/settings/SettingsPage.js';
-import { I18nProvider } from '../i18n/I18nProvider.js';
+import { ContainerProvider } from '../../di/ContainerProvider.js';
+import { TYPES } from '../../di/types.js';
+import type { ISettingService } from '../../types/user/SettingService.interface.js';
+import type { IUnasService } from '../../types/unas/UnasService.interface.js';
+import type { IUnasConnection } from '../../types/unas/UnasConnection.interface.js';
+import SettingsPage from '../../features/settings/SettingsPage.js';
+import { I18nProvider } from '../../i18n/I18nProvider.js';
 
 const mockGetToken = vi.fn().mockResolvedValue('test_token');
 
