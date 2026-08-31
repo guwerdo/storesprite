@@ -16,13 +16,13 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
   public async runTest(
     connectionId: string,
     userId: string,
-    workerToken: string,
+    token: string,
     backendUrl: string
   ): Promise<void> {
     await Promise.resolve();
     const nodeEnv = (process.env.NODE_ENV || "dev").toLowerCase();
     const defaultDriver = nodeEnv === "prod" || nodeEnv === "production" ? "cloud_run" : "docker";
-    const driver = (process.env.WORKER_DRIVER || defaultDriver).toLowerCase();
+    const driver = (process.env.INTERNAL_DRIVER || defaultDriver).toLowerCase();
 
     this._logger?.info("Dispatching connection test runner", {
       connectionId,
@@ -43,7 +43,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     }
 
     // Default to Docker runner for dev environments
-    void this._runDockerContainer(connectionId, userId, workerToken, backendUrl);
+    void this._runDockerContainer(connectionId, userId, token, backendUrl);
   }
 
   private _spawnDocker(
@@ -91,7 +91,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
   private async _runDockerContainer(
     connectionId: string,
     userId: string,
-    workerToken: string,
+    token: string,
     backendUrl: string
   ): Promise<void> {
     const dockerNetwork = process.env.DOCKER_NETWORK || "storesprite-shared-net";
@@ -114,7 +114,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       `--network=${dockerNetwork}`,
       "-e", `TEST_CONNECTION=${connectionId}`,
       "-e", `USER_ID=${userId}`,
-      "-e", `WORKER_TOKEN=${workerToken}`,
+      "-e", `INTERNAL_TOKEN=${token}`,
       "-e", `BACKEND_URL=${backendUrl}`,
       imageName,
     ];

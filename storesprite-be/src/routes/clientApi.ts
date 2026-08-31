@@ -374,10 +374,10 @@ export default function clientApi(fastify: FastifyInstance, _opts: unknown, done
           started_at: startedAt,
         });
 
-        const workerToken = process.env.INTERNAL_WORKER_TOKEN || "";
+        const token = process.env.INTERNAL_TOKEN || "";
         const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://storesprite-be:3000";
 
-        void runnerService.runTest(id, userId, workerToken, backendUrl);
+        void runnerService.runTest(id, userId, token, backendUrl);
 
         return reply.code(202).send();
       } catch (err: unknown) {

@@ -28,17 +28,17 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
    * **Security Boundaries & Endpoints**:
      * `/api/webhooks/clerk`: Verifies raw body Svix cryptographic signatures before syncing user records to PostgreSQL.
      * `/api/client/*`: Protected via `@clerk/fastify` and `getAuth()` for client UI operations.
-     * `/api/worker/*`: Protected via a `preHandler` hook enforcing `Bearer INTERNAL_WORKER_TOKEN`. Allows workers to fetch `/api/worker/config` and report `/api/worker/progress`.
+     * `/api/internal/stocksprite/*`: Protected via a `preHandler` hook enforcing the `x-internal-token` header. Allows workers to fetch `/api/internal/stocksprite/config` and report `/api/internal/stocksprite/progress`.
    * **Real-Time Gateway**: Uses Socket.IO to manage isolated tenant broadcast rooms (`tenant_${userId}`).
-   * **Worker Orchestrator**: Spawns ephemeral `stocksprite` container instances on demand, injecting `USER_ID`, `SYNC_ID`, and `WORKER_TOKEN`.
+   * **Worker Orchestrator**: Spawns ephemeral `stocksprite` container instances on demand, injecting `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
 
 3. **On-Demand Worker Engine (`stocksprite`)**:
    * Ephemeral Docker stack running Node.js, TypeScript CLI, BullMQ, and Redis.
    * **Execution Lifecycle**:
-     1. Booted on-demand with `USER_ID`, `SYNC_ID`, and `WORKER_TOKEN`.
+     1. Booted on-demand with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
      2. `csv-provider`: Downloads the raw supplier inventory feed.
-     3. `stocksprite-app`: Fetches tenant webshop configuration from `/api/worker/config`.
-     4. Executes BullMQ queues to handle product matching, UNAS rate limits, and stock/price updates, emitting status to `/api/worker/progress`.
+     3. `stocksprite-app`: Fetches tenant webshop configuration from `/api/internal/stocksprite/config`.
+     4. Executes BullMQ queues to handle product matching, UNAS rate limits, and stock/price updates, emitting status to `/api/internal/stocksprite/progress`.
      5. `fluentbit`: Collects log buffers and streams structured JSON logs to OpenSearch.
      6. Process completes and container auto-exits (exit code 0).
 
@@ -139,15 +139,15 @@ The monorepo contains three primary services:
     *   **Security Routes**:
         *   `/api/webhooks/clerk`: Svix raw buffer signature verification.
         *   `/api/client/*`: Clerk JWT protected routes for user actions.
-        *   `/api/worker/*`: Protected via `INTERNAL_WORKER_TOKEN` `preHandler` hook. Allows workers to fetch `/api/worker/config` and report `/api/worker/progress`.
-    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID`, `SYNC_ID`, and `WORKER_TOKEN`).
+        *   `/api/internal/stocksprite/*`: Protected via `INTERNAL_TOKEN` `preHandler` hook. Allows workers to fetch `/api/internal/stocksprite/config` and report `/api/internal/stocksprite/progress`.
+    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`).
 *   **`stocksprite/` (On-Demand Stock Sync Worker Engine)**:
     *   Node.js / TypeScript CLI worker stack with BullMQ & Redis, packaged in Docker.
     *   Runs **on-demand** for a specific user/tenant:
-        1. Booted with `USER_ID`, `SYNC_ID`, and `WORKER_TOKEN`.
+        1. Booted with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
         2. `csv-provider` downloads supplier inventory feed.
-        3. `stocksprite-app` requests tenant credentials from `/api/worker/config`.
-        4. BullMQ queues map inventory, handle UNAS rate limits, execute updates, and emit progress to `/api/worker/progress`.
+        3. `stocksprite-app` requests tenant credentials from `/api/internal/stocksprite/config`.
+        4. BullMQ queues map inventory, handle UNAS rate limits, execute updates, and emit progress to `/api/internal/stocksprite/progress`.
         5. `fluentbit` captures application log buffers and streams them to OpenSearch; container exits (0) upon job completion.
 
 ---
@@ -157,7 +157,7 @@ The monorepo contains three primary services:
 | Layer | Identification | Authentication Guard | Access Level |
 | --- | --- | --- | --- |
 | **Frontend User** | `clerk_user_id` | Clerk Session JWT | Client UI, self tenant data, triggers |
-| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_WORKER_TOKEN` | Worker config fetch, progress emission |
+| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_TOKEN` | Worker config fetch, progress emission |
 | **Clerk Webhooks** | `svix_id` | Svix Signature Verification | User provisioning & billing synchronization |
 | **Log Observability** | Tenant metadata tags | Node API Proxy / OpenSearch Multi-Tenancy | Isolated log views per tenant |
 
@@ -217,7 +217,7 @@ The monorepo contains three primary services:
 5.  **Multi-Tenant & Security Rules**:
     *   Tenant data (UNAS API keys, CSV mapping profiles, stock logs) MUST be strictly isolated per user session/tenant context.
     *   `clientApi` routes MUST be protected via Clerk JWT authentication.
-    *   `workerApi` routes MUST be protected via `INTERNAL_WORKER_TOKEN` authorization.
+    *   `internalApi` routes MUST be protected via `INTERNAL_TOKEN` authorization.
     *   Webhook endpoints (e.g. Clerk webhooks) MUST verify raw payloads using Svix.
 6.  **Strict JSON Schema Validation (Ajv)**:
     *   All incoming JSON payloads across API boundaries (client API, worker API, webhooks), parsed JSON strings, or database JSONB objects MUST be validated against statically declared JSON schemas using **Ajv**.

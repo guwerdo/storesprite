@@ -1,42 +1,25 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Logger } from "log4js";
-import { TYPES, IUserService, IDataConnectionService } from "../di/index.js";
-import { Util } from "../utils/index.js";
+import { TYPES, IUserService, IDataConnectionService } from "../../di/index.js";
+import { Util } from "../../utils/index.js";
 
-export default function workerApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
-  const validToken = process.env.INTERNAL_WORKER_TOKEN;
+export default function internalApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
+  const validToken = process.env.INTERNAL_TOKEN;
 
-  // Check X-Worker-Token header before executing routes in this plugin
+  // Check X-Internal-Token header before executing routes in this plugin
   fastify.addHook("preHandler", (request: FastifyRequest, reply: FastifyReply, hookDone: (err?: Error) => void) => {
-    const workerToken = request.headers["x-worker-token"];
+    const token = request.headers["x-internal-token"];
 
-    if (!workerToken || !validToken || workerToken !== validToken) {
+    if (!token || !validToken || token !== validToken) {
       const logger = request.server.container.get<Logger>(TYPES.Logger);
-      logger.warn("Unauthorized worker API access attempt", { path: request.url });
-      void reply.code(403).send({ error: "Forbidden: Invalid worker token" });
+      logger.warn("Unauthorized internal API access attempt", { path: request.url });
+      void reply.code(403).send({ error: "Forbidden: Invalid internal token" });
       return;
     }
     hookDone();
   });
 
-  // Internal route to seed / create a user directly
-  fastify.post("/users", async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id, email, name } = request.body as { id: string; email: string; name?: string };
-
-    if (!id || !email) {
-      return reply.code(400).send({ error: "Missing required fields: id, email" });
-    }
-
-    const userService = request.server.container.get<IUserService>(TYPES.IUserService);
-    const logger = request.server.container.get<Logger>(TYPES.Logger);
-
-    const user = await userService.createUser(id, email, name);
-    logger.info("User created via worker API", { userId: user.id, email: user.email });
-
-    return reply.code(201).send({ user });
-  });
-
-  // Internal route for workers to fetch user data connections
+  // Internal route for the container to fetch user data connections
   fastify.get(
     "/users/:userId/connections",
     async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
@@ -47,18 +30,18 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
       const user = await userService.getUserById(userId);
       if (!user) {
-        logger.warn("Worker API requested connections for non-existent user", { userId });
+        logger.warn("Internal API requested connections for non-existent user", { userId });
         return reply.code(404).send({ error: `User '${userId}' not found` });
       }
 
       const connections = await connectionService.getConnections(userId);
-      logger.info("Worker API fetched user connections", { userId, count: connections.length });
+      logger.info("Internal API fetched user connections", { userId, count: connections.length });
 
       return reply.send({ connections });
     }
   );
 
-  // Internal route for worker to fetch single connection configuration
+  // Internal route for the container to fetch single connection configuration
   fastify.get(
     "/connections/:id",
     async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
@@ -68,7 +51,7 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
       const connection = await connectionService.getConnectionByIdForWorker(id);
       if (!connection) {
-        logger.warn("Worker requested non-existent connection", { id });
+        logger.warn("Internal API requested non-existent connection", { id });
         return reply.code(404).send({ error: "Connection not found" });
       }
 
@@ -76,7 +59,7 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
     }
   );
 
-  // Internal route for worker to report connection test progress & final result
+  // Internal route for the container to report connection test progress & final result
   fastify.patch(
     "/connections/:id/test-result",
     async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
@@ -119,7 +102,7 @@ export default function workerApi(fastify: FastifyInstance, _opts: unknown, done
 
         return reply.code(204).send();
       } catch (err: unknown) {
-        logger.error("Failed to save connection test result from worker", { id, error: Util.stringifyError(err) });
+        logger.error("Failed to save connection test result from container", { id, error: Util.stringifyError(err) });
         return reply.code(400).send({ error: (err as Error).message || "Invalid test result payload" });
       }
     }

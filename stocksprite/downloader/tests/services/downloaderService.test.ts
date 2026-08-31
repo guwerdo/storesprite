@@ -36,7 +36,7 @@ describe("DownloaderService Unit Tests", () => {
 
     config = {
       userId: "user_mock",
-      workerToken: "token_123",
+      internalToken: "token_123",
       backendUrl: "http://backend:3000",
       outputDir: testDir,
     };

@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/api/worker/users/test_user_all_protocols/connections"
+    "url": "/api/internal/stocksprite/users/test_user_all_protocols/connections"
   },
   "response": {
     "status": 200,

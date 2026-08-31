@@ -1,3 +1,3 @@
 ﻿export interface IConnectionTestRunnerService {
-  runTest(connectionId: string, userId: string, workerToken: string, backendUrl: string): Promise<void>;
+  runTest(connectionId: string, userId: string, token: string, backendUrl: string): Promise<void>;
 }

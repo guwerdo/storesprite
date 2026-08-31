@@ -18,7 +18,7 @@
 ## 2. Local Design & Execution Constraints
 
 1. **Ephemeral Lifecycle & Worker Token Isolation**:
-   * The container stack is strictly **on-demand**. Processes MUST fetch tenant credentials from `/api/worker/config` using `INTERNAL_WORKER_TOKEN`, push execution progress to `/api/worker/progress`, and cleanly auto-exit (`exit code 0`).
+   * The container stack is strictly **on-demand**. Processes MUST fetch tenant credentials from `/api/internal/stocksprite/config` using `INTERNAL_TOKEN`, push execution progress to `/api/internal/stocksprite/progress`, and cleanly auto-exit (`exit code 0`).
 2. **UNAS API & Rate Limiting Rules**:
    * Respect UNAS API rate limits (maximum 6,000 requests/hour). Batch product updates in `SET_PRODUCT` calls.
    * UNAS token expiration must be handled transparently using the `withAuthRetry` pattern.

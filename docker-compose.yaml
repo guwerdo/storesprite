@@ -41,8 +41,8 @@ services:
       - PGPORT=5432
       - CLERK_SECRET_KEY=sk_test_betoW7FNs6IwHbjTgibXzIPyU7e2VzHWcyGsS8NhV0
       - NODE_ENV=dev
-      - WORKER_DRIVER=docker
-      - INTERNAL_WORKER_TOKEN=storesprite-internal-worker-secret-token
+      - INTERNAL_DRIVER=docker
+      - INTERNAL_TOKEN=storesprite-internal-worker-secret-token
       - INTERNAL_BACKEND_URL=http://storesprite-be:3000
     networks:
       - storesprite-net

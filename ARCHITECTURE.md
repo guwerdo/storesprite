@@ -22,7 +22,7 @@ StoreSprite uses a decoupled, multi-tenant architecture divided into three core 
    * **Security & Routing Boundaries**:
      * **Clerk Webhooks (`/api/webhooks/clerk`)**: Uses raw buffer parsing to verify cryptographic Svix signatures before syncing new user records into PostgreSQL.
      * **Client Endpoints (`/api/client/*`)**: Protected by `@clerk/fastify` and `getAuth()`. Accepts user triggers and webshop configs.
-     * **Worker Endpoints (`/api/worker/*`)**: Guarded by a `preHandler` hook enforcing a shared `Bearer INTERNAL_WORKER_TOKEN`. Allows workers to fetch store credentials and push progress events.
+     * **Internal Endpoints (`/api/internal/stocksprite/*`)**: Guarded by a `preHandler` hook enforcing the `x-internal-token` header. Allows workers to fetch store credentials and push progress events.
    * **Real-Time Layer**: Direct integration between Fastify's HTTP server and Socket.IO to manage isolated tenant rooms (`tenant_${userId}`).
    * **Testing Advantage**: Built using the App Factory pattern (`buildApp()`), enabling fast, in-memory integration testing using `fastify.inject()` paired with mocked Inversify service bindings.
 
@@ -30,10 +30,10 @@ StoreSprite uses a decoupled, multi-tenant architecture divided into three core 
    * **Core Stack**: Node.js + TypeScript CLI + BullMQ + Redis + Docker.
    * **Execution Model**: Fully ephemeral. Triggered on-demand (locally or as an AWS container task) and shuts down immediately upon job completion.
    * **Execution Flow**:
-     1. Booted with `USER_ID`, `SYNC_ID`, and `WORKER_TOKEN` environment variables.
+     1. Booted with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN` environment variables.
      2. `csv-provider`: Downloads the raw supplier inventory feed.
-     3. `stocksprite-app`: Requests tenant-specific UNAS API credentials from `storesprite-be` via `POST /api/worker/config`.
-     4. BullMQ queues orchestrate inventory mapping, rate limits, and UNAS updates while posting progress events to `POST /api/worker/progress`.
+     3. `stocksprite-app`: Requests tenant-specific UNAS API credentials from `storesprite-be` via `POST /api/internal/stocksprite/config`.
+     4. BullMQ queues orchestrate inventory mapping, rate limits, and UNAS updates while posting progress events to `POST /api/internal/stocksprite/progress`.
      5. `fluentbit`: Captures application log buffers and streams them directly to the central OpenSearch instance.
      6. Process finishes and container exits (`exit code 0`).
 
@@ -44,7 +44,7 @@ StoreSprite uses a decoupled, multi-tenant architecture divided into three core 
 | Layer | Identification | Authentication Guard | Access Level |
 | --- | --- | --- | --- |
 | **Frontend User** | `clerk_user_id` | Clerk Session JWT | Client UI, self tenant data, triggers |
-| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_WORKER_TOKEN` | Worker config fetch, progress emission |
+| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_TOKEN` | Worker config fetch, progress emission |
 | **Clerk Webhooks** | `svix_id` | Svix Signature Verification | User provisioning & billing synchronization |
 | **Log Observability** | Tenant metadata tags | Node API Proxy / OpenSearch Multi-Tenancy | Isolated log views per tenant |
 

@@ -105,8 +105,8 @@ Endpoints in `storesprite-be` use Fastify per-route metadata for flexible auth c
   - `GET /api/client/status`
 * **Clerk JWT Protected Endpoints (`config: { auth: true }`)**:
   - `GET /api/client/me` (requires `Authorization: Bearer <CLERK_JWT>`)
-* **Internal Worker Endpoints**:
-  - `POST /api/worker/*` (requires `x-worker-token` header)
+* **Internal Internal Endpoints**:
+  - `POST /api/internal/stocksprite/*` (requires `x-internal-token` header)
 
 ---
 

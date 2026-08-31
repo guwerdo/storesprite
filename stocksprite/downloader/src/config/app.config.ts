@@ -5,7 +5,7 @@ dotenv.config();
 
 export interface AppConfig {
   userId: string;
-  workerToken: string;
+  internalToken: string;
   backendUrl: string;
   outputDir: string;
   testConnectionId?: string;
@@ -17,9 +17,9 @@ export function getAppConfig(): AppConfig {
     throw new Error("Missing required environment variable: USER_ID");
   }
 
-  const workerToken = process.env.WORKER_TOKEN?.trim();
-  if (!workerToken && process.env.NODE_ENV === "production") {
-    throw new Error("Missing required environment variable: WORKER_TOKEN");
+  const internalToken = process.env.INTERNAL_TOKEN?.trim();
+  if (!internalToken && process.env.NODE_ENV === "production") {
+    throw new Error("Missing required environment variable: INTERNAL_TOKEN");
   }
   const backendUrl = (process.env.BACKEND_URL?.trim() || "http://storesprite-be:3000").replace(/\/+$/, "");
   const outputDir = process.env.OUTPUT_DIR?.trim() || path.resolve(process.cwd(), "temp");
@@ -27,7 +27,7 @@ export function getAppConfig(): AppConfig {
 
   return {
     userId,
-    workerToken: workerToken || "mock_worker_token",
+    internalToken: internalToken || "mock_internal_token",
     backendUrl,
     outputDir,
     testConnectionId,

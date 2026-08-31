@@ -26,7 +26,7 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
       "-e",
       `USER_ID=${userId}`,
       "-e",
-      "WORKER_TOKEN=mock_worker_token",
+      "INTERNAL_TOKEN=mock_internal_token",
       "-e",
       "BACKEND_URL=http://mock-backend:8080",
       "-e",

@@ -5,7 +5,7 @@ import inversifyPlugin from "./plugins/inversify.js";
 import socketioPlugin from "./plugins/socketio.js";
 import clerkWebhooks from "./routes/clerkWebhooks.js";
 import clientApi from "./routes/clientApi.js";
-import workerApi from "./routes/workerApi.js";
+import internalApi from "./routes/stocksprite/internalApi.js";
 
 export function buildApp(opts: FastifyServerOptions = {}) {
   const app = Fastify(opts);
@@ -26,7 +26,7 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   // Register Routes
   app.register(clerkWebhooks, { prefix: "/api/clerk" });
   app.register(clientApi, { prefix: "/api/client" });
-  app.register(workerApi, { prefix: "/api/worker" });
+  app.register(internalApi, { prefix: "/api/internal/stocksprite" });
 
   return app;
 }

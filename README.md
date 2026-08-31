@@ -27,7 +27,7 @@ StoreSprite operates on a multi-tenant architecture with three primary services:
 | Layer | Identification | Authentication Guard | Access Level |
 | --- | --- | --- | --- |
 | **Frontend User** | `clerk_user_id` | Clerk Session JWT | Client UI, self tenant data, triggers |
-| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_WORKER_TOKEN` | Worker config fetch, progress emission |
+| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_TOKEN` | Worker config fetch, progress emission |
 | **Clerk Webhooks** | `svix_id` | Svix Signature Verification | User provisioning & billing synchronization |
 | **Log Observability** | Tenant metadata tags | Node API Proxy / OpenSearch Multi-Tenancy | Isolated log views per tenant |
 

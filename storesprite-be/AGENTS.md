@@ -20,7 +20,7 @@
 1. **Security & Route Boundary Protection**:
    * `/api/webhooks/clerk`: MUST perform raw body buffer Svix cryptographic signature verification before updating PostgreSQL user records.
    * `/api/client/*`: MUST be protected via `@clerk/fastify` and `getAuth()` middleware.
-   * `/api/worker/*`: MUST be protected via a Fastify `preHandler` hook verifying `Bearer INTERNAL_WORKER_TOKEN`.
+   * `/api/internal/stocksprite/*`: MUST be protected via a Fastify `preHandler` hook verifying the `x-internal-token` header.
 2. **No Direct Instantiation or Raw Queries in Routes**:
    * Fastify route handlers MUST NOT instantiate services directly (`new UserService()`) or execute inline database queries.
    * Routes MUST receive dependencies via the Fastify Inversify DI decorator (`fastify.diContainer`).

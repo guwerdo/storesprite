@@ -24,13 +24,13 @@ export class BackendApiClient implements IBackendApiClient {
   }
 
   public async getUserConnections(userId: string): Promise<DataConnectionDto[]> {
-    const url = `${this._config.backendUrl}/api/worker/users/${userId}/connections`;
+    const url = `${this._config.backendUrl}/api/internal/stocksprite/users/${userId}/connections`;
     this._logger.info("Fetching user connections from backend", { userId, url });
 
     try {
       const response = await axios.get<{ connections: DataConnectionDto[] }>(url, {
         headers: {
-          "x-worker-token": this._config.workerToken,
+          "x-internal-token": this._config.internalToken,
         },
         timeout: 10000,
       });
@@ -54,13 +54,13 @@ export class BackendApiClient implements IBackendApiClient {
   }
 
   public async getConnectionById(connectionId: string): Promise<DataConnectionDto> {
-    const url = `${this._config.backendUrl}/api/worker/connections/${connectionId}`;
+    const url = `${this._config.backendUrl}/api/internal/stocksprite/connections/${connectionId}`;
     this._logger.info("Fetching single connection from backend", { connectionId, url });
 
     try {
       const response = await axios.get<{ connection: DataConnectionDto }>(url, {
         headers: {
-          "x-worker-token": this._config.workerToken,
+          "x-internal-token": this._config.internalToken,
         },
         timeout: 10000,
       });
@@ -85,13 +85,13 @@ export class BackendApiClient implements IBackendApiClient {
     connectionId: string,
     result: Partial<ConnectionTestResult>
   ): Promise<void> {
-    const url = `${this._config.backendUrl}/api/worker/connections/${connectionId}/test-result`;
+    const url = `${this._config.backendUrl}/api/internal/stocksprite/connections/${connectionId}/test-result`;
     this._logger.info("Reporting test result to backend", { connectionId, progress: result.progress });
 
     try {
       await axios.patch(url, result, {
         headers: {
-          "x-worker-token": this._config.workerToken,
+          "x-internal-token": this._config.internalToken,
         },
         timeout: 15000,
       });

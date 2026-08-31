@@ -14,7 +14,7 @@ RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
 
 # Hardcoded environment variables for development
 ENV USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"
-ENV WORKER_TOKEN="mock_worker_token"
+ENV INTERNAL_TOKEN="mock_internal_token"
 ENV BACKEND_URL="http://storesprite-be:3000"
 ENV OUTPUT_DIR="/workspace/stocksprite/downloader/temp"
 

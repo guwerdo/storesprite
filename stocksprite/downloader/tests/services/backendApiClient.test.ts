@@ -18,14 +18,14 @@ describe("BackendApiClient Unit Tests", () => {
     loggerMock = mock<Logger>();
     config = {
       userId: "user_test",
-      workerToken: "test_token",
+      internalToken: "test_token",
       backendUrl: "http://backend:3000",
       outputDir: "/temp",
     };
     client = new BackendApiClient(config, loggerMock);
   });
 
-  it("should fetch user connections with x-worker-token header", async () => {
+  it("should fetch user connections with x-internal-token header", async () => {
     const mockConnections: DataConnectionDto[] = [
       {
         id: "conn_1",
@@ -48,9 +48,9 @@ describe("BackendApiClient Unit Tests", () => {
 
     expect(result).toEqual(mockConnections);
     expect(axios.get).toHaveBeenCalledWith(
-      "http://backend:3000/api/worker/users/user_test/connections",
+      "http://backend:3000/api/internal/stocksprite/users/user_test/connections",
       expect.objectContaining({
-        headers: { "x-worker-token": "test_token" },
+        headers: { "x-internal-token": "test_token" },
       })
     );
   });

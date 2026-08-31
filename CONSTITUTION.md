@@ -100,7 +100,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
 | Layer | Identification | Authentication Guard | Access Level |
 | --- | --- | --- | --- |
 | **Frontend User** | `clerk_user_id` | Clerk Session JWT | Client UI, self tenant data, triggers |
-| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_WORKER_TOKEN` | Worker config fetch, progress emission |
+| **Worker Container** | `sync_id` / `user_id` | `INTERNAL_TOKEN` | Worker config fetch, progress emission |
 | **Clerk Webhooks** | `svix_id` | Svix Signature Verification | User provisioning & billing synchronization |
 | **Log Observability** | Tenant metadata tags | Node API Proxy / OpenSearch Multi-Tenancy | Isolated log views per tenant |
 
@@ -160,7 +160,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
 
 9. **Error Handling & Resiliency**:
    * Silent exception swallowing is strictly prohibited.
-   * Unhandled CSV parsing errors or UNAS API rate limits must be logged with detailed context and reported back through job state telemetry (`POST /api/worker/progress`).
+   * Unhandled CSV parsing errors or UNAS API rate limits must be logged with detailed context and reported back through job state telemetry (`POST /api/internal/stocksprite/progress`).
 
 ---
 

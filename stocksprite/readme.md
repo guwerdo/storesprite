@@ -6,7 +6,7 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
 
 ## 1. Single Responsibility & Workflow
 
-1. **Fetches Configuration**: Accepts a `USER_ID`, calls `storesprite-be` (`GET /api/worker/users/:userId/connections` with `x-worker-token`), and filters for `isActive: true` connections.
+1. **Fetches Configuration**: Accepts a `USER_ID`, calls `storesprite-be` (`GET /api/internal/stocksprite/users/:userId/connections` with `x-internal-token`), and filters for `isActive: true` connections.
 2. **Streams Multi-Protocol Downloads**:
    - **HTTP**: Low-memory streaming GET/POST downloads with authentication (None, Basic, Bearer, ApiKey) and automatic detection of empty bodies or HTML error/redirect pages.
    - **SFTP**: Streaming downloads from remote SFTP servers with password or private key authentication and file selection strategies (`LATEST_ALPHABETICAL`, `LATEST_MODIFIED`, `EXACT_MATCH`).
@@ -33,7 +33,7 @@ A dedicated **`.devcontainer/`** and **`Dockerfile.dev`** setup is provided to d
    ```
 4. The devcontainer is pre-configured with the development environment variables:
    - `USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"`
-   - `WORKER_TOKEN="mock_worker_token"`
+   - `INTERNAL_TOKEN="mock_worker_token"`
    - `BACKEND_URL="http://storesprite-be:3000"`
    - `OUTPUT_DIR="/workspace/stocksprite/downloader/temp"`
    - Network attached to `storesprite-shared-net` to reach `storesprite-be`.
@@ -56,7 +56,7 @@ To run the container attached to the shared Docker network (`storesprite-shared-
 docker run --rm \
   --network storesprite-shared-net \
   -e USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp" \
-  -e WORKER_TOKEN="mock_worker_token" \
+  -e INTERNAL_TOKEN="mock_worker_token" \
   -e BACKEND_URL="http://storesprite-be:3000" \
   -e OUTPUT_DIR="/app/temp" \
   -v C:\my-git\storesprite\stocksprite\downloader\temp:/app/temp \
@@ -76,7 +76,7 @@ npm test
 
 ### Container Integration Test Suite (`npm run test:integration`)
 The integration test suite spins up a real test environment on the host via `test-integration/docker-compose-test-integration.yaml`:
-* **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/worker/users/:userId/connections`).
+* **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/internal/stocksprite/users/:userId/connections`).
 * **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
 * **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the built production multi-stage image against the test network.
 
