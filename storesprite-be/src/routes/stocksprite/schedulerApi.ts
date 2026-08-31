@@ -2,20 +2,10 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Logger } from "log4js";
 import { TYPES, ISchedulerService } from "../../di/index.js";
 import { Util } from "../../utils/index.js";
+import { requireInternalToken } from "./internalAuth.js";
 
 export default function schedulerApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
-  const validToken = process.env.INTERNAL_TOKEN;
-
-  fastify.addHook("preHandler", (request: FastifyRequest, reply: FastifyReply, hookDone: (err?: Error) => void) => {
-    const token = request.headers["x-internal-token"];
-    if (!token || !validToken || token !== validToken) {
-      const logger = request.server.container.get<Logger>(TYPES.Logger);
-      logger.warn("Unauthorized scheduler API access attempt", { path: request.url });
-      void reply.code(403).send({ error: "Forbidden: Invalid internal token" });
-      return;
-    }
-    hookDone();
-  });
+  fastify.addHook("preHandler", requireInternalToken);
 
   fastify.post("/run", async (request: FastifyRequest, reply: FastifyReply) => {
     const schedulerService = request.server.container.get<ISchedulerService>(TYPES.ISchedulerService);

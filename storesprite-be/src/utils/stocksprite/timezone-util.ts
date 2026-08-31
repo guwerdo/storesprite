@@ -48,7 +48,7 @@ export function getZonedParts(date: Date, timezone: string): ZonedParts {
   const year = Number(map.year);
   const month = Number(map.month);
   const day = Number(map.day);
-  const hour = Number(map.hour) % 24;
+  const hour = Number(map.hour);
   const dayOfWeek = WEEKDAY_INDEX[map.weekday] ?? 0;
 
   return {

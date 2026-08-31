@@ -2,22 +2,10 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Logger } from "log4js";
 import { TYPES, IUserService, IDataConnectionService } from "../../di/index.js";
 import { Util } from "../../utils/index.js";
+import { requireInternalToken } from "./internalAuth.js";
 
 export default function internalApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
-  const validToken = process.env.INTERNAL_TOKEN;
-
-  // Check X-Internal-Token header before executing routes in this plugin
-  fastify.addHook("preHandler", (request: FastifyRequest, reply: FastifyReply, hookDone: (err?: Error) => void) => {
-    const token = request.headers["x-internal-token"];
-
-    if (!token || !validToken || token !== validToken) {
-      const logger = request.server.container.get<Logger>(TYPES.Logger);
-      logger.warn("Unauthorized internal API access attempt", { path: request.url });
-      void reply.code(403).send({ error: "Forbidden: Invalid internal token" });
-      return;
-    }
-    hookDone();
-  });
+  fastify.addHook("preHandler", requireInternalToken);
 
   // Internal route for the container to fetch user data connections
   fastify.get(
