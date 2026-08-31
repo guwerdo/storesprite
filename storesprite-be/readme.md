@@ -101,12 +101,17 @@ npm run migration:up
 Endpoints in `storesprite-be` use Fastify per-route metadata for flexible auth control:
 
 * **Public Endpoints (`config: { auth: false }`)**:
-  - `GET /api/hello`
   - `GET /api/client/status`
 * **Clerk JWT Protected Endpoints (`config: { auth: true }`)**:
   - `GET /api/client/me` (requires `Authorization: Bearer <CLERK_JWT>`)
-* **Internal Internal Endpoints**:
-  - `POST /api/internal/stocksprite/*` (requires `x-internal-token` header)
+  - *All other `/api/client/*` routes are protected the same way.*
+* **Clerk Webhook (Svix-signed, raw-body verified)**:
+  - `POST /api/clerk/webhooks/clerk` (requires `svix-id` / `svix-timestamp` / `svix-signature` headers)
+* **Internal API Endpoints (`x-internal-token` header)**:
+  - `POST /api/internal/stocksprite/scheduler/run`
+  - `GET /api/internal/stocksprite/users/:userId/connections`
+  - `GET /api/internal/stocksprite/connections/:id`
+  - `PATCH /api/internal/stocksprite/connections/:id/test-result`
 
 ---
 
