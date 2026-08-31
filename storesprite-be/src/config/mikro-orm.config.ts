@@ -1,8 +1,8 @@
 import { Options, PostgreSqlDriver } from "@mikro-orm/postgresql";
 import { Migrator } from "@mikro-orm/migrations";
-import { User } from "../entities/User.js";
-import { Language } from "../entities/Language.js";
-import { UserSetting } from "../entities/UserSetting.js";
+import { User } from "../entities/user/User.js";
+import { Language } from "../entities/user/Language.js";
+import { UserSetting } from "../entities/user/UserSetting.js";
 import { DataConnection } from "../entities/stocksprite/DataConnection.js";
 import { Mapping } from "../entities/stocksprite/Mapping.js";
 import dotenv from "dotenv";

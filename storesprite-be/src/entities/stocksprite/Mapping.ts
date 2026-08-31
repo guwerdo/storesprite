@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
-import { User } from "../User.js";
+import { User } from "../user/User.js";
 import { DataConnection } from "./DataConnection.js";
 import type {
   MappingRule,

@@ -3,8 +3,8 @@ import cors from "@fastify/cors";
 import mikroOrmPlugin from "./plugins/mikroOrm.js";
 import inversifyPlugin from "./plugins/inversify.js";
 import socketioPlugin from "./plugins/socketio.js";
-import clerkWebhooks from "./routes/clerkWebhooks.js";
-import clientApi from "./routes/clientApi.js";
+import clerkWebhooks from "./routes/user/clerkWebhooks.js";
+import clientApi from "./routes/client/index.js";
 import internalApi from "./routes/stocksprite/internalApi.js";
 import schedulerApi from "./routes/stocksprite/schedulerApi.js";
 

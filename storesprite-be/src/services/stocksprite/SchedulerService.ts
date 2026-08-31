@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
 import { Mapping } from "../../entities/stocksprite/Mapping.js";
 import { IMappingRepository } from "../../types/stocksprite/MappingRepository.interface.js";
-import { ISettingService } from "../../types/SettingService.interface.js";
+import { ISettingService } from "../../types/user/SettingService.interface.js";
 import { ISchedulerService } from "../../types/stocksprite/SchedulerService.interface.js";
 import { getZonedParts } from "../../utils/stocksprite/timezone-util.js";
 import { isScheduleDue } from "../../utils/stocksprite/schedule-util.js";

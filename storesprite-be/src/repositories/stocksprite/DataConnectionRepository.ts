@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 import { EntityManager } from "@mikro-orm/postgresql";
 import type { Logger } from "log4js";
-import { User } from "../../entities/User.js";
+import { User } from "../../entities/user/User.js";
 import { DataConnection } from "../../entities/stocksprite/DataConnection.js";
 import {
   IDataConnectionRepository,

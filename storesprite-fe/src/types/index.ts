@@ -5,7 +5,6 @@ export * from './Navigation.interface.js';
 export * from './Profile.interface.js';
 export * from './UserMenu.interface.js';
 export * from './TabbedPageLayout.interface.js';
-export * from './StockSprite.interface.js';
 export * from './StoreChat.interface.js';
 export * from './I18n.interface.js';
 export * from './Theme.interface.js';

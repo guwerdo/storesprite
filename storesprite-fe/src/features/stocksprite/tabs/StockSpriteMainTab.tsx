@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Typography,
   Box,
-  Alert,
-  CircularProgress,
   Grid2 as Grid,
   Card,
   CardContent,
@@ -13,60 +11,8 @@ import {
 import SyncIcon from '@mui/icons-material/Sync';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import StorageIcon from '@mui/icons-material/Storage';
-import { useAuth } from '@clerk/clerk-react';
-import { useInjection } from '../../../di/ContainerProvider.js';
-import { TYPES } from '../../../di/types.js';
-import type { IHttpClient } from '../../../types/HttpClient.interface.js';
-import type { IHelloAuthResponse } from '../../../types/StockSprite.interface.js';
 
 export default function StockSpriteMainTab(): React.JSX.Element {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
-  const httpClient = useInjection<IHttpClient>(TYPES.IHttpClient);
-
-  const [greeting, setGreeting] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    if (!isLoaded) return;
-
-    const fetchProtectedHello = async (): Promise<void> => {
-      try {
-        setLoading(true);
-        const token = await getToken();
-        const data = await httpClient.get<IHelloAuthResponse>('/client/hello-auth', {
-          Authorization: `Bearer ${token ?? ''}`,
-        });
-
-        if (!isMounted) return;
-
-        setGreeting(data.greetings ?? null);
-        setUserId(data.userId ?? null);
-      } catch (err: unknown) {
-        if (!isMounted) return;
-        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch backend status';
-        setError(errorMsg);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    if (isSignedIn) {
-      void fetchProtectedHello();
-    } else {
-      setLoading(false);
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoaded, isSignedIn, getToken, httpClient]);
-
   return (
     <Box>
       {/* Quick Stat Summary Cards */}
@@ -134,37 +80,6 @@ export default function StockSpriteMainTab(): React.JSX.Element {
           </Card>
         </Grid>
       </Grid>
-
-      {/* Backend Auth Diagnostic / Status Banner */}
-      <Card elevation={1} sx={{ p: 2.5, mb: 3 }}>
-        <Typography variant="h6" fontWeight={700} gutterBottom>
-          Backend Synchronization Gateway
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          Automate product stock count updates, price syncs, and product catalog synchronization in your UNAS webshop.
-        </Typography>
-
-        {loading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, my: 1.5 }}>
-            <CircularProgress size={20} />
-            <Typography variant="body2" color="text.secondary">
-              Connecting to control plane...
-            </Typography>
-          </Box>
-        )}
-
-        {greeting && (
-          <Alert severity="success" sx={{ mt: 1.5, borderRadius: '8px' }}>
-            Backend API Connected: <strong>{greeting}</strong> (User ID: {userId})
-          </Alert>
-        )}
-
-        {error && (
-          <Alert severity="warning" sx={{ mt: 1.5, borderRadius: '8px' }}>
-            Backend connection notice: {error}
-          </Alert>
-        )}
-      </Card>
     </Box>
   );
 }

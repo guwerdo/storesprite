@@ -1,12 +1,12 @@
-export { User } from "../entities/User.js";
-export { Language } from "../entities/Language.js";
-export { UserSetting } from "../entities/UserSetting.js";
+export { User } from "../entities/user/User.js";
+export { Language } from "../entities/user/Language.js";
+export { UserSetting } from "../entities/user/UserSetting.js";
 export { DataConnection } from "../entities/stocksprite/DataConnection.js";
 export { Mapping } from "../entities/stocksprite/Mapping.js";
-export type { IUserRepository } from "../types/UserRepository.interface.js";
-export type { IUserService } from "../types/UserService.interface.js";
-export type { ISettingRepository } from "../types/SettingRepository.interface.js";
-export type { ISettingService, UserSettingsDto, SaveUserSettingsDto } from "../types/SettingService.interface.js";
+export type { IUserRepository } from "../types/user/UserRepository.interface.js";
+export type { IUserService } from "../types/user/UserService.interface.js";
+export type { ISettingRepository } from "../types/user/SettingRepository.interface.js";
+export type { ISettingService, UserSettingsDto, SaveUserSettingsDto } from "../types/user/SettingService.interface.js";
 export type {
   IDataConnectionRepository,
   DataConnectionDto,
@@ -26,8 +26,8 @@ export type { IMappingService } from "../types/stocksprite/MappingService.interf
 export type { ISchedulerService } from "../types/stocksprite/SchedulerService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 export type { IConnectionTestRunnerService } from "../types/stocksprite/ConnectionTestRunnerService.interface.js";
-export type { IUnasService } from "../types/UnasService.interface.js";
-export type { IUnasClientFactory } from "../types/UnasClientFactory.interface.js";
+export type { IUnasService } from "../types/unas/UnasService.interface.js";
+export type { IUnasClientFactory } from "../types/unas/UnasClientFactory.interface.js";
 
 export const TYPES = {
   IConfiguration: Symbol.for("IConfiguration"),

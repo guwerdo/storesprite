@@ -1,5 +1,5 @@
 import type { ILoginResponse, IWebshopInfo } from "@storesprite/unas-json-client";
-import type { UnasConnectionRecord } from "../../src/types/UnasConnection.interface.js";
+import type { UnasConnectionRecord } from "../../src/types/unas/UnasConnection.interface.js";
 
 export function makeWebshopInfo(overrides: Partial<IWebshopInfo> = {}): IWebshopInfo {
   return {
