@@ -4,6 +4,7 @@ import type {
   IMappingsApiResponse,
   IMappingMutationResponse,
   IMappingRulesResponse,
+  IMappingHistoryResponse,
 } from './Mapping.interface.js';
 
 export interface IMappingService {
@@ -13,4 +14,5 @@ export interface IMappingService {
   deleteMapping(token: string, id: string): Promise<IMappingMutationResponse>;
   getRules(token: string): Promise<IMappingRulesResponse>;
   runMapping(token: string, id: string): Promise<{ success: boolean }>;
+  getHistory(token: string, id: string): Promise<IMappingHistoryResponse>;
 }

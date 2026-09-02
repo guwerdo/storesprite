@@ -91,6 +91,8 @@ export interface UpdateMappingDto {
 export interface IMappingRepository {
   getAllByUserId(userId: string): Promise<Mapping[]>;
   getByIdAndUserId(id: string, userId: string): Promise<Mapping | null>;
+  /** Worker-facing lookup. populate: ["connection", "user"] */
+  getById(id: string): Promise<Mapping | null>;
   getByConnectionIdAndUserId(connectionId: string, userId: string): Promise<Mapping | null>;
   getEnabledSchedules(): Promise<Mapping[]>;
   create(userId: string, data: CreateMappingDto): Promise<Mapping>;

@@ -26,6 +26,7 @@ import { useAppTranslation } from '../../../i18n/I18nProvider.js';
 import type { IMapping, IMappingSchedule } from '../../../types/stocksprite/Mapping.interface.js';
 import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
 import ConfirmDialog from '../../../components/ConfirmDialog.js';
+import RunHistoryPanel from './RunHistoryPanel.js';
 
 type ScheduleFrequency = 'once' | 'daily' | 'monthly';
 
@@ -111,6 +112,7 @@ export default function ScheduleForm({
     JSON.stringify({ scheduleEnabled: initialMapping?.scheduleEnabled ?? false, schedule: initialSchedule ?? DEFAULT_SCHEDULE })
   );
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [runRefreshVersion, setRunRefreshVersion] = useState<number>(0);
 
   const dirty = JSON.stringify({ scheduleEnabled, schedule }) !== savedSnapshot;
 
@@ -166,6 +168,7 @@ export default function ScheduleForm({
     if (!mappingId) return;
     try {
       await onRun(mappingId);
+      setRunRefreshVersion((version) => version + 1);
     } catch {
       // parent shows the error toast
     }
@@ -377,6 +380,8 @@ export default function ScheduleForm({
           )}
         </CardContent>
       </Card>
+
+      {!!mappingId && <RunHistoryPanel mappingId={mappingId} refreshSignal={runRefreshVersion} />}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
         <Box>

@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start:dev": "vite --host",
-    "build": "tsc && vite build",
+    "start:dev": "npm run build:deps && vite --host",
+    "build": "npm run build:deps && tsc && vite build",
     "rel": "vite preview --host",
     "test": "vitest run",
-    "lint": "npx eslint ./src"
+    "lint": "npx eslint ./src",
+    "build:deps": "npm --prefix ../packages/mapping-rules run build"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.0.0",
@@ -18,6 +19,7 @@
     "@hookform/resolvers": "^5.9.1",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
+    "@storesprite/mapping-rules": "file:../packages/mapping-rules",
     "axios": "^1.7.7",
     "i18next": "^26.3.6",
     "inversify": "^8.2.3",

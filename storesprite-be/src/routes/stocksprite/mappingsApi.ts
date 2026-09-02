@@ -7,7 +7,7 @@ import {
   UpdateMappingDto,
 } from "../../di/index.js";
 import { Util } from "../../utils/index.js";
-import { MAPPING_RULES } from "../../config/stocksprite/mapping-rules.js";
+import { MAPPING_RULES } from "@storesprite/mapping-rules";
 
 export default function mappingsApi(fastify: FastifyInstance, _opts: unknown, done: (err?: Error) => void): void {
   // Protected route: GET /api/client/stocksprite/mappings/rules - Static rule dictionary
@@ -54,6 +54,28 @@ export default function mappingsApi(fastify: FastifyInstance, _opts: unknown, do
       }
 
       return { mapping };
+    }
+  );
+
+  // Protected route: GET /api/client/stocksprite/mappings/:id/history - Run history for a mapping
+  fastify.get(
+    "/stocksprite/mappings/:id/history",
+    { config: { auth: true } },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const userId = request.userClaims?.sub;
+      if (!userId) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+
+      const { id } = request.params;
+      const mappingService = request.server.container.get<IMappingService>(TYPES.IMappingService);
+      const history = await mappingService.listHistory(id, userId);
+
+      if (history === null) {
+        return reply.code(404).send({ error: "Mapping not found" });
+      }
+
+      return { history };
     }
   );
 

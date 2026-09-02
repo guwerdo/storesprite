@@ -5,6 +5,7 @@ import { Language } from "../entities/user/Language.js";
 import { UserSetting } from "../entities/user/UserSetting.js";
 import { DataConnection } from "../entities/stocksprite/DataConnection.js";
 import { Mapping } from "../entities/stocksprite/Mapping.js";
+import { MappingHistory } from "../entities/stocksprite/MappingHistory.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -16,7 +17,7 @@ const clientUrl =
 const config: Options = {
   driver: PostgreSqlDriver,
   clientUrl,
-  entities: [User, Language, UserSetting, DataConnection, Mapping],
+  entities: [User, Language, UserSetting, DataConnection, Mapping, MappingHistory],
   extensions: [Migrator],
   migrations: {
     path: "./src/migrations",

@@ -8,6 +8,7 @@ import type {
   IMappingsApiResponse,
   IMappingMutationResponse,
   IMappingRulesResponse,
+  IMappingHistoryResponse,
 } from '../../types/stocksprite/Mapping.interface.js';
 import { TYPES } from '../../di/types.js';
 
@@ -50,6 +51,12 @@ export class MappingService implements IMappingService {
 
   public async runMapping(token: string, id: string): Promise<{ success: boolean }> {
     return this._httpClient.post<{ success: boolean }>(`/client/stocksprite/mappings/${id}/run`, {}, {
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
+  public async getHistory(token: string, id: string): Promise<IMappingHistoryResponse> {
+    return this._httpClient.get<IMappingHistoryResponse>(`/client/stocksprite/mappings/${id}/history`, {
       Authorization: `Bearer ${token}`,
     });
   }

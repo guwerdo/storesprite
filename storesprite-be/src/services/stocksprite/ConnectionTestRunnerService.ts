@@ -5,6 +5,11 @@ import { TYPES } from "../../di/types.js";
 import { Util } from "../../utils/index.js";
 import { IConnectionTestRunnerService } from "../../types/stocksprite/ConnectionTestRunnerService.interface.js";
 
+/**
+ * Dispatches the combined `storesprite-worker` container. The image always runs the
+ * downloader first; `TEST_CONNECTION` short-circuits after it (connection test), and
+ * otherwise the processor continues with MAPPING_ID/RUN_ID (mapping run).
+ */
 @injectable()
 export class ConnectionTestRunnerService implements IConnectionTestRunnerService {
   constructor(
@@ -20,10 +25,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     backendUrl: string
   ): Promise<void> {
     await Promise.resolve();
-    const nodeEnv = (process.env.NODE_ENV || "dev").toLowerCase();
-    const defaultDriver = nodeEnv === "prod" || nodeEnv === "production" ? "cloud_run" : "docker";
-    const driver = (process.env.INTERNAL_DRIVER || defaultDriver).toLowerCase();
-
+    const driver = this._resolveDriver();
     this._logger?.info("Dispatching connection test runner", {
       connectionId,
       userId,
@@ -33,17 +35,57 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
 
     if (driver === "cloud_run") {
       this._logger?.info("Cloud Run worker execution selected", { connectionId });
-      // Dispatches Cloud Run job execution in production environment
       return;
     }
 
-    if (driver === "noop" || nodeEnv === "test") {
+    if (driver === "noop" || process.env.NODE_ENV?.toLowerCase() === "test") {
       this._logger?.info("Noop/test driver selected, skipping spawn", { connectionId });
       return;
     }
 
-    // Default to Docker runner for dev environments
-    void this._runDockerContainer(connectionId, userId, token, backendUrl);
+    void this._runContainer(this._imageName(), {
+      TEST_CONNECTION: connectionId,
+      USER_ID: userId,
+      INTERNAL_TOKEN: token,
+      BACKEND_URL: backendUrl,
+    });
+  }
+
+  public async runMapping(
+    mappingId: string,
+    runId: string,
+    userId: string,
+    token: string,
+    backendUrl: string
+  ): Promise<void> {
+    await Promise.resolve();
+    const driver = this._resolveDriver();
+    this._logger?.info("Dispatching mapping runner", {
+      mappingId,
+      runId,
+      userId,
+      driver,
+      backendUrl,
+    });
+
+    if (driver === "cloud_run") {
+      this._logger?.info("Cloud Run worker execution selected", { mappingId });
+      return;
+    }
+
+    if (driver === "noop" || process.env.NODE_ENV?.toLowerCase() === "test") {
+      this._logger?.info("Noop/test driver selected, skipping spawn", { mappingId });
+      return;
+    }
+
+    void this._runContainer(this._imageName(), {
+      MAPPING_ID: mappingId,
+      RUN_ID: runId,
+      USER_ID: userId,
+      INTERNAL_TOKEN: token,
+      BACKEND_URL: backendUrl,
+      OUTPUT_DIR: "/app/temp",
+    });
   }
 
   private _spawnDocker(
@@ -67,6 +109,16 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     });
   }
 
+  private _resolveDriver(): string {
+    const nodeEnv = (process.env.NODE_ENV || "dev").toLowerCase();
+    const defaultDriver = nodeEnv === "prod" || nodeEnv === "production" ? "cloud_run" : "docker";
+    return (process.env.INTERNAL_DRIVER || defaultDriver).toLowerCase();
+  }
+
+  private _imageName(): string {
+    return process.env.STOCKSPRITE_IMAGE || "storesprite-worker:latest";
+  }
+
   private async _ensureImageExists(imageName: string): Promise<void> {
     const inspect = await this._spawnDocker(["image", "inspect", imageName]);
     if (inspect.code === 0) {
@@ -75,8 +127,9 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
 
     this._logger?.info(`Docker image '${imageName}' not found locally. Building on-demand...`);
 
-    const buildContext = process.env.DOWNLOADER_BUILD_CONTEXT || "/workspace/stocksprite";
-    const build = await this._spawnDocker(["build", "-t", imageName, buildContext]);
+    const buildContext = process.env.STOCKSPRITE_BUILD_CONTEXT || "/workspace";
+    const dockerfile = process.env.STOCKSPRITE_DOCKERFILE || "stocksprite/Dockerfile";
+    const build = await this._spawnDocker(["build", "-f", dockerfile, "-t", imageName, buildContext]);
 
     if (build.code === 0) {
       this._logger?.info(`Successfully built '${imageName}' on-demand.`);
@@ -88,41 +141,25 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     throw err;
   }
 
-  private async _runDockerContainer(
-    connectionId: string,
-    userId: string,
-    token: string,
-    backendUrl: string
-  ): Promise<void> {
+  private async _runContainer(imageName: string, env: Record<string, string>): Promise<void> {
     const dockerNetwork = process.env.DOCKER_NETWORK || "storesprite-shared-net";
-    const imageName = process.env.DOWNLOADER_IMAGE || "storesprite-downloader:latest";
 
     try {
       await this._ensureImageExists(imageName);
     } catch (buildError) {
-      this._logger?.error("Could not ensure Docker image before test run", {
+      this._logger?.error("Could not ensure Docker image before run", {
         error: Util.stringifyError(buildError),
-        connectionId,
       });
       return;
     }
 
-    const args = [
-      "run",
-      "--rm",
-      "-d",
-      `--network=${dockerNetwork}`,
-      "-e", `TEST_CONNECTION=${connectionId}`,
-      "-e", `USER_ID=${userId}`,
-      "-e", `INTERNAL_TOKEN=${token}`,
-      "-e", `BACKEND_URL=${backendUrl}`,
-      imageName,
-    ];
+    const args = ["run", "--rm", "-d", `--network=${dockerNetwork}`];
+    for (const [key, value] of Object.entries(env)) {
+      args.push("-e", `${key}=${value}`);
+    }
+    args.push(imageName);
 
-    this._logger?.info("Spawning docker container for connection test", {
-      command: "docker",
-      args,
-    });
+    this._logger?.info("Spawning docker container", { command: "docker", args });
 
     try {
       const { code, stdout, stderr } = await this._spawnDocker(args);
@@ -131,18 +168,15 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
           code,
           stderr: stderr.trim(),
           stdout: stdout.trim(),
-          connectionId,
         });
       } else {
         this._logger?.info("Docker worker container launched successfully", {
           containerId: stdout.trim(),
-          connectionId,
         });
       }
     } catch (error) {
-      this._logger?.error("Failed to spawn docker container for connection test", {
+      this._logger?.error("Failed to spawn docker container", {
         error: Util.stringifyError(error),
-        connectionId,
       });
     }
   }

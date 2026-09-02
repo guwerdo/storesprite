@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start:dev": "npm run build:deps && CHOKIDAR_USEPOLLING=1 CHOKIDAR_INTERVAL=3000 tsx watch src/server.ts",
-    "build:deps": "npm --prefix ../packages/app-config run build && npm --prefix ../packages/unas-json-client run build",
+    "build:deps": "npm --prefix ../packages/app-config run build && npm --prefix ../packages/unas-json-client run build && npm --prefix ../packages/mapping-rules run build",
     "generate-schemas": "ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type HttpConnectionConfig -o src/schemas/connection-config-http.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type SftpConnectionConfig -o src/schemas/connection-config-sftp.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type CsvDataFormatConfig -o src/schemas/connection-data-format-config-csv.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type XmlDataFormatConfig -o src/schemas/connection-data-format-config-xml.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type HttpCredentials -o src/schemas/connection-credentials-http.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type SftpCredentials -o src/schemas/connection-credentials-sftp.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type ConnectionTestResult -o src/schemas/connection-test-result.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type StockMappingItems -o src/schemas/stock-mapping-items.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type MappingRules -o src/schemas/mapping-rules.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type MappingSchedule -o src/schemas/mapping-schedule.schema.json",
     "build": "npm run build:deps && npm run generate-schemas && tsc && cpx \"src/schemas/*.json\" dist/schemas/",
     "start": "node dist/server.js",
@@ -25,6 +25,7 @@
     "@mikro-orm/migrations": "^6.6.16",
     "@mikro-orm/postgresql": "^6.6.16",
     "@storesprite/app-config": "file:../packages/app-config",
+    "@storesprite/mapping-rules": "file:../packages/mapping-rules",
     "@storesprite/unas-json-client": "file:../packages/unas-json-client",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

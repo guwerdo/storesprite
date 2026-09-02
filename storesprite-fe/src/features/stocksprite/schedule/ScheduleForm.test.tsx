@@ -1,11 +1,27 @@
 import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Container } from 'inversify';
 import ScheduleForm from './ScheduleForm.js';
 import type { ScheduleFormProps } from './ScheduleForm.js';
 import { I18nProvider } from '../../../i18n/I18nProvider.js';
+import { ContainerProvider } from '../../../di/ContainerProvider.js';
+import { TYPES } from '../../../di/types.js';
+import type { IMappingService } from '../../../types/stocksprite/MappingService.interface.js';
+import type { ISocketService } from '../../../types/SocketService.interface.js';
 import type { IMapping } from '../../../types/stocksprite/Mapping.interface.js';
 import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
+
+const mockGetToken = vi.fn().mockResolvedValue('test_token');
+
+vi.mock('@clerk/clerk-react', () => ({
+  useAuth: () => ({
+    isLoaded: true,
+    isSignedIn: true,
+    getToken: mockGetToken,
+    userId: 'test_user_id',
+  }),
+}));
 
 const makeMapping = (overrides: Partial<IMapping> = {}): IMapping => ({
   id: 'mapping-1',
@@ -36,9 +52,28 @@ describe('ScheduleForm', () => {
       onCancel: vi.fn(),
       ...overrides,
     };
+    const container = new Container();
+    container.bind<IMappingService>(TYPES.IMappingService).toConstantValue({
+      getMappings: vi.fn(),
+      createMapping: vi.fn(),
+      updateMapping: vi.fn(),
+      deleteMapping: vi.fn(),
+      getRules: vi.fn(),
+      runMapping: vi.fn(),
+      getHistory: vi.fn().mockResolvedValue({ history: [] }),
+    });
+    container.bind<ISocketService>(TYPES.ISocketService).toConstantValue({
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      joinTenant: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+    });
     return render(
       <I18nProvider>
-        <ScheduleForm {...props} />
+        <ContainerProvider container={container}>
+          <ScheduleForm {...props} />
+        </ContainerProvider>
       </I18nProvider>,
     );
   };

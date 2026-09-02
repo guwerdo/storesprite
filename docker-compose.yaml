@@ -1,13 +1,15 @@
 services:
   storesprite-fe:
     build:
-      context: ./storesprite-fe
+      context: .
+      dockerfile: ./storesprite-fe/Dockerfile
     container_name: storesprite-fe
     restart: always
     ports:
       - "5173:5173"
     volumes:
       - ./storesprite-fe:/workspace
+      - ./packages:/packages
       - /workspace/node_modules
     depends_on:
       - storesprite-be

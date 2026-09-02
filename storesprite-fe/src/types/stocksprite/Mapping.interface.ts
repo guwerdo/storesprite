@@ -1,13 +1,19 @@
-export interface IMappingRule {
-  op: string;
-  params: Record<string, string | number>;
-}
+import type {
+  MappingRule,
+  MappingRuleDefinition,
+  MappingRuleParamDefinition,
+  StockMappingItem,
+} from '@storesprite/mapping-rules';
 
-export interface IStockMappingItem {
-  column: string;
-  warehouseId: number;
-  rules?: IMappingRule[];
-}
+/**
+ * App-level aliases for the shared rule-engine types. The engine itself
+ * (`applyRule` / `applyRules`) lives in @storesprite/mapping-rules so a rule
+ * behaves identically in the editor preview, the backend and the processor.
+ */
+export type IMappingRule = MappingRule;
+export type IMappingRuleDefinition = MappingRuleDefinition;
+export type IMappingRuleParamDefinition = MappingRuleParamDefinition;
+export type IStockMappingItem = StockMappingItem;
 
 export type IMappingSchedule =
   | { frequency: 'once'; date: string; time: number }
@@ -56,17 +62,31 @@ export interface IMappingMutationResponse {
   error?: string;
 }
 
-export interface IMappingRuleParamDefinition {
-  name: string;
-  type: 'number' | 'string';
-}
-
-export interface IMappingRuleDefinition {
-  op: string;
-  groups: string[];
-  params: IMappingRuleParamDefinition[];
-}
-
 export interface IMappingRulesResponse {
   rules: IMappingRuleDefinition[];
+}
+
+export type MappingRunStatus = 'running' | 'success' | 'partial' | 'failed';
+export type MappingRunTrigger = 'schedule' | 'manual';
+
+/** Wire shape of one run-history row returned by `GET /client/stocksprite/mappings/:id/history`. */
+export interface IMappingHistoryDto {
+  id: string;
+  mappingId: string;
+  status: MappingRunStatus;
+  trigger: MappingRunTrigger;
+  /** ISO-8601 */
+  startedAt: string;
+  /** ISO-8601, or null while the run is still active */
+  finishedAt: string | null;
+  processedItems: number;
+  updatedItems: number;
+  unchangedItems: number;
+  warningCount: number;
+  errorCount: number;
+  error: string | null;
+}
+
+export interface IMappingHistoryResponse {
+  history: IMappingHistoryDto[];
 }

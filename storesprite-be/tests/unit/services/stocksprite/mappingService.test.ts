@@ -3,15 +3,18 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { MappingService } from "../../../../src/services/stocksprite/MappingService.js";
 import { IMappingRepository } from "../../../../src/types/stocksprite/MappingRepository.interface.js";
+import { IMappingHistoryRepository } from "../../../../src/types/stocksprite/MappingHistoryRepository.interface.js";
 import { IDataConnectionRepository } from "../../../../src/types/stocksprite/DataConnectionRepository.interface.js";
 import { DataConnection } from "../../../../src/entities/stocksprite/DataConnection.js";
 import { User } from "../../../../src/entities/user/User.js";
 import { Mapping } from "../../../../src/entities/stocksprite/Mapping.js";
+import { MappingHistory } from "../../../../src/entities/stocksprite/MappingHistory.js";
 import { JsonSchemaValidator } from "../../../../src/utils/JsonSchemaValidator.js";
 
 describe("MappingService Unit Tests", () => {
   let repositoryMock: ReturnType<typeof mock<IMappingRepository>>;
   let dataConnectionRepositoryMock: ReturnType<typeof mock<IDataConnectionRepository>>;
+  let historyRepositoryMock: ReturnType<typeof mock<IMappingHistoryRepository>>;
   let service: MappingService;
   const mockUser = new User("user_123", "test@storesprite.com", "Test User");
 
@@ -31,7 +34,8 @@ describe("MappingService Unit Tests", () => {
   beforeEach(() => {
     repositoryMock = mock<IMappingRepository>();
     dataConnectionRepositoryMock = mock<IDataConnectionRepository>();
-    service = new MappingService(repositoryMock, dataConnectionRepositoryMock, new JsonSchemaValidator());
+    historyRepositoryMock = mock<IMappingHistoryRepository>();
+    service = new MappingService(repositoryMock, dataConnectionRepositoryMock, historyRepositoryMock, new JsonSchemaValidator());
   });
 
   it("rejects an untested connection", async () => {
@@ -261,6 +265,90 @@ describe("MappingService Unit Tests", () => {
       repositoryMock.getByIdAndUserId.mockResolvedValue(null);
 
       await expect(service.runMapping("missing", "user_123")).resolves.toBe(false);
+    });
+  });
+
+  describe("listHistory", () => {
+    const makeOwnedMapping = (): Mapping => {
+      const mapping = new Mapping(mockUser, makeTestedConnection(), "Cromwell", "sku", []);
+      mapping.id = "m1";
+      return mapping;
+    };
+
+    const makeRow = (mapping: Mapping, id: string, status: "success" | "failed", startedAt: Date): MappingHistory => {
+      const row = new MappingHistory(mapping, status, "schedule");
+      row.id = id;
+      row.startedAt = startedAt;
+      row.finishedAt = new Date(startedAt.getTime() + 1000);
+      row.processedItems = 5;
+      row.updatedItems = 3;
+      row.unchangedItems = 2;
+      row.warningCount = 0;
+      row.errorCount = status === "failed" ? 1 : 0;
+      row.error = status === "failed" ? "boom" : null;
+      return row;
+    };
+
+    it("returns null when the mapping does not belong to the user", async () => {
+      repositoryMock.getByIdAndUserId.mockResolvedValue(null);
+
+      await expect(service.listHistory("m1", "user_123")).resolves.toBeNull();
+      expect(historyRepositoryMock.markStaleRunningFailed).not.toHaveBeenCalled();
+      expect(historyRepositoryMock.listByMapping).not.toHaveBeenCalled();
+    });
+
+    it("sweeps stale runs then maps the rows into DTOs", async () => {
+      const mapping = makeOwnedMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(mapping);
+      const newer = makeRow(mapping, "run1", "success", new Date("2026-08-01T10:00:00Z"));
+      const older = makeRow(mapping, "run0", "failed", new Date("2026-07-01T10:00:00Z"));
+      historyRepositoryMock.listByMapping.mockResolvedValue([newer, older]);
+
+      const result = await service.listHistory("m1", "user_123");
+
+      expect(historyRepositoryMock.markStaleRunningFailed).toHaveBeenCalledTimes(1);
+      const olderThan = historyRepositoryMock.markStaleRunningFailed.mock.calls[0][0] as Date;
+      expect(olderThan.getTime()).toBeGreaterThan(Date.now() - 3 * 60 * 60 * 1000);
+      expect(historyRepositoryMock.listByMapping).toHaveBeenCalledWith("m1");
+
+      expect(result).toEqual([
+        {
+          id: "run1",
+          mappingId: "m1",
+          status: "success",
+          trigger: "schedule",
+          startedAt: "2026-08-01T10:00:00.000Z",
+          finishedAt: "2026-08-01T10:00:01.000Z",
+          processedItems: 5,
+          updatedItems: 3,
+          unchangedItems: 2,
+          warningCount: 0,
+          errorCount: 0,
+          error: null,
+        },
+        {
+          id: "run0",
+          mappingId: "m1",
+          status: "failed",
+          trigger: "schedule",
+          startedAt: "2026-07-01T10:00:00.000Z",
+          finishedAt: "2026-07-01T10:00:01.000Z",
+          processedItems: 5,
+          updatedItems: 3,
+          unchangedItems: 2,
+          warningCount: 0,
+          errorCount: 1,
+          error: "boom",
+        },
+      ]);
+    });
+
+    it("returns an empty array when the mapping has no history", async () => {
+      const mapping = makeOwnedMapping();
+      repositoryMock.getByIdAndUserId.mockResolvedValue(mapping);
+      historyRepositoryMock.listByMapping.mockResolvedValue([]);
+
+      await expect(service.listHistory("m1", "user_123")).resolves.toEqual([]);
     });
   });
 });

@@ -1,47 +1,58 @@
-# Multi-stage Dockerfile for StoreSprite Downloader Service (Production)
-FROM node:24-slim AS builder
+# syntax=docker/dockerfile:1
+# Combined StoreSprite worker: downloader → processor (build context = repo root)
 
+# ---- Stage 1: build the shared packages (file: deps of the processor) ----
+FROM node:24-slim AS packages
+WORKDIR /workspace
+COPY packages/app-config/package*.json packages/app-config/
+COPY packages/unas-json-client/package*.json packages/unas-json-client/
+COPY packages/mapping-rules/package*.json packages/mapping-rules/
+RUN cd packages/app-config && npm ci && npm run build
+RUN cd packages/unas-json-client && npm ci && npm run build
+RUN cd packages/mapping-rules && npm ci && npm run build
+COPY packages ./packages
+
+# ---- Stage 2: build the downloader ----
+FROM node:24-slim AS downloader
 WORKDIR /app
-
-# Copy package files and install all dependencies (including devDependencies for TypeScript build)
-COPY downloader/package*.json downloader/tsconfig.json ./
+COPY stocksprite/downloader/package*.json stocksprite/downloader/tsconfig.json ./
 RUN npm ci
-
-# Copy source code and build TypeScript to dist/
-COPY downloader/src ./src
+COPY stocksprite/downloader/src ./src
 RUN npm run build
-
-# Prune devDependencies so node_modules contains production-only dependencies
 RUN npm prune --omit=dev
 
-# Production stage
-FROM node:24-slim
+# ---- Stage 3: build the processor ----
+FROM node:24-slim AS processor
+WORKDIR /workspace
+COPY packages/app-config/package*.json packages/app-config/
+COPY packages/unas-json-client/package*.json packages/unas-json-client/
+COPY packages/mapping-rules/package*.json packages/mapping-rules/
+COPY stocksprite/processor/package*.json stocksprite/processor/
+RUN cd stocksprite/processor && npm ci
+COPY --from=packages /workspace/packages ./packages
+COPY stocksprite/processor ./stocksprite/processor
+RUN cd stocksprite/processor && npm run build
+RUN cd stocksprite/processor && npm prune --omit=dev
 
-# Install Python & csvkit for ultra-low memory CSV streaming conversion, bash, tzdata, openssh-client, openssl
+# ---- Stage 4: runtime ----
+FROM node:24-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip csvkit bash tzdata openssh-client openssl \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Set timezone
 ENV TZ=Europe/Budapest
-RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime \
-    && dpkg-reconfigure -f noninteractive tzdata
-
-# Copy production node_modules and package.json directly from builder stage
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-
-# Copy compiled JavaScript from builder stage
-COPY --from=builder /app/dist ./dist
-
-# Create temp output directory
+RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+WORKDIR /app
+COPY --from=downloader /app/package.json ./downloader/package.json
+COPY --from=downloader /app/node_modules ./downloader/node_modules
+COPY --from=downloader /app/dist ./downloader/dist
+COPY --from=processor /workspace/stocksprite/processor/package.json ./processor/package.json
+COPY --from=processor /workspace/stocksprite/processor/node_modules ./processor/node_modules
+COPY --from=processor /workspace/stocksprite/processor/dist ./processor/dist
+COPY --from=processor /workspace/packages ./packages
+# npm may install file: deps as symlinks whose target is absolute (/workspace/packages)
+# from the build stage; replicate that path so the processor can resolve them at runtime.
+COPY --from=processor /workspace/packages /workspace/packages
 RUN mkdir -p /app/temp
-
 ENV NODE_ENV=production
 ENV OUTPUT_DIR=/app/temp
-
-VOLUME ["/app/temp"]
-
-CMD ["node", "dist/index.js"]
+CMD ["sh","-c","cd /app/downloader && node dist/index.js && [ -z \"$TEST_CONNECTION\" ] && cd /app/processor && node dist/index.js"]

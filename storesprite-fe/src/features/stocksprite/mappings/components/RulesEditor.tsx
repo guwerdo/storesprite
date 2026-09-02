@@ -16,7 +16,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import { Controller, useFieldArray, useFormContext, useWatch, type FieldArrayPath, type FieldPath } from 'react-hook-form';
 import { useAppTranslation } from '../../../../i18n/I18nProvider.js';
 import type { IMappingRuleDefinition } from '../../../../types/stocksprite/Mapping.interface.js';
-import { computePreview } from '../rulePreview.js';
+import { applyRule, type MappingRule } from '@storesprite/mapping-rules';
 import {
   emptyRuleFormValue,
   MappingFormValues,
@@ -28,6 +28,17 @@ export interface RulesEditorProps {
   group: 'sku' | 'stock';
   rulesDict: IMappingRuleDefinition[];
   sample: string | number;
+}
+
+/** Returns the ordered chain of preview values: `[sample, ...intermediates, result]`. */
+function computePreview(rules: MappingRule[], sample: string | number): string[] {
+  const steps: string[] = [String(sample)];
+  let current: string | number = sample;
+  for (const rule of rules) {
+    current = applyRule(current, rule);
+    steps.push(String(current));
+  }
+  return steps;
 }
 
 export default function RulesEditor({ name, group, rulesDict, sample }: RulesEditorProps): React.JSX.Element {

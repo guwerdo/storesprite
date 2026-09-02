@@ -1,6 +1,9 @@
 import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
+import { MAPPING_RULES } from "@storesprite/mapping-rules";
+import type { MappingRuleGroup, MappingRuleDefinition } from "@storesprite/mapping-rules";
 import { Mapping } from "../../entities/stocksprite/Mapping.js";
+import { MappingHistory } from "../../entities/stocksprite/MappingHistory.js";
 import {
   IMappingRepository,
   MappingDto,
@@ -11,9 +14,10 @@ import {
   MappingSchedule,
 } from "../../types/stocksprite/MappingRepository.interface.js";
 import { IMappingService } from "../../types/stocksprite/MappingService.interface.js";
+import { IMappingHistoryRepository, MappingHistoryDto } from "../../types/stocksprite/MappingHistoryRepository.interface.js";
 import { IDataConnectionRepository } from "../../types/stocksprite/DataConnectionRepository.interface.js";
 import { IJsonSchemaValidator } from "../../types/JsonSchemaValidator.interface.js";
-import { MAPPING_RULES, MappingRuleGroup, MappingRuleDefinition } from "../../config/stocksprite/mapping-rules.js";
+import { MAX_RUN_DURATION_MS } from "../../config/stocksprite/history.constants.js";
 import { TYPES } from "../../di/types.js";
 
 @injectable()
@@ -23,6 +27,8 @@ export class MappingService implements IMappingService {
     private readonly _repository: IMappingRepository,
     @inject(TYPES.IDataConnectionRepository)
     private readonly _dataConnectionRepository: IDataConnectionRepository,
+    @inject(TYPES.IMappingHistoryRepository)
+    private readonly _historyRepository: IMappingHistoryRepository,
     @inject(TYPES.IJsonSchemaValidator)
     private readonly _validator: IJsonSchemaValidator,
     @inject(TYPES.Logger)
@@ -136,6 +142,20 @@ export class MappingService implements IMappingService {
     return true;
   }
 
+  public async listHistory(mappingId: string, userId: string): Promise<MappingHistoryDto[] | null> {
+    this._logger?.info("Service listing mapping run history", { mappingId, userId });
+    const mapping = await this._repository.getByIdAndUserId(mappingId, userId);
+    if (!mapping) {
+      return null;
+    }
+
+    // Lazy timeout sweep: close orphaned runs older than the max duration.
+    await this._historyRepository.markStaleRunningFailed(new Date(Date.now() - MAX_RUN_DURATION_MS));
+
+    const rows = await this._historyRepository.listByMapping(mappingId);
+    return rows.map((row) => this._mapHistoryToDto(row));
+  }
+
   private _mapToDto(entity: Mapping): MappingDto {
     return {
       id: entity.id,
@@ -149,6 +169,23 @@ export class MappingService implements IMappingService {
       stockMappings: entity.stockMappings,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
+    };
+  }
+
+  private _mapHistoryToDto(entity: MappingHistory): MappingHistoryDto {
+    return {
+      id: entity.id,
+      mappingId: entity.mapping.id,
+      status: entity.status,
+      trigger: entity.trigger,
+      startedAt: entity.startedAt.toISOString(),
+      finishedAt: entity.finishedAt ? entity.finishedAt.toISOString() : null,
+      processedItems: entity.processedItems,
+      updatedItems: entity.updatedItems,
+      unchangedItems: entity.unchangedItems,
+      warningCount: entity.warningCount,
+      errorCount: entity.errorCount,
+      error: entity.error ?? null,
     };
   }
 

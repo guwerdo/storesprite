@@ -1,0 +1,34 @@
+{
+  "name": "stocksprite-processor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ephemeral single-run stock processor: reads one supplier CSV, reverse-joins it against the UNAS product-database CSV, and batch-sends the stock diffs to UNAS.",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "lint": "npx eslint ./src"
+  },
+  "dependencies": {
+    "@storesprite/mapping-rules": "file:../../packages/mapping-rules",
+    "@storesprite/unas-json-client": "file:../../packages/unas-json-client",
+    "ajv": "^8.17.1",
+    "axios": "^1.9.0",
+    "csv-parser": "^3.2.0",
+    "inversify": "^8.2.3",
+    "log4js": "^6.9.1",
+    "reflect-metadata": "^0.2.2",
+    "strip-bom-stream": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.26.0",
+    "@types/log4js": "^0.0.33",
+    "@types/node": "^22.15.17",
+    "eslint": "^9.26.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.0",
+    "vitest": "^4.0.17"
+  }
+}

@@ -35,6 +35,7 @@ describe('StockSpriteMappingTab', () => {
       deleteMapping: vi.fn().mockResolvedValue({ success: true }),
       getRules: vi.fn().mockResolvedValue({ rules: [] }),
       runMapping: vi.fn().mockResolvedValue({ success: true }),
+      getHistory: vi.fn().mockResolvedValue({ history: [] }),
     };
 
     mockConnectionService = {

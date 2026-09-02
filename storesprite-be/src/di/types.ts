@@ -3,6 +3,7 @@ export { Language } from "../entities/user/Language.js";
 export { UserSetting } from "../entities/user/UserSetting.js";
 export { DataConnection } from "../entities/stocksprite/DataConnection.js";
 export { Mapping } from "../entities/stocksprite/Mapping.js";
+export { MappingHistory } from "../entities/stocksprite/MappingHistory.js";
 export type { IUserRepository } from "../types/user/UserRepository.interface.js";
 export type { IUserService } from "../types/user/UserService.interface.js";
 export type { ISettingRepository } from "../types/user/SettingRepository.interface.js";
@@ -22,6 +23,10 @@ export type {
   CreateMappingDto,
   UpdateMappingDto,
 } from "../types/stocksprite/MappingRepository.interface.js";
+export type {
+  IMappingHistoryRepository,
+  MappingHistoryDto,
+} from "../types/stocksprite/MappingHistoryRepository.interface.js";
 export type { IMappingService } from "../types/stocksprite/MappingService.interface.js";
 export type { ISchedulerService } from "../types/stocksprite/SchedulerService.interface.js";
 export type { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
@@ -38,6 +43,7 @@ export const TYPES = {
   IDataConnectionRepository: Symbol.for("IDataConnectionRepository"),
   IDataConnectionService: Symbol.for("IDataConnectionService"),
   IMappingRepository: Symbol.for("IMappingRepository"),
+  IMappingHistoryRepository: Symbol.for("IMappingHistoryRepository"),
   IMappingService: Symbol.for("IMappingService"),
   ISchedulerService: Symbol.for("ISchedulerService"),
   IJsonSchemaValidator: Symbol.for("IJsonSchemaValidator"),
