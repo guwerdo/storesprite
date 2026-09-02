@@ -1,5 +1,6 @@
 import type { MappingRule, StockMappingItem } from "@storesprite/mapping-rules";
 import type { IUnasJsonClient, IUnasJsonClientConfig } from "@storesprite/unas-json-client";
+import type { RunCounters } from "./connection.interface.js";
 
 /** Run-config subset of a Mapping (as served by the backend run-config endpoint). */
 export interface MappingDto {
@@ -32,16 +33,11 @@ export interface RunConfigResponse {
 export type ProgressStage = "start" | "parse" | "download" | "compare" | "send" | "finish" | "error";
 
 /** Body posted to `POST /mappings/:id/progress`. */
-export interface ProgressBody {
+export type ProgressBody = {
     runId: string;
     progress: ProgressStage;
     error?: string;
-    processedItems?: number;
-    updatedItems?: number;
-    unchangedItems?: number;
-    warningCount?: number;
-    errorCount?: number;
-}
+} & Partial<RunCounters>;
 
 /** Builds the @storesprite/unas-json-client once the run config is validated. */
 export type UnasClientFactory = (config: IUnasJsonClientConfig) => IUnasJsonClient;

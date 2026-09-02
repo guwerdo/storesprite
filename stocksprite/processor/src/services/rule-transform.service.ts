@@ -25,13 +25,7 @@ export class RuleTransformService {
     /** Quantity: an empty/whitespace cell means "clear", any other cell is rule-piped and clamped to ≥ 0. */
     public transformStockQuantity(value: unknown, rules: MappingRule[] = []): number {
         const trimmed =
-            value == null
-                ? ""
-                : typeof value === "number"
-                  ? String(value).trim()
-                  : typeof value === "string"
-                    ? value.trim()
-                    : "";
+            typeof value === "number" ? String(value).trim() : typeof value === "string" ? value.trim() : "";
         if (trimmed.length === 0) {
             return 0;
         }

@@ -97,15 +97,7 @@ export class ProcessorService {
     }
 
     private async _reportProgress(progress: ProgressStage, counters: RunCounters): Promise<void> {
-        const body: ProgressBody = {
-            runId: this._config.runId,
-            progress,
-            processedItems: counters.processedItems,
-            updatedItems: counters.updatedItems,
-            unchangedItems: counters.unchangedItems,
-            warningCount: counters.warningCount,
-            errorCount: counters.errorCount,
-        };
+        const body: ProgressBody = { runId: this._config.runId, progress, ...counters };
         await this._backend.reportProgress(this._config.mappingId, body);
     }
 }

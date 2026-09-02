@@ -1,17 +1,26 @@
 import type { ISetProductStock } from "@storesprite/unas-json-client";
 
-/** Converts a value to a number. Throws when the value is an empty or non-numeric string. */
-export function getNumberValue(value: unknown): number | undefined {
+/** UNAS's main warehouse id: its stock is the unprefixed "Raktárkészlet" column and its serialized stock omits `warehouseId`. */
+export const MAIN_WAREHOUSE_ID = 1;
+
+/** Converts a value to a number. When `lenient`, an empty or non-numeric string yields undefined instead of throwing. */
+export function getNumberValue(value: unknown, lenient = false): number | undefined {
     if (typeof value === "number") {
         return Number.isNaN(value) ? undefined : value;
     }
     if (typeof value === "string") {
         const trimmedValue = value.trim();
         if (!trimmedValue) {
+            if (lenient) {
+                return undefined;
+            }
             throw new Error("Cannot convert empty string to number");
         }
         const number = Number(trimmedValue);
         if (Number.isNaN(number)) {
+            if (lenient) {
+                return undefined;
+            }
             throw new Error(`Cannot convert value to number. Value: ${value}`);
         }
         return number;
@@ -29,10 +38,6 @@ export function getStringValue(value: unknown): string | undefined {
 
 export function negativeToZero(value: number): number {
     return value < 0 ? 0 : value;
-}
-
-export function isObject(value: unknown): boolean {
-    return typeof value === "object" && value !== null;
 }
 
 /** True when both maps hold identical warehouseId -> quantity entries. */
@@ -69,11 +74,11 @@ export function computeFinalStocks(
     return final;
 }
 
-/** Serializes a warehouse->quantity map into the UNAS stock array. Main warehouse 1 omits warehouseId. */
+/** Serializes a warehouse->quantity map into the UNAS stock array. The main warehouse omits warehouseId. */
 export function toStockArray(stocks: ReadonlyMap<number, number>): ISetProductStock[] {
     const result: ISetProductStock[] = [];
     for (const [warehouseId, quantity] of stocks) {
-        result.push(warehouseId === 1 ? { quantity } : { warehouseId, quantity });
+        result.push(warehouseId === MAIN_WAREHOUSE_ID ? { quantity } : { warehouseId, quantity });
     }
     return result;
 }

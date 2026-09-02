@@ -31,10 +31,6 @@ export class UnasUpdateService {
         this._client = client;
     }
 
-    public get bufferSize(): number {
-        return this._buffer.length;
-    }
-
     /** Enqueue one diff; flushes as soon as the buffer reaches 100. */
     public async queue(update: ISetProduct, counters: RunCounters): Promise<void> {
         this._buffer.push(update);
@@ -67,15 +63,17 @@ export class UnasUpdateService {
                         received: responses.length,
                     });
                 }
+                let productErrors = 0;
                 for (const response of responses) {
                     if (response.status === "error") {
                         counters.errorCount += 1;
+                        productErrors += 1;
                         this._logger.error("UNAS rejected a product update", { sku: response.sku, id: response.id });
                     }
                 }
                 this._logger.info("Sent stock batch to UNAS", {
                     batchSize: chunk.length,
-                    productErrors: responses.filter((r) => r.status === "error").length,
+                    productErrors,
                 });
                 return;
             } catch (error) {
@@ -83,7 +81,7 @@ export class UnasUpdateService {
                     throw error;
                 }
                 counters.warningCount += 1;
-                const waitMs = RETRY_DELAYS_MS[attempt - 1] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
+                const waitMs = RETRY_DELAYS_MS[attempt - 1];
                 this._logger.warn("Rate limited by UNAS (HTTP 429); retrying batch", {
                     attempt: attempt + 1,
                     waitMs,

@@ -1,7 +1,6 @@
 import { Container } from "inversify";
 import type { Logger } from "log4js";
 import { createUnasJsonClient } from "@storesprite/unas-json-client";
-import type { IUnasJsonClient, IUnasJsonClientConfig } from "@storesprite/unas-json-client";
 import { TYPES } from "./types/binding-keys.js";
 import type { AppConfig } from "./config/app.config.js";
 import { getAppConfig } from "./config/app.config.js";
@@ -34,9 +33,7 @@ export function createContainer(customConfig?: AppConfig, customLogger?: Logger)
     container.bind<Logger>(TYPES.Logger).toConstantValue(logger);
 
     container.bind<IBackendApiClient>(TYPES.IBackendApiClient).to(BackendApiClient);
-    const clientFactory: UnasClientFactory = (clientConfig: IUnasJsonClientConfig): IUnasJsonClient =>
-        createUnasJsonClient(clientConfig);
-    container.bind<UnasClientFactory>(TYPES.UnasClientFactory).toConstantValue(clientFactory);
+    container.bind<UnasClientFactory>(TYPES.UnasClientFactory).toConstantValue(createUnasJsonClient);
 
     container.bind(ConnectionIndexRepository).toSelf();
     container.bind(RuleTransformService).toSelf();

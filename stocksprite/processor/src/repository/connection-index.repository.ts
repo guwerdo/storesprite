@@ -1,5 +1,4 @@
 import { injectable } from "inversify";
-import type { DesiredState } from "../types/connection.interface.js";
 
 /**
  * The single resident structure of the run: sku -> every desired stock state
@@ -9,9 +8,9 @@ import type { DesiredState } from "../types/connection.interface.js";
  */
 @injectable()
 export class ConnectionIndexRepository {
-    private readonly _bySku = new Map<string, DesiredState[]>();
+    private readonly _bySku = new Map<string, Map<number, number>[]>();
 
-    public add(sku: string, desired: DesiredState): void {
+    public add(sku: string, desired: Map<number, number>): void {
         const existing = this._bySku.get(sku);
         if (existing) {
             existing.push(desired);
@@ -20,12 +19,8 @@ export class ConnectionIndexRepository {
         this._bySku.set(sku, [desired]);
     }
 
-    public get(sku: string): DesiredState[] | undefined {
+    public get(sku: string): Map<number, number>[] | undefined {
         return this._bySku.get(sku);
-    }
-
-    public has(sku: string): boolean {
-        return this._bySku.has(sku);
     }
 
     public delete(sku: string): boolean {

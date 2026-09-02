@@ -5,7 +5,6 @@ import stripBomStream from "strip-bom-stream";
 import type { Logger } from "log4js";
 import { TYPES } from "../types/binding-keys.js";
 import type { MappingDto } from "../types/mapping.interface.js";
-import type { DesiredState } from "../types/connection.interface.js";
 import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
 import { RuleTransformService } from "./rule-transform.service.js";
 
@@ -67,8 +66,7 @@ export class ConnectionFeedService {
                 this._logger.warn("Skipping supplier row: empty SKU", { rowNumber: processedItems });
                 continue;
             }
-            const desiredState: DesiredState = { desired: match.desired };
-            this._index.add(match.sku, desiredState);
+            this._index.add(match.sku, match.desired);
         }
         this._logger.info("Supplier feed parsed", { processedItems, skippedEmptySkus, indexedSkus: this._index.size });
         return { processedItems, skippedEmptySkus };

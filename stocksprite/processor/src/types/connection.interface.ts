@@ -1,13 +1,5 @@
 import type { ISetProduct } from "@storesprite/unas-json-client";
 
-/**
- * The desired end state for one product, derived from a single row of the
- * supplier CSV: warehouseId -> quantity (0 meaning "clear this warehouse").
- */
-export interface DesiredState {
-    desired: Map<number, number>;
-}
-
 /** A stock update queued for UNAS — the processor's send-buffer unit. */
 export type ProductUpdate = ISetProduct;
 

@@ -94,7 +94,7 @@ describe("UnasProductDbService", () => {
     describe("streamAndCompare", () => {
         it("zeroes out current warehouses not requested (main included) and emits the diff", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("A1", { desired: new Map([[1, 5]]) });
+            index.add("A1", new Map([[1, 5]]));
             const { counters, updates } = await runCompare(index, [
                 { Cikkszám: "A1", Raktárkészlet: "3", [addCol("BP")]: "2", [addCol("Debrecen")]: "1" },
             ]);
@@ -103,24 +103,24 @@ describe("UnasProductDbService", () => {
             expect(updates).toEqual([
                 { sku: "A1", stocks: [{ quantity: 5 }, { warehouseId: 2, quantity: 0 }, { warehouseId: 3, quantity: 0 }] },
             ]);
-            expect(index.has("A1")).toBe(false);
+            expect(index.get("A1")).toBeUndefined();
         });
 
         it("emits nothing when the final (desired ∪ zeroed) state equals the current one", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("B1", { desired: new Map([[1, 3], [2, 2], [3, 1]]) });
+            index.add("B1", new Map([[1, 3], [2, 2], [3, 1]]));
             const { counters, updates } = await runCompare(index, [
                 { Cikkszám: "B1", Raktárkészlet: "3", [addCol("BP")]: "2", [addCol("Debrecen")]: "1" },
             ]);
 
             expect(counters.unchangedItems).toBe(1);
             expect(updates).toEqual([]);
-            expect(index.has("B1")).toBe(false);
+            expect(index.get("B1")).toBeUndefined();
         });
 
         it("wakes a product disabled with 'off' when the supplier wants stock", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("C1", { desired: new Map([[1, 4], [2, 0]]) });
+            index.add("C1", new Map([[1, 4], [2, 0]]));
             const { updates } = await runCompare(index, [
                 { Cikkszám: "C1", Raktárkészlet: "off", [addCol("BP")]: "9" },
             ]);
@@ -132,7 +132,7 @@ describe("UnasProductDbService", () => {
 
         it("counts an 'off' product with an empty desired state as unchanged", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("C2", { desired: new Map() });
+            index.add("C2", new Map());
             const { counters, updates } = await runCompare(index, [
                 { Cikkszám: "C2", Raktárkészlet: "off" },
             ]);
@@ -154,7 +154,7 @@ describe("UnasProductDbService", () => {
 
         it("warns about and drops supplier SKUs that never appear in the UNAS db", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("GHOST", { desired: new Map([[1, 1]]) });
+            index.add("GHOST", new Map([[1, 1]]));
             const { counters, updates } = await runCompare(index, []);
 
             expect(counters.warningCount).toBe(1);
@@ -164,7 +164,7 @@ describe("UnasProductDbService", () => {
 
         it("skips a warehouse whose additional column is missing from the export", async () => {
             const index = new ConnectionIndexRepository();
-            index.add("D1", { desired: new Map([[1, 2]]) });
+            index.add("D1", new Map([[1, 2]]));
             const withSzeged: WarehouseDto[] = [...warehouses, { id: 4, name: "Szeged", publicName: "Szeged" }];
             const warn = vi.fn();
             const service = new UnasProductDbService(stubLogger(warn), index);

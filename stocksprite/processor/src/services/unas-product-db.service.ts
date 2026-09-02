@@ -11,36 +11,10 @@ import type { WarehouseDto } from "../types/mapping.interface.js";
 import type { ProductUpdate, RunCounters } from "../types/connection.interface.js";
 import { UnasCsvColumnNames } from "../config/unas-csv-column-names.js";
 import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
-import { computeFinalStocks, stocksEqual, toStockArray } from "../utils/mapping-util.js";
+import { computeFinalStocks, getNumberValue, MAIN_WAREHOUSE_ID, stocksEqual, toStockArray } from "../utils/mapping-util.js";
 
 /** UNAS disables a product's stock rows with the exact literal "off". */
 const UNAS_STOCK_OFF = "off";
-
-/**
- * Parses a single UNAS stock cell. An empty/whitespace cell and a non-numeric
- * cell both mean "no usable value" → undefined (never throws), mirroring the
- * legacy mapper's behaviour but reporting instead of aborting the run.
- */
-function parseStockNumber(value: unknown): number | undefined {
-    if (value == null) {
-        return undefined;
-    }
-    if (typeof value === "number") {
-        return Number.isNaN(value) ? undefined : value;
-    }
-    if (typeof value !== "string") {
-        return undefined;
-    }
-    const trimmed = value.trim();
-    if (trimmed === "") {
-        return undefined;
-    }
-    const number = Number(trimmed);
-    if (Number.isNaN(number)) {
-        return undefined;
-    }
-    return number;
-}
 
 /**
  * Stage 2: stream the UNAS product-database CSV (comma-delimited), reverse-join
@@ -86,15 +60,15 @@ export class UnasProductDbService {
             // Product disabled on UNAS → treat as "no current stock anywhere".
             return { sku, stocks };
         }
-        const mainQuantity = parseStockNumber(mainCell);
+        const mainQuantity = getNumberValue(mainCell, true);
         if (mainQuantity === undefined) {
-            this._logger.warn("Non-numeric or empty main stock cell (Raktárkészlet)", { sku });
+            this._logger.warn(`Non-numeric or empty main stock cell (${UnasCsvColumnNames.stockMain})`, { sku });
         } else {
-            stocks.set(1, mainQuantity);
+            stocks.set(MAIN_WAREHOUSE_ID, mainQuantity);
         }
 
         for (const warehouse of warehouses) {
-            if (warehouse.id === 1) {
+            if (warehouse.id === MAIN_WAREHOUSE_ID) {
                 continue; // main warehouse 1 is Raktárkészlet, never a "További" column
             }
             const column = UnasCsvColumnNames.stockAdditionalPrefix + warehouse.name;
@@ -107,7 +81,7 @@ export class UnasProductDbService {
                 });
                 continue;
             }
-            const quantity = parseStockNumber(cell);
+            const quantity = getNumberValue(cell, true);
             if (quantity === undefined) {
                 this._logger.warn("Non-numeric additional stock cell", { sku, warehouse: warehouse.name });
                 continue;
@@ -141,7 +115,7 @@ export class UnasProductDbService {
                 continue; // SKU not in the supplier feed → never touch it
             }
             for (const entry of entries) {
-                const finalStocks = computeFinalStocks(product.stocks, entry.desired);
+                const finalStocks = computeFinalStocks(product.stocks, entry);
                 if (stocksEqual(finalStocks, product.stocks)) {
                     counters.unchangedItems += 1;
                     continue;
@@ -152,7 +126,7 @@ export class UnasProductDbService {
         }
 
         if (this._index.size > 0) {
-            for (const sku of [...this._index.keys()]) {
+            for (const sku of this._index.keys()) {
                 counters.warningCount += 1;
                 this._logger.warn("Supplier SKU absent from UNAS product database", { sku });
             }
