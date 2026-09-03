@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import type { MappingDto } from "../../src/types/mapping.interface.js";
 import { stubLogger } from "../helpers/stub-logger.js";
 import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
@@ -96,6 +99,29 @@ describe("ConnectionFeedService", () => {
             const result = await service.buildIndexFromRows(asyncRows([]), mapping);
             expect(result.processedItems).toBe(0);
             expect(result.skippedEmptySkus).toBe(0);
+        });
+    });
+
+    describe("buildIndex", () => {
+        it("streams a semicolon CSV file into the index (BOM-stripped)", async () => {
+            const dir = fs.mkdtempSync(path.join(os.tmpdir(), "feed-build-"));
+            const file = path.join(dir, "feed.csv");
+            fs.writeFileSync(file, "SKU;Raktár;BP;Debrecen\nA-100;5;;3\n", "utf-8");
+
+            const index = new ConnectionIndexRepository();
+            const service = new ConnectionFeedService(stubLogger(), index, new RuleTransformService());
+            const result = await service.buildIndex(file, mapping);
+
+            expect(result.processedItems).toBe(1);
+            expect(result.skippedEmptySkus).toBe(0);
+            expect(index.size).toBe(1);
+            expect([...(index.get("A100")?.[0] ?? [])]).toEqual([
+                [1, 5],
+                [2, 0],
+                [3, 6],
+            ]);
+
+            fs.rmSync(dir, { recursive: true, force: true });
         });
     });
 });
