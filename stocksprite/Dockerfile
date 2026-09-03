@@ -1,16 +1,19 @@
-# syntax=docker/dockerfile:1
 # Combined StoreSprite worker: downloader → processor (build context = repo root)
+# No `# syntax=` directive: the built-in Dockerfile frontend fully supports this file,
+# and pinning docker/dockerfile:1 forces BuildKit to pull that image from Docker Hub on
+# every uncached build (can fail behind TLS-intercepting proxies).
 
 # ---- Stage 1: build the shared packages (file: deps of the processor) ----
 FROM node:24-slim AS packages
 WORKDIR /workspace
-COPY packages/app-config/package*.json packages/app-config/
-COPY packages/unas-json-client/package*.json packages/unas-json-client/
-COPY packages/mapping-rules/package*.json packages/mapping-rules/
+# Copy the whole tree up front: `tsc` builds need each package's tsconfig.json and
+# src to be present (the repo .dockerignore keeps node_modules/dist out of the
+# context). Individual package*.json-first COPYs broke `npm run build` (bare `tsc`
+# with no tsconfig exits 1).
+COPY packages ./packages
 RUN cd packages/app-config && npm ci && npm run build
 RUN cd packages/unas-json-client && npm ci && npm run build
 RUN cd packages/mapping-rules && npm ci && npm run build
-COPY packages ./packages
 
 # ---- Stage 2: build the downloader ----
 FROM node:24-slim AS downloader

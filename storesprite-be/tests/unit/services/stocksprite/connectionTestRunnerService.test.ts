@@ -163,10 +163,83 @@ describe("ConnectionTestRunnerService", () => {
     await settle();
 
     expect(impl).toHaveBeenCalledTimes(3);
+    // The dockerfile is resolved to an absolute path against the build context, because
+    // `-f` is interpreted relative to the spawned CLI's cwd (the backend's own working
+    // directory), not the context — the backend's cwd is /workspace/storesprite-be, where
+    // `stocksprite/Dockerfile` does not exist.
     expect(impl.mock.calls[1][1]).toEqual([
       "build",
       "-f",
-      "stocksprite/Dockerfile",
+      "/workspace/stocksprite/Dockerfile",
+      "-t",
+      "storesprite-worker:latest",
+      "/workspace",
+    ]);
+  });
+
+  it("builds with the default absolute dockerfile when no overrides are set", async () => {
+    delete process.env.STOCKSPRITE_DOCKERFILE;
+    delete process.env.STOCKSPRITE_BUILD_CONTEXT;
+
+    const impl = vi.fn(() => {
+      const handlers: Record<string, CloseHandler> = {};
+      const child = {
+        stdout: null,
+        stderr: null,
+        on: vi.fn((event: string, cb: CloseHandler) => {
+          handlers[event] = cb;
+          return child;
+        }),
+      };
+      setImmediate(() => {
+        const isInspect = impl.mock.calls.length === 1;
+        handlers["close"]?.(isInspect ? 1 : 0, null);
+      });
+      return child;
+    });
+    spawnMock.mockImplementation(impl as unknown as typeof spawn);
+
+    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await settle();
+
+    expect(impl.mock.calls[1][1]).toEqual([
+      "build",
+      "-f",
+      "/workspace/stocksprite/Dockerfile",
+      "-t",
+      "storesprite-worker:latest",
+      "/workspace",
+    ]);
+  });
+
+  it("passes an absolute STOCKSPRITE_DOCKERFILE override through verbatim", async () => {
+    process.env.STOCKSPRITE_DOCKERFILE = "/custom/worker/Dockerfile";
+
+    const impl = vi.fn(() => {
+      const handlers: Record<string, CloseHandler> = {};
+      const child = {
+        stdout: null,
+        stderr: null,
+        on: vi.fn((event: string, cb: CloseHandler) => {
+          handlers[event] = cb;
+          return child;
+        }),
+      };
+      setImmediate(() => {
+        const isInspect = impl.mock.calls.length === 1;
+        handlers["close"]?.(isInspect ? 1 : 0, null);
+      });
+      return child;
+    });
+    spawnMock.mockImplementation(impl as unknown as typeof spawn);
+
+    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await settle();
+
+    expect(impl.mock.calls[1][1]).toEqual([
+      "build",
+      "-f",
+      "/custom/worker/Dockerfile",
       "-t",
       "storesprite-worker:latest",
       "/workspace",

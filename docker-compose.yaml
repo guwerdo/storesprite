@@ -28,6 +28,9 @@ services:
       - ./storesprite-be:/workspace/storesprite-be
       - ./packages:/workspace/packages
       - ./stocksprite:/workspace/stocksprite
+      # Expose the repo-root .dockerignore so the on-demand worker build (context
+      # /workspace, dockerfile stocksprite/Dockerfile) excludes node_modules/dist.
+      - ./.dockerignore:/workspace/.dockerignore:ro
       - /workspace/storesprite-be/node_modules
       - /workspace/packages/app-config/node_modules
       - /workspace/packages/unas-json-client/node_modules

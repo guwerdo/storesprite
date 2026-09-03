@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import path from "node:path";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../../di/types.js";
@@ -128,7 +129,13 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     this._logger?.info(`Docker image '${imageName}' not found locally. Building on-demand...`);
 
     const buildContext = process.env.STOCKSPRITE_BUILD_CONTEXT || "/workspace";
-    const dockerfile = process.env.STOCKSPRITE_DOCKERFILE || "stocksprite/Dockerfile";
+    const configuredDockerfile = process.env.STOCKSPRITE_DOCKERFILE || "stocksprite/Dockerfile";
+    // `-f` is resolved relative to the spawned CLI's working directory (the backend's
+    // own cwd), NOT the build context. Resolve relative paths against the context so the
+    // on-demand build works regardless of which directory the backend runs from.
+    const dockerfile = path.isAbsolute(configuredDockerfile)
+      ? configuredDockerfile
+      : path.resolve(buildContext, configuredDockerfile);
     const build = await this._spawnDocker(["build", "-f", dockerfile, "-t", imageName, buildContext]);
 
     if (build.code === 0) {
