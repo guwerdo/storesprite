@@ -118,6 +118,33 @@ ports on the Docker host; when the suite runs from inside a container, `MOCK_HOS
 must point at the host (the `stocksprite-dev` image sets it to `host.docker.internal`;
 defaults to `127.0.0.1` when unset, e.g. running directly on the host).
 
+### Processor Integration Test Suite (`npm run test:integration`)
+
+The processor's integration tier is **in-process — it needs no extra Docker**. It runs
+inside `stocksprite-dev` like the unit tests and fakes the two remote HTTP dependencies
+it has rather than containerizing them
+(`processor/test/integration/processor.integration.test.ts`):
+
+* **Real, untouched:** the full processor pipeline — `ProcessorService`,
+  `ConnectionFeedService`, `RuleTransformService`, `UnasProductDbService`,
+  `UnasUpdateService`, `ConnectionIndexRepository` (in-memory) — plus the real
+  `@storesprite/unas-json-client` HTTP stack (`login`, `getProductDB`, `setProduct`).
+* **Faked in-process:** the UNAS API is a `node:http` fake on an ephemeral loopback
+  port (`fake-unas-server.ts`); the backend client is an inline `IBackendApiClient`
+  object literal (no HTTP) that hands the service a run-config pointing the real UNAS
+  client at the fake and records the reported progress sequence.
+* **Not exercised:** the Inversify composition root / `index.ts` boot — the test
+  composes the services manually with a no-op logger.
+
+It asserts the golden CSV→XML mapping outcomes (happy path, zeroed stock, partial
+update, no-op, skip) plus batching of >100 diffs into ≤100-SKU `setProduct` calls.
+
+#### Running Integration Tests:
+```bash
+docker exec -it stocksprite-dev sh -c "cd /workspace/stocksprite/processor && npm run test:integration"
+```
+Only `node` + loopback is required — no Docker CLI or daemon.
+
 ---
 
 ## 5. Local CLI Commands
