@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
 
 const COMPOSE_FILE = path.resolve(__dirname, "docker-compose-test-integration.yaml");
@@ -19,6 +20,28 @@ function cleanTempDir(): void {
     fs.rmSync(TEMP_DIR, { recursive: true, force: true });
   }
   fs.mkdirSync(TEMP_DIR, { recursive: true });
+}
+
+// Probe the datasource mock's sshd by reading its SSH banner from the host-published
+// port 2224. A bare TCP connect can succeed via docker-proxy before sshd inside the
+// container is actually accepting, so wait for the "SSH-2.0-..." identification
+// string instead. Mirrors the HTTP readiness probes on 8088/8089.
+function sshdIsReady(host: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.connect(2224, host);
+    let settled = false;
+    const done = (ready: boolean): void => {
+      if (!settled) {
+        settled = true;
+        socket.destroy();
+        resolve(ready);
+      }
+    };
+    socket.setTimeout(2000);
+    socket.once("data", (chunk: Buffer) => done(chunk.toString().startsWith("SSH-2.0-")));
+    socket.once("timeout", () => done(false));
+    socket.once("error", () => done(false));
+  });
 }
 
 function runDownloaderContainer(userId: string): { exitCode: number; stdout: string; stderr: string } {
@@ -99,16 +122,20 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
       stdio: "inherit",
     });
 
-    // 3. Poll for mock-backend and mock-datasource-server readiness
+    // 3. Poll for mock-backend (WireMock health), the datasource nginx (public CSV)
+    //    and the datasource sshd (SSH banner) until all are ready. Two of the twelve
+    //    happy-path feeds are SFTP, so the downloader container must not launch until
+    //    sshd accepts connections, not just until HTTP answers.
     console.log("[Integration Test] Waiting for mock services to be ready...");
     let ready = false;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       try {
-        const [resBackend, resSupplier] = await Promise.all([
+        const [resBackend, resSupplier, sshReady] = await Promise.all([
           fetch(`http://${MOCK_HOST}:8089/__admin/health`),
           fetch(`http://${MOCK_HOST}:8088/public/feed_public_comma.csv`),
+          sshdIsReady(MOCK_HOST),
         ]);
-        if (resBackend.status === 200 && resSupplier.status === 200) {
+        if (resBackend.status === 200 && resSupplier.status === 200 && sshReady) {
           ready = true;
           break;
         }
@@ -139,10 +166,18 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
   it("should successfully download and standardize all 12 protocols/auth/encoding combinations (Happy Path)", () => {
     cleanTempDir();
 
-    const { exitCode, stdout } = runDownloaderContainer("test_user_all_protocols");
+    const { exitCode, stdout, stderr } = runDownloaderContainer("test_user_all_protocols");
 
     console.log("[Integration Test Output - Happy Path]:\n" + stdout);
-    expect(exitCode).toBe(0);
+    // Embed the downloader's own output in the failure so a flaky/non-zero run is
+    // self-diagnosing: the session summary + "Error processing connection ..." lines
+    // name the exact connection(s) that failed instead of vanishing with the temp dir.
+    expect(
+      exitCode,
+      `downloader exited ${exitCode} (expected 0).\n--- stdout (tail) ---\n${stdout.slice(-8000)}${
+        stderr ? `\n--- stderr (tail) ---\n${stderr.slice(-2000)}` : ""
+      }`
+    ).toBe(0);
     expect(stdout).toContain("Downloader completed successfully without errors");
 
     // Verify all 12 converted CSV files exist in temp/
