@@ -1,27 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import path from "node:path";
-import type { Logger } from "log4js";
 import type { IUnasJsonClient } from "@storesprite/unas-json-client";
-import type { AppConfig } from "../config/app.config.js";
-import type { RunConfigResponse, ProgressBody, UnasClientFactory } from "../types/mapping.interface.js";
-import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
-import { ProcessorService } from "./processor.service.js";
-import type { IBackendApiClient } from "./backend-api-client.js";
-import type { ConnectionFeedService } from "./connection-feed.service.js";
-import type { UnasProductDbService } from "./unas-product-db.service.js";
-import type { UnasUpdateService } from "./unas-update.service.js";
-
-function stubLogger(): Logger {
-    return {
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        fatal: vi.fn(),
-        mark: vi.fn(),
-    } as unknown as Logger;
-}
+import { stubLogger } from "../helpers/stub-logger.js";
+import type { AppConfig } from "../../src/config/app.config.js";
+import type { RunConfigResponse, ProgressBody, UnasClientFactory } from "../../src/types/mapping.interface.js";
+import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
+import { ProcessorService } from "../../src/services/processor.service.js";
+import type { IBackendApiClient } from "../../src/services/backend-api-client.js";
+import type { ConnectionFeedService } from "../../src/services/connection-feed.service.js";
+import type { UnasProductDbService } from "../../src/services/unas-product-db.service.js";
+import type { UnasUpdateService } from "../../src/services/unas-update.service.js";
 
 const runConfig: RunConfigResponse = {
     mapping: {

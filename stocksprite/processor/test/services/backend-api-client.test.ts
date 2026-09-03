@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import axios from "axios";
-import type { Logger } from "log4js";
-import { BackendApiClient } from "./backend-api-client.js";
-import type { AppConfig } from "../config/app.config.js";
-import type { RunConfigResponse } from "../types/mapping.interface.js";
+import { BackendApiClient } from "../../src/services/backend-api-client.js";
+import type { AppConfig } from "../../src/config/app.config.js";
+import type { RunConfigResponse } from "../../src/types/mapping.interface.js";
+import { stubLogger } from "../helpers/stub-logger.js";
 
 vi.mock("axios", () => {
     const get = vi.fn();
@@ -19,18 +19,6 @@ const axiosGetMock = axios.get as unknown as Mock;
 const axiosPostMock = axios.post as unknown as Mock;
 /* eslint-enable @typescript-eslint/unbound-method */
 const axiosIsAxiosErrorMock = axios.isAxiosError as unknown as Mock;
-
-function stubLogger(): Logger {
-    return {
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        fatal: vi.fn(),
-        mark: vi.fn(),
-    } as unknown as Logger;
-}
 
 const config: AppConfig = {
     mappingId: "m1",

@@ -1,23 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Logger } from "log4js";
-import { UnasCsvColumnNames } from "../config/unas-csv-column-names.js";
-import type { WarehouseDto } from "../types/mapping.interface.js";
-import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
-import type { ProductUpdate, RunCounters } from "../types/connection.interface.js";
-import { createRunCounters } from "../types/connection.interface.js";
-import { UnasProductDbService } from "./unas-product-db.service.js";
-
-function stubLogger(warn: ReturnType<typeof vi.fn> = vi.fn()): Logger {
-    return {
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn,
-        error: vi.fn(),
-        fatal: vi.fn(),
-        mark: vi.fn(),
-    } as unknown as Logger;
-}
+import { UnasCsvColumnNames } from "../../src/config/unas-csv-column-names.js";
+import { stubLogger } from "../helpers/stub-logger.js";
+import type { WarehouseDto } from "../../src/types/mapping.interface.js";
+import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
+import type { ProductUpdate, RunCounters } from "../../src/types/connection.interface.js";
+import { createRunCounters } from "../../src/types/connection.interface.js";
+import { UnasProductDbService } from "../../src/services/unas-product-db.service.js";
 
 const warehouses: WarehouseDto[] = [
     { id: 1, name: "Fő raktár", publicName: "Fő raktár" },
@@ -84,7 +72,7 @@ describe("UnasProductDbService", () => {
 
         it("logs and skips a non-numeric main-stock cell instead of crashing", () => {
             const warn = vi.fn();
-            const service = new UnasProductDbService(stubLogger(warn), new ConnectionIndexRepository());
+            const service = new UnasProductDbService(stubLogger({ warn }), new ConnectionIndexRepository());
             const product = service.parseProductRow({ Cikkszám: "A1", Raktárkészlet: "abc" }, warehouses);
             expect(product?.stocks.has(1)).toBe(false);
             expect(warn).toHaveBeenCalled();
@@ -167,7 +155,7 @@ describe("UnasProductDbService", () => {
             index.add("D1", new Map([[1, 2]]));
             const withSzeged: WarehouseDto[] = [...warehouses, { id: 4, name: "Szeged", publicName: "Szeged" }];
             const warn = vi.fn();
-            const service = new UnasProductDbService(stubLogger(warn), index);
+            const service = new UnasProductDbService(stubLogger({ warn }), index);
             const counters = createRunCounters();
             const updates: ProductUpdate[] = [];
 

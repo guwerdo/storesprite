@@ -14,8 +14,9 @@ export default defineConfig({
             NODE_ENV: "test",
             VITEST: "true",
         },
-        // Colocated unit tests in src + the end-to-end CSV→XML scenarios under test/integration.
-        include: ["./src/**/*.test.ts", "./src/**/*.spec.ts", "./test/integration/**/*.test.ts"],
+        // Unit tests only; the end-to-end CSV→XML scenarios under test/integration run via `test:integration`.
+        include: ["./test/**/*.test.ts"],
+        exclude: ["node_modules", "dist", "temp", "./test/integration/**"],
         setupFiles: ["./test/setup.ts"],
         // Integration runs real HTTP against an in-process UNAS server and real CSV parsing.
         testTimeout: 60000,

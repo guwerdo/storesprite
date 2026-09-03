@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RuleTransformService } from "./rule-transform.service.js";
+import { RuleTransformService } from "../../src/services/rule-transform.service.js";
 
 const service = new RuleTransformService();
 

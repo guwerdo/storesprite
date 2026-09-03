@@ -1,30 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Logger } from "log4js";
 import { UnasHttpError } from "@storesprite/unas-json-client";
 import type { IUnasJsonClient, ISetProduct, ISetProductResponse } from "@storesprite/unas-json-client";
-import { createRunCounters, type RunCounters } from "../types/connection.interface.js";
-import { UnasUpdateService } from "./unas-update.service.js";
+import { createRunCounters, type RunCounters } from "../../src/types/connection.interface.js";
+import { UnasUpdateService } from "../../src/services/unas-update.service.js";
+import { stubLogger } from "../helpers/stub-logger.js";
 
 // Keep 429-retry unit tests fast: the real backoff (2s / 4s) never runs here.
-vi.mock("../utils/http-util.js", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("../utils/http-util.js")>();
+vi.mock("../../src/utils/http-util.js", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("../../src/utils/http-util.js")>();
     return { ...actual, delay: vi.fn().mockResolvedValue(undefined) };
 });
 
 type SetProductHandler = (request: { products: ISetProduct[] }) => Promise<ISetProductResponse[]>;
 type SetProductMock = ReturnType<typeof vi.fn<SetProductHandler>>;
-
-function stubLogger(): Logger {
-    return {
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        fatal: vi.fn(),
-        mark: vi.fn(),
-    } as unknown as Logger;
-}
 
 function rateLimit(): UnasHttpError {
     return new UnasHttpError("Too Many Requests", 429, "http://unas/setProduct");

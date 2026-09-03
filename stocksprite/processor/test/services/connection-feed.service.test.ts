@@ -1,21 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
-import type { Logger } from "log4js";
-import type { MappingDto } from "../types/mapping.interface.js";
-import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
-import { RuleTransformService } from "./rule-transform.service.js";
-import { ConnectionFeedService } from "./connection-feed.service.js";
-
-function stubLogger(): Logger {
-    return {
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        fatal: vi.fn(),
-        mark: vi.fn(),
-    } as unknown as Logger;
-}
+import { describe, expect, it } from "vitest";
+import type { MappingDto } from "../../src/types/mapping.interface.js";
+import { stubLogger } from "../helpers/stub-logger.js";
+import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
+import { RuleTransformService } from "../../src/services/rule-transform.service.js";
+import { ConnectionFeedService } from "../../src/services/connection-feed.service.js";
 
 function asyncRows(rows: Record<string, unknown>[]): AsyncIterable<Record<string, unknown>> {
     return (async function* () {
