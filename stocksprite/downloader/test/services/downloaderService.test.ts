@@ -6,17 +6,19 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
 import { DownloaderService } from "../../src/services/DownloaderService.js";
+import { DownloaderFactory } from "../../src/services/DownloaderFactory.js";
+import { ConverterFactory } from "../../src/services/ConverterFactory.js";
 import { AppConfig } from "../../src/config/app.config.js";
 import { IBackendApiClient } from "../../src/types/BackendApiClient.interface.js";
-import { IDownloaderFactory, IDownloader } from "../../src/types/Downloader.interface.js";
-import { IConverterFactory, IDataConverter } from "../../src/types/DataConverter.interface.js";
+import { IDownloader } from "../../src/types/Downloader.interface.js";
+import { IDataConverter } from "../../src/types/DataConverter.interface.js";
 import { DataConnectionDto } from "../../src/types/Connection.types.js";
 
 describe("DownloaderService Unit Tests", () => {
   let loggerMock: ReturnType<typeof mock<Logger>>;
   let apiClientMock: ReturnType<typeof mock<IBackendApiClient>>;
-  let downloaderFactoryMock: ReturnType<typeof mock<IDownloaderFactory>>;
-  let converterFactoryMock: ReturnType<typeof mock<IConverterFactory>>;
+  let downloaderFactory: DownloaderFactory;
+  let converterFactory: ConverterFactory;
   let downloaderMock: ReturnType<typeof mock<IDownloader>>;
   let converterMock: ReturnType<typeof mock<IDataConverter>>;
   let config: AppConfig;
@@ -26,13 +28,13 @@ describe("DownloaderService Unit Tests", () => {
   beforeEach(() => {
     loggerMock = mock<Logger>();
     apiClientMock = mock<IBackendApiClient>();
-    downloaderFactoryMock = mock<IDownloaderFactory>();
-    converterFactoryMock = mock<IConverterFactory>();
     downloaderMock = mock<IDownloader>();
     converterMock = mock<IDataConverter>();
 
-    downloaderFactoryMock.getDownloader.mockReturnValue(downloaderMock);
-    converterFactoryMock.getConverter.mockReturnValue(converterMock);
+    // Real factories: HTTP+SFTP route to downloaderMock, CSV+XML to converterMock.
+    // Connections with an unsupported channel/format now throw for real.
+    downloaderFactory = new DownloaderFactory(downloaderMock, downloaderMock);
+    converterFactory = new ConverterFactory(converterMock, converterMock);
 
     config = {
       userId: "user_mock",
@@ -41,13 +43,7 @@ describe("DownloaderService Unit Tests", () => {
       outputDir: testDir,
     };
 
-    service = new DownloaderService(
-      config,
-      loggerMock,
-      apiClientMock,
-      downloaderFactoryMock,
-      converterFactoryMock
-    );
+    service = new DownloaderService(config, loggerMock, apiClientMock, downloaderFactory, converterFactory);
 
     fs.mkdirSync(testDir, { recursive: true });
   });
@@ -277,6 +273,112 @@ describe("DownloaderService Unit Tests", () => {
           ["SKU;001", "Drill", "50"],
           ["SKU;002", "Hammer", "20"],
         ],
+      })
+    );
+  });
+
+  it("should record an error and continue when a connection uses an unsupported channel", async () => {
+    const goodConnection: DataConnectionDto = {
+      id: "good_1",
+      name: "Good Feed",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "HTTP", url: "https://example.com/good.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const ftpConnection = {
+      id: "ftp_1",
+      name: "FTP Feed",
+      channel: "FTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "FTP" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as unknown as DataConnectionDto;
+
+    apiClientMock.getUserConnections.mockResolvedValue([goodConnection, ftpConnection]);
+    downloaderMock.download.mockResolvedValue({
+      destinationPath: path.join(testDir, "good_1.raw.csv"),
+      isUnchanged: false,
+      byteCount: 10,
+    });
+    converterMock.convert.mockResolvedValue({
+      outputPath: path.join(testDir, "good_1.csv"),
+      rowCount: 1,
+      byteCount: 4,
+    });
+
+    const summary = await service.run();
+
+    expect(summary.successCount).toBe(1);
+    expect(summary.errorCount).toBe(1);
+    const ftpResult = summary.results.find((r) => r.connectionId === "ftp_1");
+    expect(ftpResult?.status).toBe("ERROR");
+    expect(ftpResult?.error).toContain("Unsupported download channel: 'FTP'");
+    // The earlier good connection was still processed, so the loop continued.
+    expect(summary.results.find((r) => r.connectionId === "good_1")?.status).toBe("OK");
+  });
+
+  it("should record an error when a connection uses an unsupported data format", async () => {
+    const jsonConnection = {
+      id: "json_1",
+      name: "JSON Feed",
+      channel: "HTTP",
+      dataFormat: "JSON",
+      isActive: true,
+      config: { channel: "HTTP", url: "https://example.com/f.json" },
+      dataFormatConfig: { format: "JSON" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as unknown as DataConnectionDto;
+
+    apiClientMock.getUserConnections.mockResolvedValue([jsonConnection]);
+    downloaderMock.download.mockResolvedValue({
+      destinationPath: path.join(testDir, "json_1.raw.json"),
+      isUnchanged: false,
+      byteCount: 9,
+    });
+
+    const summary = await service.run();
+
+    expect(summary.successCount).toBe(0);
+    expect(summary.errorCount).toBe(1);
+    expect(summary.results[0].status).toBe("ERROR");
+    expect(summary.results[0].error).toContain("Unsupported data format: 'JSON'");
+  });
+
+  it("should report a test failure when the connection channel is unsupported", async () => {
+    config.testConnectionId = "ftp_test";
+
+    const ftpConnection = {
+      id: "ftp_test",
+      name: "FTP Feed",
+      channel: "FTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "FTP" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as unknown as DataConnectionDto;
+
+    apiClientMock.getConnectionById.mockResolvedValue(ftpConnection);
+
+    const summary = await service.run();
+
+    expect(summary.successCount).toBe(0);
+    expect(summary.errorCount).toBe(1);
+    expect(apiClientMock.reportTestResult).toHaveBeenCalledWith(
+      "ftp_test",
+      expect.objectContaining({
+        progress: "finish",
+        success: false,
+        errorMessage: expect.stringContaining("Unsupported download channel: 'FTP'"),
       })
     );
   });
