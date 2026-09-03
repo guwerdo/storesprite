@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import { BackendApiClient } from "../../src/services/BackendApiClient.js";
+import { BackendApiClient } from "../../src/services/backend-api-client.js";
 import { AppConfig } from "../../src/config/app.config.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 vi.mock("axios");
 

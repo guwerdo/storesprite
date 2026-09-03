@@ -1,4 +1,4 @@
-import { DataConnectionDto, ConnectionTestResult } from "./Connection.types.js";
+import { DataConnectionDto, ConnectionTestResult } from "./connection.types.js";
 
 export interface IBackendApiClient {
   getUserConnections(userId: string): Promise<DataConnectionDto[]>;

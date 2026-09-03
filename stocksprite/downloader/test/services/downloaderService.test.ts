@@ -5,14 +5,14 @@ import fs from "node:fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import { DownloaderService } from "../../src/services/DownloaderService.js";
-import { DownloaderFactory } from "../../src/services/DownloaderFactory.js";
-import { ConverterFactory } from "../../src/services/ConverterFactory.js";
+import { DownloaderService } from "../../src/services/downloader-service.js";
+import { DownloaderFactory } from "../../src/services/downloader-factory.js";
+import { ConverterFactory } from "../../src/services/converter-factory.js";
 import { AppConfig } from "../../src/config/app.config.js";
-import { IBackendApiClient } from "../../src/types/BackendApiClient.interface.js";
-import { IDownloader } from "../../src/types/Downloader.interface.js";
-import { IDataConverter } from "../../src/types/DataConverter.interface.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { IBackendApiClient } from "../../src/types/backend-api-client.interface.js";
+import { IDownloader } from "../../src/types/downloader.interface.js";
+import { IDataConverter } from "../../src/types/data-converter.interface.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 describe("DownloaderService Unit Tests", () => {
   let loggerMock: ReturnType<typeof mock<Logger>>;

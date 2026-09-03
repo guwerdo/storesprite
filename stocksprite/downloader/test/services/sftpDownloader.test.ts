@@ -6,8 +6,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
 import SftpClient from "ssh2-sftp-client";
-import { SftpDownloader } from "../../src/services/SftpDownloader.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { SftpDownloader } from "../../src/services/sftp-downloader.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 vi.mock("ssh2-sftp-client");
 

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DataConnectionFormat } from "../types/Connection.types.js";
+import { DataConnectionFormat } from "../types/connection.types.js";
 
 export class FileUtil {
   public static ensureDirExists(dirPath: string): void {

@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { describe, it, expect, vi } from "vitest";
-import type { IDownloader } from "../../src/types/Downloader.interface.js";
-import { DownloaderFactory } from "../../src/services/DownloaderFactory.js";
+import type { IDownloader } from "../../src/types/downloader.interface.js";
+import { DownloaderFactory } from "../../src/services/downloader-factory.js";
 
 describe("DownloaderFactory", () => {
   const httpDownloader = { download: vi.fn() } as unknown as IDownloader;

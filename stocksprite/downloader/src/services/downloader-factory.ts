@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../di/types.js";
-import { IDownloader, IDownloaderFactory } from "../types/Downloader.interface.js";
+import { IDownloader, IDownloaderFactory } from "../types/downloader.interface.js";
 
 @injectable()
 export class DownloaderFactory implements IDownloaderFactory {

@@ -3,8 +3,8 @@ import axios from "axios";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
 import { AppConfig } from "../config/app.config.js";
-import { IBackendApiClient } from "../types/BackendApiClient.interface.js";
-import { DataConnectionDto, ConnectionTestResult } from "../types/Connection.types.js";
+import { IBackendApiClient } from "../types/backend-api-client.interface.js";
+import { DataConnectionDto, ConnectionTestResult } from "../types/connection.types.js";
 import { ErrorUtil } from "../utils/error-util.js";
 
 @injectable()

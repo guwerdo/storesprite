@@ -6,8 +6,8 @@ import iconv from "iconv-lite";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import { XmlConverter } from "../../src/services/XmlConverter.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { XmlConverter } from "../../src/services/xml-converter.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 describe("XmlConverter Unit Tests", () => {
   let loggerMock: ReturnType<typeof mock<Logger>>;

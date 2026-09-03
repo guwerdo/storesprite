@@ -4,15 +4,15 @@ import { injectable, inject } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
 import { AppConfig } from "../config/app.config.js";
-import { IBackendApiClient } from "../types/BackendApiClient.interface.js";
-import { IDownloaderFactory } from "../types/Downloader.interface.js";
-import { IConverterFactory } from "../types/DataConverter.interface.js";
+import { IBackendApiClient } from "../types/backend-api-client.interface.js";
+import { IDownloaderFactory } from "../types/downloader.interface.js";
+import { IConverterFactory } from "../types/data-converter.interface.js";
 import {
   IDownloaderService,
   DownloaderExecutionSummary,
   ConnectionProcessResult,
-} from "../types/DownloaderService.interface.js";
-import { DataConnectionChannel, DataConnectionFormat } from "../types/Connection.types.js";
+} from "../types/downloader-service.interface.js";
+import { DataConnectionChannel, DataConnectionFormat } from "../types/connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
 import { ErrorUtil } from "../utils/error-util.js";
 import { CsvUtil } from "../utils/csv-util.js";

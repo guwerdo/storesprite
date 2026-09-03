@@ -4,12 +4,12 @@ import { injectable, inject } from "inversify";
 import SftpClient from "ssh2-sftp-client";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
-import { IDownloader, DownloadResult } from "../types/Downloader.interface.js";
+import { IDownloader, DownloadResult } from "../types/downloader.interface.js";
 import {
   DataConnectionDto,
   SftpConnectionConfig,
   SftpCredentials,
-} from "../types/Connection.types.js";
+} from "../types/connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
 import { StreamUtil } from "../utils/stream-util.js";
 import { ErrorUtil } from "../utils/error-util.js";

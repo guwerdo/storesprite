@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import type { Logger } from "log4js";
 import { createContainer, TYPES } from "./di/index.js";
-import { IDownloaderService } from "./types/DownloaderService.interface.js";
+import { IDownloaderService } from "./types/downloader-service.interface.js";
 import { ErrorUtil } from "./utils/error-util.js";
 
 async function main(): Promise<void> {

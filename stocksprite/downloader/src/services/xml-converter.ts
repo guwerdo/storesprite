@@ -4,8 +4,8 @@ import { injectable, inject } from "inversify";
 import sax from "sax";
 import type { Logger } from "log4js";
 import { TYPES } from "../di/types.js";
-import { IDataConverter, ConvertResult } from "../types/DataConverter.interface.js";
-import { DataConnectionDto, XmlDataFormatConfig } from "../types/Connection.types.js";
+import { IDataConverter, ConvertResult } from "../types/data-converter.interface.js";
+import { DataConnectionDto, XmlDataFormatConfig } from "../types/connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
 import { EncodingUtil } from "../utils/encoding-util.js";
 

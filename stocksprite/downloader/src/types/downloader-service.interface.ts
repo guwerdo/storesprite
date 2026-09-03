@@ -1,4 +1,4 @@
-import { DataConnectionChannel, DataConnectionFormat } from "./Connection.types.js";
+import { DataConnectionChannel, DataConnectionFormat } from "./connection.types.js";
 
 export interface ConnectionProcessResult {
   connectionId: string;

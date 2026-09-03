@@ -7,8 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import axios from "axios";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import { HttpDownloader } from "../../src/services/HttpDownloader.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { HttpDownloader } from "../../src/services/http-downloader.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 vi.mock("axios");
 

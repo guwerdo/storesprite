@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { describe, it, expect, vi } from "vitest";
-import type { IDataConverter } from "../../src/types/DataConverter.interface.js";
-import { ConverterFactory } from "../../src/services/ConverterFactory.js";
+import type { IDataConverter } from "../../src/types/data-converter.interface.js";
+import { ConverterFactory } from "../../src/services/converter-factory.js";
 
 describe("ConverterFactory", () => {
   const csvConverter = { convert: vi.fn() } as unknown as IDataConverter;

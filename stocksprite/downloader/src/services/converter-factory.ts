@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../di/types.js";
-import { IDataConverter, IConverterFactory } from "../types/DataConverter.interface.js";
+import { IDataConverter, IConverterFactory } from "../types/data-converter.interface.js";
 
 @injectable()
 export class ConverterFactory implements IConverterFactory {

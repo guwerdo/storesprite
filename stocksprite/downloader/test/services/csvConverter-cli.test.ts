@@ -5,9 +5,9 @@ import os from "node:os";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { Logger } from "log4js";
-import { CsvConverter } from "../../src/services/CsvConverter.js";
+import { CsvConverter } from "../../src/services/csv-converter.js";
 import { CliUtil } from "../../src/utils/cli-util.js";
-import { DataConnectionDto } from "../../src/types/Connection.types.js";
+import { DataConnectionDto } from "../../src/types/connection.types.js";
 
 // Mock the CLI seam so both CsvConverter branches are pinned deterministically,
 // independent of whether a real `csvformat` binary is installed on the host.

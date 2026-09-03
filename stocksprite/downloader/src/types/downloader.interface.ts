@@ -1,4 +1,4 @@
-import { DataConnectionDto } from "./Connection.types.js";
+import { DataConnectionDto } from "./connection.types.js";
 
 export interface DownloadResult {
   destinationPath: string;
