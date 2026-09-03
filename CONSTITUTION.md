@@ -29,7 +29,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
 3. **Service Layer Isolation**:
    * `storesprite-fe` is strictly a presentation layer consuming injected API & Socket.IO clients.
    * `storesprite-be` acts as the orchestrator and API gateway with container-registered services.
-   * `stocksprite` is an ephemeral worker running containerized BullMQ queues and injected data mappers/clients.
+   * `stocksprite` is an ephemeral worker: one combined container (built from `stocksprite/Dockerfile`) runs the `downloader` CLI (fetch + stream-convert supplier feeds) followed by the `processor` CLI (mapping-rules join + batched UNAS `setProduct` updates), then exits.
 
 4. **Repository Pattern & Database Access Architecture**:
    * **Mandatory Repository Pattern**: All database interactions across backend services MUST be encapsulated within dedicated repository classes. Handlers, controllers, and domain services must never execute direct SQL queries or invoke raw ORM EntityManager methods directly.
@@ -52,7 +52,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
      * When creating or updating database tables/entities, ALWAYS use MikroORM CLI migration tools (`npm run migration:create` / `npm run migration:up`) to generate and apply deterministic migration scripts. Never modify live database schemas manually.
 
 5. **Containerized Runtime Environment Invariant**:
-   * **Host vs Container Boundary**: Source code is authored on the host filesystem (bind-mounted), but all compilers, linters, Node.js scripts, migration tools, and test runners MUST execute inside their respective Docker containers (`storesprite-fe`, `storesprite-be`, `stocksprite-app`).
+   * **Host vs Container Boundary**: Source code is authored on the host filesystem (bind-mounted), but all compilers, linters, Node.js scripts, migration tools, and test runners MUST execute inside their respective Docker containers (`storesprite-fe`, `storesprite-be`, `stocksprite-dev`).
    * **No Host Runtime Dependencies**: Never rely on or execute commands against host-installed Node/npm/PostgreSQL runtimes. Always execute verification steps via `docker exec -it <container> <cmd>`.
 
 6. **Frontend Internationalization (i18n) & Localization Invariant**:
@@ -75,7 +75,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
 
 2. **Backend API & Container Integration Test Mandates**:
    * **Backend API Integration Tests (`npm run test:integration`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an integration test in `tests/integration/`. Integration tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
-   * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/test-integration/` testing the built Docker container against mock backend & datasource servers.
+   * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/downloader/tests/integration/` testing the built Docker container against mock backend & datasource servers.
 
 3. **Comprehensive Scenario Coverage Mandate (Happy Path, Edge Cases, Error Cases)**:
    * Test suites for both unit tests and integration tests MUST NOT test only happy path scenarios.
@@ -88,7 +88,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
    * Write modular, loosely coupled code that is easy to isolate, test, and mock in unit tests without complex setups.
    * **Framework Breakdown**:
      * `storesprite-fe` & `storesprite-be`: Powered by **Vitest**. Use `vitest-mock-extended` (or `vi.fn()`) for interface mocking.
-     * `stocksprite`: Powered by **Jest**. Uses `jest-mock-extended` for interface mocking.
+     * `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. Uses `vitest-mock-extended` for interface mocking.
    * **File Organization & Naming**: Test files must reside alongside the source file or within an adjacent test folder using the `.test.ts` or `.spec.ts` suffix (e.g., `unas-updater.ts` -> `unas-updater.test.ts`).
    * **Test Structuring (AAA Pattern)**: Structure every test block explicitly into **Arrange**, **Act**, and **Assert** phases.
    * **Individual Test Execution**: Ensure individual test suites can be isolated using runner flags (`npm test -- -t "test name"` or `it.only(...)`).

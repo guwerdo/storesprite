@@ -23,19 +23,27 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
 
 ## 2. Development via VS Code Devcontainers
 
-A dedicated **`.devcontainer/`** and **`Dockerfile.dev`** setup is provided to develop and debug the application inside a Linux container environment with `csvkit` and dependencies pre-installed.
+A dedicated **`.devcontainer/`**, **`Dockerfile.dev`**, and a **`stocksprite-dev`**
+compose service are provided to develop both worker subprojects (`downloader` +
+`processor`) inside a single Linux container with `csvkit`, the Docker CLI/Compose
+plugin, and all dependencies pre-installed. Source folders are bind-mounted from the
+host; `node_modules`/`dist` live only inside the container.
 
 1. Open VS Code in `stocksprite/` (or open Command Palette: `F1` / `Ctrl+Shift+P`).
-2. Select **"Dev Containers: Reopen in Container"**.
-3. Once the container is running, open the integrated terminal and start the downloader:
+2. Select **"Dev Containers: Reopen in Container"** — VS Code attaches to the
+   `stocksprite-dev` compose service at `/workspace/stocksprite`.
+3. The container stays alive with no app running; open an integrated terminal (or
+   `docker exec -it stocksprite-dev ...`) and run commands per subproject, e.g.:
    ```bash
-   npm run start:dev
+   cd /workspace/stocksprite/downloader && npm run build
+   cd /workspace/stocksprite/processor && npm run test
    ```
 4. The devcontainer is pre-configured with the development environment variables:
    - `USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"`
-   - `INTERNAL_TOKEN="mock_worker_token"`
+   - `INTERNAL_TOKEN="mock_internal_token"`
    - `BACKEND_URL="http://storesprite-be:3000"`
    - `OUTPUT_DIR="/workspace/stocksprite/downloader/temp"`
+   - `MOCK_HOST="host.docker.internal"` (for the container integration tests)
    - Network attached to `storesprite-shared-net` to reach `storesprite-be`.
 
 ---
@@ -75,10 +83,10 @@ npm test
 ```
 
 ### Container Integration Test Suite (`npm run test:integration`)
-The integration test suite spins up a real test environment on the host via `test-integration/docker-compose-test-integration.yaml`:
+The integration test suite spins up a real test environment on the host via `downloader/tests/integration/docker-compose-test-integration.yaml`:
 * **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/internal/stocksprite/users/:userId/connections`).
 * **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
-* **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the built production multi-stage image against the test network.
+* **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the downloader-only runtime stage (`--target downloader-runtime` of the production multi-stage image) against the test network.
 
 #### Scenarios Covered:
 1. **Happy Path (9 Protocols/Auth Combinations)**:
@@ -99,11 +107,16 @@ The integration test suite spins up a real test environment on the host via `tes
    - Asserts downloader terminates immediately with exit code 1 when backend returns 404.
 
 #### Running Integration Tests:
-Run the integration test from your host machine (where Docker is running):
+Run the integration test inside the `stocksprite-dev` container (or from your host
+machine where Docker is running — it just needs the Docker CLI + a reachable daemon):
 ```bash
-cd stocksprite/downloader
-npm run test:integration
+docker exec -it stocksprite-dev sh -c "cd /workspace/stocksprite/downloader && npm run test:integration"
 ```
+The suite needs the Docker CLI/daemon (it builds the `downloader-runtime` target and
+starts the mock containers via `docker compose`). The mock services publish their HTTP
+ports on the Docker host; when the suite runs from inside a container, `MOCK_HOST`
+must point at the host (the `stocksprite-dev` image sets it to `host.docker.internal`;
+defaults to `127.0.0.1` when unset, e.g. running directly on the host).
 
 ---
 

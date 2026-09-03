@@ -1,9 +1,14 @@
 services:
   mock-backend:
-    image: wiremock/wiremock:latest
+    # Mappings are baked into the image (./wiremock/Dockerfile) rather than bind-
+    # mounted: this harness is run from inside the stocksprite-dev container, and
+    # bind sources are resolved by the HOST engine in its own namespace — a
+    # /workspace/... source would mount an empty dir there. Baked files work from
+    # host or container alike (the build context is streamed client-side).
+    build:
+      context: ./wiremock
+      dockerfile: Dockerfile
     container_name: mock-backend
-    volumes:
-      - ./wiremock/mappings:/home/wiremock/mappings:ro
     ports:
       - "8089:8080"
     healthcheck:

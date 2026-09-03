@@ -21,6 +21,24 @@ COPY stocksprite/downloader/src ./src
 RUN npm run build
 RUN npm prune --omit=dev
 
+# ---- Stage 2b: downloader-only runtime (built via `--target downloader-runtime`) ----
+# Used by the downloader container integration tests, which run the downloader in
+# isolation against mock backend & supplier services.
+FROM node:24-slim AS downloader-runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip csvkit bash tzdata openssh-client openssl \
+    && rm -rf /var/lib/apt/lists/*
+ENV TZ=Europe/Budapest
+RUN ln -fs /usr/share/zoneinfo/Europe/Budapest /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+WORKDIR /app
+COPY --from=downloader /app/package.json ./package.json
+COPY --from=downloader /app/node_modules ./node_modules
+COPY --from=downloader /app/dist ./dist
+RUN mkdir -p /app/temp
+ENV NODE_ENV=production
+ENV OUTPUT_DIR=/app/temp
+CMD ["node", "dist/index.js"]
+
 # ---- Stage 3: build the processor ----
 FROM node:24-slim AS processor
 WORKDIR /workspace

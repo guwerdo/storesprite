@@ -26,16 +26,13 @@ StoreSprite uses a decoupled, multi-tenant architecture divided into three core 
    * **Real-Time Layer**: Direct integration between Fastify's HTTP server and Socket.IO to manage isolated tenant rooms (`tenant_${userId}`).
    * **Testing Advantage**: Built using the App Factory pattern (`buildApp()`), enabling fast, in-memory integration testing using `fastify.inject()` paired with mocked Inversify service bindings.
 
-3. **On-Demand Worker Stack (`stocksprite`)**:
-   * **Core Stack**: Node.js + TypeScript CLI + BullMQ + Redis + Docker.
-   * **Execution Model**: Fully ephemeral. Triggered on-demand (locally or as an AWS container task) and shuts down immediately upon job completion.
-   * **Execution Flow**:
-     1. Booted with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN` environment variables.
-     2. `csv-provider`: Downloads the raw supplier inventory feed.
-     3. `stocksprite-app`: Requests tenant-specific UNAS API credentials from `storesprite-be` via `POST /api/internal/stocksprite/config`.
-     4. BullMQ queues orchestrate inventory mapping, rate limits, and UNAS updates while posting progress events to `POST /api/internal/stocksprite/progress`.
-     5. `fluentbit`: Captures application log buffers and streams them directly to the central OpenSearch instance.
-     6. Process finishes and container exits (`exit code 0`).
+3. **On-Demand Worker (`stocksprite`)**:
+   * **Core Stack**: Node.js + TypeScript CLI, packaged as ONE combined container (built from `stocksprite/Dockerfile`). During development the two subprojects run inside the `stocksprite-dev` container (see `docker-compose.yaml`).
+   * **Execution Model**: Fully ephemeral. Spawned on demand by `storesprite-be` per job with the run's env (`USER_ID` / `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`) and shuts down immediately when the run finishes.
+   * **Execution Flow** (two CLI stages run in sequence inside the same container):
+     1. **`downloader`** (`stocksprite/downloader`): Fetches the tenant's active supplier connections from `storesprite-be` (`GET /api/internal/stocksprite/users/:userId/connections`, guarded by `x-internal-token`), stream-downloads each feed over HTTP/SFTP (no-auth, Bearer, API-key, Basic, SSH-key, password), and ultra-low-memory converts the raw feeds to standardized `;`-delimited CSV — `csvkit` for CSV delimiters/encodings, a streaming SAX parser for XML — writing `temp/<connectionId>.csv`.
+     2. **`processor`** (`stocksprite/processor`): Runs one mapping job. Fetches + Ajv-validates the run config (`GET /api/internal/stocksprite/mappings/:mappingId/run-config`), streams the supplier CSV and the UNAS product database, stream-joins/diffs them per `@storesprite/mapping-rules`, sends batched `setProduct` XML to the tenant's UNAS webshop via `@storesprite/unas-json-client` (respecting rate limits), and reports progress (`POST /api/internal/stocksprite/mappings/:mappingId/progress`).
+     3. Container exits with the run's exit code (`0` or `1`).
 
 ---
 
@@ -62,20 +59,23 @@ StoreSprite uses a Docker-first local development setup. Source code is edited o
                                         |  (Bind Mounts)
                                         v
 +-------------------------------------------------------------------------------+
-| DOCKER COMPOSE NETWORK (storesprite-shared-net)                               |
-|                                                                               |
-|  +------------------------+  +------------------------+  +-----------------+  |
-|  |     storesprite-fe     |  |     storesprite-be     |  | stocksprite-app |  |
-|  | - React / Vite dev     |  | - Fastify API          |  | - BullMQ Worker |  |
-|  | - Port 5173            |  | - Port 3000            |  | - On-demand     |  |
-|  +-----------+------------+  +-----------+------------+  +--------+--------+  |
-|              |                           |                        |           |
-|              +-------------------+-------+                        |           |
-|                                  v                                v           |
-|                     +-------------------------+      +---------------------+  |
-|                     |        postgres         |      |     redis-stack     |  |
-|                     | - Port 5432             |      | - Port 6379 / 8001  |  |
-|                     +-------------------------+      +---------------------+  |
+| DOCKER COMPOSE (docker-compose.yaml, network: storesprite-shared-net)         |
+|  +----------------------+  +---------------------+  +---------------------+   |
+|  |    storesprite-fe    |  |    storesprite-be    |  |   stocksprite-dev   |   |
+|  | React / Vite dev     |  | Fastify API          |  | worker dev shell    |   |
+|  | Port 5173            |  | Port 3000            |  | (docker exec, no    |   |
+|  |                      |  |                      |  |  app started)       |   |
+|  +----------+-----------+  +----------+----------+  +----------+----------+   |
+|             |                        |                          |              |
+|             +------------+-----------+------------+-------------+              |
+|                          |                         |                          |
+|              +--------------------+      +-----------------+                   |
+|              |      postgres      |      |     pgadmin     |                   |
+|              | Port 5432          |      | Port 5050       |                   |
+|              +--------------------+      +-----------------+                   |
 +-------------------------------------------------------------------------------+
+  At runtime `storesprite-be` spawns the on-demand worker as an ephemeral
+  container built from stocksprite/Dockerfile (runs downloader → processor, then
+  exits) — it is NOT a compose service.
 ```
 

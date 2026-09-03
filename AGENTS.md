@@ -28,19 +28,26 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
    * **Security Boundaries & Endpoints**:
      * `/api/webhooks/clerk`: Verifies raw body Svix cryptographic signatures before syncing user records to PostgreSQL.
      * `/api/client/*`: Protected via `@clerk/fastify` and `getAuth()` for client UI operations.
-     * `/api/internal/stocksprite/*`: Protected via a `preHandler` hook enforcing the `x-internal-token` header. Allows workers to fetch `/api/internal/stocksprite/config` and report `/api/internal/stocksprite/progress`.
+     * `/api/internal/stocksprite/*`: Protected via a `preHandler` hook enforcing the `x-internal-token` header. Guards the worker↔backend contract: workers fetch tenant connections (`/users/:userId/connections`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
    * **Real-Time Gateway**: Uses Socket.IO to manage isolated tenant broadcast rooms (`tenant_${userId}`).
-   * **Worker Orchestrator**: Spawns ephemeral `stocksprite` container instances on demand, injecting `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
+   * **Worker Orchestrator**: Spawns an ephemeral `stocksprite` container (downloader → processor) per job, injecting `USER_ID` / `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, and `BACKEND_URL`.
 
-3. **On-Demand Worker Engine (`stocksprite`)**:
-   * Ephemeral Docker stack running Node.js, TypeScript CLI, BullMQ, and Redis.
-   * **Execution Lifecycle**:
-     1. Booted on-demand with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
-     2. `csv-provider`: Downloads the raw supplier inventory feed.
-     3. `stocksprite-app`: Fetches tenant webshop configuration from `/api/internal/stocksprite/config`.
-     4. Executes BullMQ queues to handle product matching, UNAS rate limits, and stock/price updates, emitting status to `/api/internal/stocksprite/progress`.
-     5. `fluentbit`: Collects log buffers and streams structured JSON logs to OpenSearch.
-     6. Process completes and container auto-exits (exit code 0).
+3. **On-Demand Worker (`stocksprite`)**:
+   * Ephemeral single container (built from `stocksprite/Dockerfile`) running two
+     TypeScript CLI stages in sequence: the **`downloader`** then the **`processor`**.
+   * **Execution Lifecycle** (booted on-demand by `storesprite-be` with `USER_ID` /
+     `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`):
+     1. `downloader` (`stocksprite/downloader`): Fetches the tenant's active supplier
+        connections from `storesprite-be` (`GET /api/internal/stocksprite/users/:userId/connections`,
+        guarded by `x-internal-token`), stream-downloads each feed (HTTP/SFTP, all auth
+        schemes), and converts it in-place to standardized `;`-delimited CSV — `csvkit`
+        for CSV delimiters/encodings, a streaming SAX parser for XML — under `temp/`.
+     2. `processor` (`stocksprite/processor`): One mapping run — fetches + Ajv-validates the
+        run config (`GET /mappings/:mappingId/run-config`), stream-joins the supplier CSV with
+        the UNAS product DB per `@storesprite/mapping-rules`, batch-sends `setProduct` to the
+        tenant's UNAS webshop via `@storesprite/unas-json-client`, reporting progress to
+        `POST /mappings/:mappingId/progress`.
+     3. Process completes and the container auto-exits (exit code 0 or 1).
 
 ---
 
@@ -59,8 +66,10 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
 | :--- | :--- | :--- | :--- |
 | **`storesprite-fe/`** | `storesprite-fe` | `/workspace` | Frontend React UI & Vite dev server |
 | **`storesprite-be/`** | `storesprite-be` | `/workspace/storesprite-be` | Fastify API, MikroORM & PostgreSQL connections |
-| **`stocksprite/downloader/`** | `storesprite-be` (or on-demand `storesprite-downloader`) | `/workspace/stocksprite/downloader` | Downloader CLI, SFTP/HTTP fetching & stream converters |
-| **`packages/unas-json-client/`** | `storesprite-be` (or `unas-json-client-dev`) | `/workspace/packages/unas-json-client` | UNAS JSON Client SDK builds, tests & validation |
+| **`stocksprite/` (worker: downloader + processor)** | `stocksprite-dev` | `/workspace/stocksprite` | Dev container for the on-demand stock-sync worker (both subprojects, see `docker-compose.yaml` → `stocksprite-dev`) |
+| **`stocksprite/downloader/`** | `stocksprite-dev` (or on-demand `storesprite-downloader`) | `/workspace/stocksprite/downloader` | Downloader CLI, SFTP/HTTP fetching & stream converters |
+| **`stocksprite/processor/`** | `stocksprite-dev` | `/workspace/stocksprite/processor` | Processor CLI, CSV reverse-join & UNAS batch update |
+| **`packages/unas-json-client/`** | `storesprite-be` (or `stocksprite-dev`) | `/workspace/packages/unas-json-client` | UNAS JSON Client SDK builds, tests & validation |
 | **Database** | `postgres` | `/` | PostgreSQL 16 server |
 
 ### Common Agent Commands (Run Inside Container)
@@ -107,14 +116,23 @@ docker exec -it storesprite-be npm --prefix /workspace/packages/unas-json-client
 docker exec -it storesprite-be npm --prefix /workspace/packages/unas-json-client run lint
 
 # ==============================================================================
-# DOWNLOADER WORKER SERVICE (stocksprite/downloader)
+# STOCKSPRITE WORKER (stocksprite/downloader & stocksprite/processor)
 # ==============================================================================
 # Run Unit Tests
-docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader test
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader test
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor test
 
 # Run Build & Lint
-docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader run build
-docker exec -it storesprite-be npm --prefix /workspace/stocksprite/downloader run lint
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader run build
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader run lint
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor run build
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor run lint
+
+# Run Downloader Container Integration Tests (builds downloader-runtime + mocks)
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader run test:integration
+
+# Run Processor Integration Tests (real CSV→UNAS XML pipeline vs in-process fake UNAS)
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor run test:integration
 ```
 
 ---
@@ -139,16 +157,16 @@ The monorepo contains three primary services:
     *   **Security Routes**:
         *   `/api/webhooks/clerk`: Svix raw buffer signature verification.
         *   `/api/client/*`: Clerk JWT protected routes for user actions.
-        *   `/api/internal/stocksprite/*`: Protected via `INTERNAL_TOKEN` `preHandler` hook. Allows workers to fetch `/api/internal/stocksprite/config` and report `/api/internal/stocksprite/progress`.
-    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`).
-*   **`stocksprite/` (On-Demand Stock Sync Worker Engine)**:
-    *   Node.js / TypeScript CLI worker stack with BullMQ & Redis, packaged in Docker.
-    *   Runs **on-demand** for a specific user/tenant:
-        1. Booted with `USER_ID`, `SYNC_ID`, and `INTERNAL_TOKEN`.
-        2. `csv-provider` downloads supplier inventory feed.
-        3. `stocksprite-app` requests tenant credentials from `/api/internal/stocksprite/config`.
-        4. BullMQ queues map inventory, handle UNAS rate limits, execute updates, and emit progress to `/api/internal/stocksprite/progress`.
-        5. `fluentbit` captures application log buffers and streams them to OpenSearch; container exits (0) upon job completion.
+        *   `/api/internal/stocksprite/*`: Protected via `INTERNAL_TOKEN` `preHandler` hook. Guards the worker↔backend contract: workers fetch tenant connections (`/users/:userId/connections`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
+    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID` / `MAPPING_ID` + `RUN_ID`, and `INTERNAL_TOKEN`).
+*   **`stocksprite/` (On-Demand Worker: downloader + processor)**:
+    *   Two TypeScript CLI subprojects packaged in ONE combined Docker container
+        (`stocksprite/Dockerfile`) that runs them in sequence per job.
+    *   Runs **on-demand** for a specific user / mapping run:
+        1. Booted by `storesprite-be` with `USER_ID` / `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`.
+        2. `downloader` fetches the tenant's active supplier connections from `storesprite-be`, stream-downloads each feed (HTTP/SFTP) and converts it to standardized CSV (`temp/<connectionId>.csv`).
+        3. `processor` fetches + validates the run config, stream-joins the supplier CSV with the UNAS product DB per mapping rules, and batch-sends `setProduct` updates to the tenant's UNAS webshop, reporting progress to `storesprite-be`.
+        4. Container exits (0/1) upon job completion.
 
 ---
 
@@ -210,7 +228,7 @@ The monorepo contains three primary services:
     *   **Testing Conventions**:
         *   *Test Frameworks & Mocking*:
             *   `storesprite-fe` & `storesprite-be`: Powered by **Vitest**, using `vitest-mock-extended` (or `vi.fn()`) for interface mocks (`import { mock } from "vitest-mock-extended"`).
-            *   `stocksprite`: Powered by **Jest**, using `jest-mock-extended` for interface mocks (`import { mock } from "jest-mock-extended"`).
+            *   `stocksprite` (`downloader` & `processor`): Powered by **Vitest**, using `vitest-mock-extended` (or `vi.fn()`) for interface mocks (`import { mock } from "vitest-mock-extended"`).
         *   *File Placement & Naming*: Place tests alongside source files using `.test.ts` or `.spec.ts` (e.g. `unas-updater.test.ts`).
         *   *AAA Pattern*: Organize test bodies clearly with **Arrange**, **Act**, and **Assert** comments.
         *   *Isolation*: Support running single test cases using `-t` or `it.only()`.
@@ -256,7 +274,7 @@ The monorepo contains three primary services:
         *   **Clerk Authentication (`clerk-mcp`)**: Use `npx -y mcp-remote https://mcp.clerk.com/mcp` to fetch official SDK snippets (`clerk_sdk_snippet`, `list_clerk_sdk_snippets`).
         *   **Material UI (`mui-mcp`)**: Use `@mui/mcp@latest` to fetch MUI component documentation via `useMuiDocs` and `fetchDocs`.
         *   **PostgreSQL (`postgres-local`)**: Use `@modelcontextprotocol/server-postgres` to inspect multi-tenant database schemas, migrations, and test raw SQL queries against PostgreSQL.
-        *   **Documentation Fetcher (`fetch-docs`)**: Use `mcp-server-fetch` to retrieve up-to-date documentation for Fastify, InversifyJS, Vitest, Jest, and BullMQ directly from official sites.
+        *   **Documentation Fetcher (`fetch-docs`)**: Use `mcp-server-fetch` to retrieve up-to-date documentation for Fastify, InversifyJS, and Vitest directly from official sites.
 11. **Frontend Internationalization (i18n) & Localization Mandate**:
     *   **No Hardcoded Text**: When adding or updating user-facing components, labels, buttons, helpers, error messages, or placeholders in `storesprite-fe`, NEVER hardcode string literals. Always use `useTranslation()` (`t('logical.path.key')`).
     *   **Synchronous Dictionary Updates**: Every logical string key added or modified MUST be registered in both `storesprite-fe/src/locales/en.ts` (English) and `storesprite-fe/src/locales/hu.ts` (Hungarian) with matching schema hierarchies.
@@ -270,7 +288,7 @@ The monorepo contains three primary services:
 | :--- | :--- | :--- |
 | **Frontend** (`storesprite-fe`) | React, Vite, TypeScript, Material-UI (MUI v6), `@clerk/clerk-react`, InversifyJS | Web app UI, tenant auth state, CSV mapping UI, on-demand job triggering & live progress monitoring via Socket.IO |
 | **Backend** (`storesprite-be`) | Fastify, TypeScript, InversifyJS, Socket.IO, `@clerk/fastify`, PostgreSQL, OpenSearch | Database access, auth validation, multi-tenant configuration, spawning on-demand `stocksprite` workers, Svix webhooks |
-| **Worker Engine** (`stocksprite`) | Node.js, TypeScript CLI, BullMQ, Redis, Docker (`csv-provider`, `stocksprite-app`, `fluentbit`) | Ephemeral containerized execution: CSV parsing, BullMQ queue processing, UNAS API updates, OpenSearch log streaming, auto-exit |
+| **Worker** (`stocksprite`) | Node.js, TypeScript CLI, Docker; `downloader` + `processor` subprojects | Ephemeral combined container (`downloader` then `processor`): stream-download/convert supplier feeds, mapping-rules join, batched UNAS `setProduct` updates, auto-exit |
 
 ---
 
@@ -292,7 +310,11 @@ docker exec -it storesprite-be npm run migration:up # Apply database migrations
 docker exec -it storesprite-fe npm test             # Vitest unit & component tests
 docker exec -it storesprite-fe npm run lint         # ESLint checks
 
-# Worker Engine (stocksprite)
-docker exec -it stocksprite-app npm test            # Unit tests
-docker exec -it stocksprite-app npm run lint        # ESLint checks
+# Worker Engine (stocksprite: downloader + processor — container is stocksprite-dev)
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader test
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor test
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader run build
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor run build
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/downloader run lint
+docker exec -it stocksprite-dev npm --prefix /workspace/stocksprite/processor run lint
 ```

@@ -4,9 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 
 const COMPOSE_FILE = path.resolve(__dirname, "docker-compose-test-integration.yaml");
-const ROOT_DIR = path.resolve(__dirname, "..");
+// /workspace inside the dev container; repo root when run from the host.
+const REPO_ROOT = path.resolve(__dirname, "../../../..");
 const TEST_INTEGRATION_DIR = __dirname;
 const TEMP_DIR = path.resolve(__dirname, "temp");
+// The mock services publish their HTTP ports on the Docker host. When this suite
+// runs from the host, that host is reached via 127.0.0.1. When it runs inside the
+// stocksprite-dev container, the host is reached via host.docker.internal
+// (baked into the image as MOCK_HOST).
+const MOCK_HOST = process.env.MOCK_HOST || "127.0.0.1";
 
 function cleanTempDir(): void {
   if (fs.existsSync(TEMP_DIR)) {
@@ -16,11 +22,20 @@ function cleanTempDir(): void {
 }
 
 function runDownloaderContainer(userId: string): { exitCode: number; stdout: string; stderr: string } {
-  const result = spawnSync(
+  const containerName = `storesprite-dl-int-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Do NOT bind-mount the temp dir into the container: this harness runs from
+  // inside the stocksprite-dev container against the HOST Docker engine, which
+  // resolves bind sources in its own namespace. A /workspace/... source would
+  // mount an empty directory there, so the downloader's output would never reach
+  // the host temp dir the assertions read. Instead run a named container, read
+  // its exit code, `docker cp` the produced files back out, then remove it.
+  const run = spawnSync(
     "docker",
     [
       "run",
-      "--rm",
+      "--name",
+      containerName,
       "--network",
       "storesprite-integration-net",
       "-e",
@@ -31,20 +46,32 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
       "BACKEND_URL=http://mock-backend:8080",
       "-e",
       "OUTPUT_DIR=/app/temp",
-      "-v",
-      `${TEMP_DIR}:/app/temp`,
       "storesprite-downloader:test-integration",
     ],
     {
       encoding: "utf-8",
-      cwd: ROOT_DIR,
+      cwd: REPO_ROOT,
     }
   );
 
+  try {
+    // Pull the downloader's output (converted CSVs + downloader.log) out of the
+    // container's filesystem into the temp dir the assertions read below.
+    spawnSync("docker", ["cp", `${containerName}:/app/temp/.`, TEMP_DIR], {
+      encoding: "utf-8",
+      cwd: REPO_ROOT,
+    });
+  } finally {
+    spawnSync("docker", ["rm", "-f", containerName], {
+      encoding: "utf-8",
+      cwd: REPO_ROOT,
+    });
+  }
+
   return {
-    exitCode: result.status ?? 1,
-    stdout: result.stdout || "",
-    stderr: result.stderr || "",
+    exitCode: run.status ?? 1,
+    stdout: run.stdout || "",
+    stderr: run.stderr || "",
   };
 }
 
@@ -52,12 +79,18 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
   beforeAll(async () => {
     cleanTempDir();
 
-    // 1. Build production image for test
-    console.log("[Integration Test] Building production storesprite-downloader image...");
-    execSync("docker build -t storesprite-downloader:test-integration .", {
-      cwd: ROOT_DIR,
-      stdio: "inherit",
-    });
+    // 1. Build the downloader-only runtime image (production Dockerfile, `--target downloader-runtime`).
+    //    DOCKER_BUILDKIT=1 ensures the target's ancestor stages are pruned (the legacy builder
+    //    would otherwise also run the unrelated `packages` stage and fail).
+    console.log("[Integration Test] Building storesprite-downloader:test-integration image...");
+    execSync(
+      "docker build --target downloader-runtime -t storesprite-downloader:test-integration -f stocksprite/Dockerfile .",
+      {
+        cwd: REPO_ROOT,
+        env: { ...process.env, DOCKER_BUILDKIT: "1", BUILDKIT_PROGRESS: "plain" },
+        stdio: "inherit",
+      }
+    );
 
     // 2. Start mock-backend and mock-datasource-server services
     console.log("[Integration Test] Starting mock-backend and mock-datasource-server services via docker-compose...");
@@ -72,8 +105,8 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
     for (let i = 0; i < 30; i++) {
       try {
         const [resBackend, resSupplier] = await Promise.all([
-          fetch("http://127.0.0.1:8089/__admin/health"),
-          fetch("http://127.0.0.1:8088/public/feed_public_comma.csv"),
+          fetch(`http://${MOCK_HOST}:8089/__admin/health`),
+          fetch(`http://${MOCK_HOST}:8088/public/feed_public_comma.csv`),
         ]);
         if (resBackend.status === 200 && resSupplier.status === 200) {
           ready = true;

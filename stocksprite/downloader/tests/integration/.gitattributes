@@ -1,0 +1,5 @@
+# This folder's contents are consumed inside Linux Docker containers (the mock
+# datasource image) and by SSH (PEM keys). CRLF line endings would break
+# `#!/bin/sh` shebangs, nginx configs, and SSH private keys, so force LF on
+# checkout regardless of the host OS / core.autocrlf setting.
+* text eol=lf

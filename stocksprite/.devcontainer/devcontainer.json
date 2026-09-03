@@ -1,14 +1,11 @@
 {
-  "name": "StoreSprite Downloader (stocksprite-downloader)",
-  "build": {
-    "dockerfile": "../Dockerfile.dev",
-    "context": ".."
-  },
-  "workspaceFolder": "/workspace/stocksprite/downloader",
-  "postCreateCommand": "npm install",
-  "runArgs": [
-    "--network=storesprite-shared-net"
+  "name": "StoreSprite Worker (stocksprite-dev)",
+  "dockerComposeFile": [
+    "../../docker-compose.yaml"
   ],
+  "service": "stocksprite-dev",
+  "workspaceFolder": "/workspace/stocksprite",
+  "postCreateCommand": "cd /workspace/stocksprite/downloader && npm install && cd /workspace/stocksprite/processor && npm install",
   "customizations": {
     "vscode": {
       "extensions": [

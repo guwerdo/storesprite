@@ -49,6 +49,34 @@ services:
     networks:
       - storesprite-net
 
+  stocksprite-dev:
+    build:
+      context: .
+      dockerfile: ./stocksprite/Dockerfile.dev
+    container_name: stocksprite-dev
+    restart: always
+    volumes:
+      - ./stocksprite:/workspace/stocksprite
+      - ./packages:/workspace/packages
+      # Expose the repo-root .dockerignore so docker builds whose context is
+      # /workspace (e.g. the downloader integration test) exclude node_modules/dist.
+      - ./.dockerignore:/workspace/.dockerignore:ro
+      # node_modules + dist stay inside the container (anonymous volumes),
+      # never written back to the host bind mount.
+      - /workspace/stocksprite/downloader/node_modules
+      - /workspace/stocksprite/downloader/dist
+      - /workspace/stocksprite/processor/node_modules
+      - /workspace/stocksprite/processor/dist
+      - /workspace/packages/app-config/node_modules
+      - /workspace/packages/app-config/dist
+      - /workspace/packages/mapping-rules/node_modules
+      - /workspace/packages/mapping-rules/dist
+      - /workspace/packages/unas-json-client/node_modules
+      - /workspace/packages/unas-json-client/dist
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - storesprite-net
+
   postgres:
     image: postgres:16-alpine
     container_name: postgres

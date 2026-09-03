@@ -10,7 +10,7 @@ StoreSprite operates on a multi-tenant architecture with three primary services:
 
 1. **Frontend Service (`storesprite-fe`)**: React, Vite, TypeScript & Material-UI (MUI v6) SPA for tenant authentication (`@clerk/clerk-react`), CSV column mapping configuration, shop credential management, and live sync monitoring via Socket.IO.
 2. **Backend Control Plane (`storesprite-be`)**: Permanent Node.js + Fastify backend API orchestrator using InversifyJS DI, Socket.IO, PostgreSQL, OpenSearch log aggregation, and Clerk authentication.
-3. **On-Demand Worker Engine (`stocksprite`)**: Ephemeral Docker worker container stack (`csv-provider`, `stocksprite-app`, `fluentbit`, BullMQ, Redis) that parses CSV feeds, handles UNAS API rate limits, pushes updates to UNAS, and auto-exits upon job completion.
+3. **On-Demand Worker (`stocksprite`)**: Ephemeral single Docker container (built from `stocksprite/Dockerfile`) that runs two CLI stages in sequence — the **`downloader`** (fetch the tenant's supplier feeds via HTTP/SFTP and stream-convert them to standardized CSV) then the **`processor`** (stream-join the feeds against the UNAS product DB per mapping rules and batch-send `setProduct` updates to the tenant's UNAS webshop) — then auto-exits.
 
 ---
 
