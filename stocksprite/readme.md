@@ -83,7 +83,7 @@ npm test
 ```
 
 ### Container Integration Test Suite (`npm run test:integration`)
-The integration test suite spins up a real test environment on the host via `downloader/tests/integration/docker-compose-test-integration.yaml`:
+The integration test suite spins up a real test environment on the host via `downloader/test/integration/docker-compose-test-integration.yaml`:
 * **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/internal/stocksprite/users/:userId/connections`).
 * **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
 * **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the downloader-only runtime stage (`--target downloader-runtime` of the production multi-stage image) against the test network.
