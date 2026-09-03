@@ -51,11 +51,15 @@ host; `node_modules`/`dist` live only inside the container.
 ## 3. Production Docker Usage
 
 ### Build the Production Image
-From the `stocksprite/` directory:
+From the repository root — `stocksprite/Dockerfile` `COPY`s `packages/` and
+`stocksprite/...`, so the build context must be the repo root, not `stocksprite/`:
 ```bash
-cd stocksprite
-docker build -t storesprite-downloader .
+docker build -f stocksprite/Dockerfile --target downloader-runtime -t storesprite-downloader .
 ```
+> **Note:** the Dockerfile's default target is the combined worker image (runs the
+> downloader **then** the processor). `--target downloader-runtime` builds the
+> downloader-only runtime stage — the image the run example below (and the
+> downloader integration suite) uses. Omit the flag to build the full downloader→processor image.
 
 ### Run the Container (Cloud Run Job / Local Container)
 To run the container attached to the shared Docker network (`storesprite-shared-net`), with the host `temp/` folder mapped for inspection:
@@ -89,7 +93,7 @@ The integration test suite spins up a real test environment on the host via `dow
 * **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the downloader-only runtime stage (`--target downloader-runtime` of the production multi-stage image) against the test network.
 
 #### Scenarios Covered:
-1. **Happy Path (9 Protocols/Auth Combinations)**:
+1. **Happy Path (12 Combinations: 9 Protocols/Auth + 3 Encodings)**:
    - HTTP Public (Comma Delimited CSV)
    - HTTP Pipe Delimited CSV
    - HTTP Semicolon Delimited CSV
@@ -99,6 +103,9 @@ The integration test suite spins up a real test environment on the host via `dow
    - HTTP XML Product Catalog (`<catalog><product>...`) converted via SAX to standardized CSV
    - SFTP Username & Password Auth CSV
    - SFTP SSH Private Key (`id_rsa` / `id_rsa.pub`) Auth CSV
+   - HTTP Windows-1250 (Hungarian) CSV, converted to UTF-8
+   - HTTP UTF-8 with BOM CSV, BOM stripped
+   - HTTP ISO-8859-2 (Latin-2) CSV, converted to UTF-8
 2. **Negative Test: Malformed XML**:
    - Asserts downstream XML parser catches broken XML syntax and completes with error summary.
 3. **Negative Test: Invalid Authentication**:

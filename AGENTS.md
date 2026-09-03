@@ -219,16 +219,18 @@ The monorepo contains three primary services:
     *   **API & Integration Test Mandates**:
         *   Backend (`storesprite-be`): When creating or modifying API endpoints, ALWAYS create/update an integration test in `tests/integration/` testing against the real test database.
         *   Downloader (`stocksprite/downloader`): When modifying downloader container behavior, run container integration tests against mock services via `npm run test:integration`.
+        *   Processor (`stocksprite/processor`): When modifying the processor pipeline or its UNAS client usage, run its in-process integration suite via `npm run test:integration` (real pipeline + real `@storesprite/unas-json-client` stack vs an in-process fake UNAS server — no Docker CLI/daemon needed).
     *   **Execution Commands**:
         ```bash
         npm run test             # Runs pure in-memory unit tests across all packages
         npm run test:integration         # Runs backend integration tests against PostgreSQL (storesprite-be)
         npm run test:integration # Runs container integration tests against mock servers (stocksprite/downloader)
+        npm run test:integration # Runs in-process CSV→UNAS integration tests (stocksprite/processor)
         ```
     *   **Testing Conventions**:
         *   *Test Frameworks & Mocking*:
             *   `storesprite-fe` & `storesprite-be`: Powered by **Vitest**, using `vitest-mock-extended` (or `vi.fn()`) for interface mocks (`import { mock } from "vitest-mock-extended"`).
-            *   `stocksprite` (`downloader` & `processor`): Powered by **Vitest**, using `vitest-mock-extended` (or `vi.fn()`) for interface mocks (`import { mock } from "vitest-mock-extended"`).
+            *   `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. The downloader uses `vitest-mock-extended` for interface mocks (`import { mock } from "vitest-mock-extended"`); the processor has no `vitest-mock-extended` dependency and mocks with `vi.fn()` / inline stubs.
         *   *File Placement & Naming*: Place tests alongside source files using `.test.ts` or `.spec.ts` (e.g. `unas-updater.test.ts`).
         *   *AAA Pattern*: Organize test bodies clearly with **Arrange**, **Act**, and **Assert** comments.
         *   *Isolation*: Support running single test cases using `-t` or `it.only()`.

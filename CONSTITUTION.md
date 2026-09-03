@@ -75,7 +75,8 @@ This document outlines the non-negotiable principles, architectural invariants, 
 
 2. **Backend API & Container Integration Test Mandates**:
    * **Backend API Integration Tests (`npm run test:integration`)**: When creating new API endpoints or modifying existing endpoint behavior in backend services (`storesprite-be`), ALWAYS create or update an integration test in `tests/integration/`. Integration tests MUST run against the isolated real PostgreSQL test database (`storesprite_test_db`) with automatic table resets/truncations before each test.
-   * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/downloader/tests/integration/` testing the built Docker container against mock backend & datasource servers.
+   * **Downloader Container Integration Tests (`npm run test:integration`)**: When modifying `stocksprite/downloader` container orchestration, run container integration tests in `stocksprite/downloader/test/integration/` testing the built Docker container against mock backend & datasource servers.
+   * **Processor In-Process Integration Tests (`npm run test:integration`)**: When modifying the `stocksprite/processor` pipeline or its UNAS client usage, run its in-process integration suite (`stocksprite/processor/test/integration/`) — the real pipeline plus the real `@storesprite/unas-json-client` HTTP stack against an in-process fake UNAS server; no Docker CLI/daemon required.
 
 3. **Comprehensive Scenario Coverage Mandate (Happy Path, Edge Cases, Error Cases)**:
    * Test suites for both unit tests and integration tests MUST NOT test only happy path scenarios.
@@ -88,7 +89,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
    * Write modular, loosely coupled code that is easy to isolate, test, and mock in unit tests without complex setups.
    * **Framework Breakdown**:
      * `storesprite-fe` & `storesprite-be`: Powered by **Vitest**. Use `vitest-mock-extended` (or `vi.fn()`) for interface mocking.
-     * `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. Uses `vitest-mock-extended` for interface mocking.
+     * `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. The downloader uses `vitest-mock-extended` for interface mocking; the processor has no `vitest-mock-extended` dependency and mocks with `vi.fn()` / inline stubs.
    * **File Organization & Naming**: Test files must reside alongside the source file or within an adjacent test folder using the `.test.ts` or `.spec.ts` suffix (e.g., `unas-updater.ts` -> `unas-updater.test.ts`).
    * **Test Structuring (AAA Pattern)**: Structure every test block explicitly into **Arrange**, **Act**, and **Assert** phases.
    * **Individual Test Execution**: Ensure individual test suites can be isolated using runner flags (`npm test -- -t "test name"` or `it.only(...)`).
