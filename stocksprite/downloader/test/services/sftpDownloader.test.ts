@@ -70,4 +70,149 @@ describe("SftpDownloader Unit Tests", () => {
     expect(fs.existsSync(destFile)).toBe(true);
     expect(mockSftpInstance.end).toHaveBeenCalled();
   });
+
+  it("should select the most recently modified file for LATEST_MODIFIED strategy", async () => {
+    const destFile = path.join(testDir, "latest.raw.csv");
+    const mockSftpInstance = {
+      connect: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([
+        { name: "a.csv", type: "-", size: 100, modifyTime: 1000 },
+        { name: "b.csv", type: "-", size: 100, modifyTime: 3000 },
+      ]),
+      fastGet: vi.fn().mockImplementation(async (_r: string, local: string) => {
+        fs.writeFileSync(local, "sku;stock\n1;2\n");
+      }),
+      end: vi.fn().mockResolvedValue(true),
+    };
+    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+
+    const connection: DataConnectionDto = {
+      id: "conn_sftp_mod",
+      name: "Cromwell",
+      channel: "SFTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/feeds", fileSelectionStrategy: "LATEST_MODIFIED" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await downloader.download(connection, destFile);
+    expect(mockSftpInstance.fastGet).toHaveBeenCalledWith("/feeds/b.csv", `${destFile}.tmp`);
+  });
+
+  it("should throw when the remote directory has no files", async () => {
+    const destFile = path.join(testDir, "empty.raw.csv");
+    const mockSftpInstance = {
+      connect: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([]),
+      fastGet: vi.fn(),
+      end: vi.fn().mockResolvedValue(true),
+    };
+    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+
+    const connection: DataConnectionDto = {
+      id: "conn_sftp_none",
+      name: "Cromwell",
+      channel: "SFTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/empty" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await expect(downloader.download(connection, destFile)).rejects.toThrow("No files found on SFTP server");
+  });
+
+  it("should reject an empty (0-byte) downloaded file", async () => {
+    const destFile = path.join(testDir, "zero.raw.csv");
+    const mockSftpInstance = {
+      connect: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([{ name: "empty.csv", type: "-", size: 0, modifyTime: 1 }]),
+      fastGet: vi.fn().mockImplementation(async (_r: string, local: string) => {
+        fs.writeFileSync(local, "");
+      }),
+      end: vi.fn().mockResolvedValue(true),
+    };
+    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+
+    const connection: DataConnectionDto = {
+      id: "conn_sftp_zero",
+      name: "Cromwell",
+      channel: "SFTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/feeds" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await expect(downloader.download(connection, destFile)).rejects.toThrow("received empty file (0 bytes)");
+  });
+
+  it("should use password auth when credentials.authType is PASSWORD", async () => {
+    const destFile = path.join(testDir, "pw.raw.csv");
+    const mockSftpInstance = {
+      connect: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([{ name: "f.csv", type: "-", size: 1, modifyTime: 1 }]),
+      fastGet: vi.fn().mockImplementation(async (_r: string, local: string) => {
+        fs.writeFileSync(local, "x");
+      }),
+      end: vi.fn().mockResolvedValue(true),
+    };
+    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+
+    const connection: DataConnectionDto = {
+      id: "conn_sftp_pw",
+      name: "Cromwell",
+      channel: "SFTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/feeds" },
+      credentials: { authType: "PASSWORD", username: "user", password: "secret" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await downloader.download(connection, destFile);
+    expect(mockSftpInstance.connect).toHaveBeenCalledWith(
+      expect.objectContaining({ username: "user", password: "secret" })
+    );
+  });
+
+  it("should use the private key raw string for PRIVATE_KEY auth when it is not a file path", async () => {
+    const destFile = path.join(testDir, "key.raw.csv");
+    const mockSftpInstance = {
+      connect: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([{ name: "f.csv", type: "-", size: 1, modifyTime: 1 }]),
+      fastGet: vi.fn().mockImplementation(async (_r: string, local: string) => {
+        fs.writeFileSync(local, "x");
+      }),
+      end: vi.fn().mockResolvedValue(true),
+    };
+    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+
+    const connection: DataConnectionDto = {
+      id: "conn_sftp_key",
+      name: "Cromwell",
+      channel: "SFTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "SFTP", host: "sftp.example.com", remoteDir: "/feeds" },
+      credentials: { authType: "PRIVATE_KEY", username: "user", privateKey: "-----BEGIN OPENSSH PRIVATE KEY-----" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await downloader.download(connection, destFile);
+    expect(mockSftpInstance.connect).toHaveBeenCalledWith(
+      expect.objectContaining({ privateKey: "-----BEGIN OPENSSH PRIVATE KEY-----" })
+    );
+  });
 });
