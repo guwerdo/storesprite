@@ -76,12 +76,12 @@ describe("ConnectionFeedService", () => {
             expect(result.skippedEmptySkus).toBe(0);
             const states = index.get("A100");
             expect(states).toHaveLength(2);
-            expect([...(states?.[0].desired ?? [])]).toEqual([
+            expect([...(states?.[0] ?? [])]).toEqual([
                 [1, 5],
                 [2, 0],
                 [3, 6],
             ]);
-            expect([...(states?.[1].desired ?? [])]).toEqual([
+            expect([...(states?.[1] ?? [])]).toEqual([
                 [1, 0],
                 [2, 2],
                 [3, 0],
