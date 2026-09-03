@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import { ContainerProvider } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import { I18nProvider } from '../../../i18n/I18nProvider.js';
@@ -40,35 +41,23 @@ function makeHistoryRow(overrides: Partial<IMappingHistoryDto>): IMappingHistory
 }
 
 describe('RunHistoryPanel', () => {
-  let mockMappingService: IMappingService;
+  let mockMappingService: ReturnType<typeof mock<IMappingService>>;
   let getHistoryMock: ReturnType<typeof vi.fn>;
   let socketHandlers: Record<string, ((data: unknown) => void) | undefined>;
-  let mockSocketService: ISocketService;
+  let mockSocketService: ReturnType<typeof mock<ISocketService>>;
 
   beforeEach(() => {
     socketHandlers = {};
-    mockSocketService = {
-      connect: vi.fn(),
-      disconnect: vi.fn(),
-      joinTenant: vi.fn(),
-      on: vi.fn((event: string, callback: (data: unknown) => void) => {
-        socketHandlers[event] = callback;
-      }),
-      off: vi.fn((event: string) => {
-        socketHandlers[event] = undefined;
-      }),
-    };
+    mockSocketService = mock<ISocketService>();
+    mockSocketService.on.mockImplementation((event, callback) => {
+      socketHandlers[event] = callback;
+    });
+    mockSocketService.off.mockImplementation((event) => {
+      socketHandlers[event] = undefined;
+    });
 
-    getHistoryMock = vi.fn();
-    mockMappingService = {
-      getMappings: vi.fn(),
-      createMapping: vi.fn(),
-      updateMapping: vi.fn(),
-      deleteMapping: vi.fn(),
-      getRules: vi.fn(),
-      runMapping: vi.fn(),
-      getHistory: getHistoryMock,
-    };
+    mockMappingService = mock<IMappingService>();
+    getHistoryMock = mockMappingService.getHistory;
   });
 
   const renderPanel = (mappingId = 'mapping-1') =>

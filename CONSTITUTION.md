@@ -88,8 +88,7 @@ This document outlines the non-negotiable principles, architectural invariants, 
 4. **Testability & Mockability Design**:
    * Write modular, loosely coupled code that is easy to isolate, test, and mock in unit tests without complex setups.
    * **Framework Breakdown**:
-     * `storesprite-fe` & `storesprite-be`: Powered by **Vitest**. Use `vitest-mock-extended` (or `vi.fn()`) for interface mocking.
-     * `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. The downloader uses `vitest-mock-extended` for interface mocking; the processor has no `vitest-mock-extended` dependency and mocks with `vi.fn()` / inline stubs.
+     * `storesprite-fe`, `storesprite-be`, & `stocksprite` (`downloader` & `processor`): Powered by **Vitest 4**. All use `vitest-mock-extended` (`mock<T>()`) for interface/logger mocks, and `vi.mock` automocking + `vi.mocked` for module mocks such as `axios` (`import { mock } from "vitest-mock-extended"`). `storesprite-fe` runs on **Vite 8**.
    * **File Organization & Naming**: Test files must reside alongside the source file or within an adjacent test folder using the `.test.ts` or `.spec.ts` suffix (e.g., `unas-updater.ts` -> `unas-updater.test.ts`).
    * **Test Structuring (AAA Pattern)**: Structure every test block explicitly into **Arrange**, **Act**, and **Assert** phases.
    * **Individual Test Execution**: Ensure individual test suites can be isolated using runner flags (`npm test -- -t "test name"` or `it.only(...)`).

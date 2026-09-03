@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { mock } from "vitest-mock-extended";
+import type { Logger } from "log4js";
 import { UnasHttpError } from "@storesprite/unas-json-client";
 import type { IUnasJsonClient, ISetProduct, ISetProductResponse } from "@storesprite/unas-json-client";
 import { createRunCounters, type RunCounters } from "../../src/types/connection.interface.js";
 import { UnasUpdateService } from "../../src/services/unas-update.service.js";
-import { stubLogger } from "../helpers/stub-logger.js";
 
 // Keep 429-retry unit tests fast: the real backoff (2s / 4s) never runs here.
 vi.mock("../../src/utils/http-util.js", async (importOriginal) => {
@@ -27,13 +28,9 @@ function makeProduct(sku: string): ISetProduct {
 }
 
 function makeHarness(setProduct: SetProductMock): { service: UnasUpdateService; counters: RunCounters; setProduct: SetProductMock } {
-    const service = new UnasUpdateService(stubLogger());
-    const client = {
-        login: vi.fn(),
-        getProductDB: vi.fn(),
-        getWarehouse: vi.fn(),
-        setProduct,
-    } as unknown as IUnasJsonClient;
+    const service = new UnasUpdateService(mock<Logger>());
+    const client = mock<IUnasJsonClient>();
+    client.setProduct.mockImplementation((request) => setProduct(request));
     service.setClient(client);
     return { service, counters: createRunCounters(), setProduct };
 }
@@ -130,7 +127,7 @@ describe("UnasUpdateService", () => {
     });
 
     it("rejects when a buffered send has no client attached", async () => {
-        const service = new UnasUpdateService(stubLogger());
+        const service = new UnasUpdateService(mock<Logger>());
         const counters = createRunCounters();
         await service.queue(makeProduct("S1"), counters);
         await expect(service.flush(counters)).rejects.toThrow(/not been attached/);

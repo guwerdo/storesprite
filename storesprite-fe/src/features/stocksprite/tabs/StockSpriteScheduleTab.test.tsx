@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import { ContainerProvider } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import type { IMappingService } from '../../../types/stocksprite/MappingService.interface.js';
@@ -21,31 +22,20 @@ vi.mock('@clerk/clerk-react', () => ({
 }));
 
 describe('StockSpriteScheduleTab', () => {
-  let mockMappingService: IMappingService;
-  let mockConnectionService: IConnectionService;
+  let mockMappingService: ReturnType<typeof mock<IMappingService>>;
+  let mockConnectionService: ReturnType<typeof mock<IConnectionService>>;
   let testContainer: Container;
 
   beforeEach(() => {
-    mockMappingService = {
-      getMappings: vi.fn().mockResolvedValue({ mappings: [] }),
-      createMapping: vi.fn(),
-      updateMapping: vi.fn().mockResolvedValue({ success: true }),
-      deleteMapping: vi.fn(),
-      getRules: vi.fn().mockResolvedValue({ rules: [] }),
-      runMapping: vi.fn().mockResolvedValue({ success: true }),
-      getHistory: vi.fn().mockResolvedValue({ history: [] }),
-    };
+    mockMappingService = mock<IMappingService>();
+    mockMappingService.getMappings.mockResolvedValue({ mappings: [] });
+    mockMappingService.updateMapping.mockResolvedValue({ success: true });
+    mockMappingService.getRules.mockResolvedValue({ rules: [] });
+    mockMappingService.runMapping.mockResolvedValue({ success: true });
+    mockMappingService.getHistory.mockResolvedValue({ history: [] });
 
-    mockConnectionService = {
-      getConnections: vi.fn().mockResolvedValue({ connections: [] }),
-      getConnection: vi.fn(),
-      createConnection: vi.fn(),
-      updateConnection: vi.fn(),
-      deleteConnection: vi.fn(),
-      runTest: vi.fn(),
-      getTestResult: vi.fn(),
-      invalidateConnection: vi.fn(),
-    };
+    mockConnectionService = mock<IConnectionService>();
+    mockConnectionService.getConnections.mockResolvedValue({ connections: [] });
 
     testContainer = new Container();
     testContainer.bind<IMappingService>(TYPES.IMappingService).toConstantValue(mockMappingService);
@@ -84,7 +74,7 @@ describe('StockSpriteScheduleTab', () => {
   });
 
   it('renders scheduled mappings in the table', async () => {
-    (mockMappingService.getMappings as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    mockMappingService.getMappings.mockResolvedValueOnce({
       mappings: [
         {
           id: 'mapping-1',

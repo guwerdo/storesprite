@@ -1,5 +1,6 @@
 import { Container } from "inversify";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { mock } from "vitest-mock-extended";
 import type { IUnasJsonClient } from "../client/unas-json-client.interface.js";
 import type { ILogger } from "../core/logger.interface.js";
 import type { IUnasEndpoint } from "../core/unas-endpoint.interface.js";
@@ -16,7 +17,7 @@ describe("registerUnasJsonClient", () => {
 
     it("lets a pre-bound override win", () => {
         const container = new Container();
-        const fakeLogger: ILogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
+        const fakeLogger = mock<ILogger>();
         container.bind(TYPES.ILogger).toConstantValue(fakeLogger);
         registerUnasJsonClient(container, { baseUrl: "http://test/shop/", apiKey: "k" });
         expect(container.get<ILogger>(TYPES.ILogger)).toBe(fakeLogger);

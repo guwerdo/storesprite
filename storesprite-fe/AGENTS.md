@@ -31,10 +31,10 @@ and is wired once in `src/di/container.ts`.
 
 ## 2. Tooling & Framework Invariants
 
-* **Framework & UI Library**: React 18, Vite, TypeScript, Material-UI (MUI v6 + Emotion), `@clerk/clerk-react`, `@clerk/themes`.
+* **Framework & UI Library**: React 18, Vite 8, TypeScript, Material-UI (MUI v6 + Emotion), `@clerk/clerk-react`, `@clerk/themes`.
 * **State & Dependency Injection**: **InversifyJS** container setup (`src/di/container.ts`, `src/di/ContainerProvider.tsx`) exposing services via the `useInjection()` hook.
 * **HTTP & Sockets**: Axios HTTP wrapper (`src/services/AxiosClient.ts`, base URL from `VITE_API_BASE_URL`, implements `IHttpClient`) and Socket.IO client (`src/services/SocketService.ts`, implements `ISocketService`).
-* **Test Runner & Mocking**: **Vitest** (jsdom) with `vi.fn()` for interface mocks.
+* **Test Runner & Mocking**: **Vitest 4** (jsdom) with `vitest-mock-extended` (`mock<T>()`) for interface mocks and `vi.mock` + `vi.mocked` for module mocks.
 
 ---
 

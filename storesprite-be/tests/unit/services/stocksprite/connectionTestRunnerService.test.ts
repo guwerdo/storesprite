@@ -73,6 +73,9 @@ describe("ConnectionTestRunnerService", () => {
   let envSnapshot: Record<string, string | undefined>;
 
   beforeEach(() => {
+    // Vitest 4 no longer resets a module mock's call history via vi.restoreAllMocks()
+    // in afterEach, so clear here — the last tests assert spawn was never called.
+    vi.clearAllMocks();
     envSnapshot = saveEnv();
     service = new ConnectionTestRunnerService();
     // Ensure a docker driver by default; NODE_ENV must not short-circuit to noop.

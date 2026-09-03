@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { mock } from "vitest-mock-extended";
+import type { Logger } from "log4js";
 import { UnasCsvColumnNames } from "../../src/config/unas-csv-column-names.js";
-import { stubLogger } from "../helpers/stub-logger.js";
 import type { WarehouseDto } from "../../src/types/mapping.interface.js";
 import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
 import type { ProductUpdate, RunCounters } from "../../src/types/connection.interface.js";
@@ -29,7 +30,7 @@ async function runCompare(
     rows: Record<string, unknown>[],
     whs: WarehouseDto[] = warehouses
 ): Promise<{ counters: RunCounters; updates: ProductUpdate[] }> {
-    const service = new UnasProductDbService(stubLogger(), index);
+    const service = new UnasProductDbService(mock<Logger>(), index);
     const counters = createRunCounters();
     const updates: ProductUpdate[] = [];
     await service.streamAndCompare(asyncRows(rows), whs, counters, (update) => {
@@ -42,7 +43,7 @@ async function runCompare(
 describe("UnasProductDbService", () => {
     describe("parseProductRow", () => {
         it("reads main + additional warehouse stock into a map", () => {
-            const service = new UnasProductDbService(stubLogger(), new ConnectionIndexRepository());
+            const service = new UnasProductDbService(mock<Logger>(), new ConnectionIndexRepository());
             const product = service.parseProductRow(
                 { Cikkszám: " A1 ", Raktárkészlet: "3", [addCol("BP")]: "2", [addCol("Debrecen")]: "1" },
                 warehouses
@@ -57,7 +58,7 @@ describe("UnasProductDbService", () => {
         });
 
         it("treats the literal 'off' as an empty (disabled) stock set", () => {
-            const service = new UnasProductDbService(stubLogger(), new ConnectionIndexRepository());
+            const service = new UnasProductDbService(mock<Logger>(), new ConnectionIndexRepository());
             const product = service.parseProductRow(
                 { Cikkszám: "A1", Raktárkészlet: "off", [addCol("BP")]: "2" },
                 warehouses
@@ -66,16 +67,16 @@ describe("UnasProductDbService", () => {
         });
 
         it("returns null for an empty SKU", () => {
-            const service = new UnasProductDbService(stubLogger(), new ConnectionIndexRepository());
+            const service = new UnasProductDbService(mock<Logger>(), new ConnectionIndexRepository());
             expect(service.parseProductRow({ Cikkszám: "", Raktárkészlet: "3" }, warehouses)).toBeNull();
         });
 
         it("logs and skips a non-numeric main-stock cell instead of crashing", () => {
-            const warn = vi.fn();
-            const service = new UnasProductDbService(stubLogger({ warn }), new ConnectionIndexRepository());
+            const logger = mock<Logger>();
+            const service = new UnasProductDbService(logger, new ConnectionIndexRepository());
             const product = service.parseProductRow({ Cikkszám: "A1", Raktárkészlet: "abc" }, warehouses);
             expect(product?.stocks.has(1)).toBe(false);
-            expect(warn).toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalled();
         });
     });
 
@@ -154,8 +155,8 @@ describe("UnasProductDbService", () => {
             const index = new ConnectionIndexRepository();
             index.add("D1", new Map([[1, 2]]));
             const withSzeged: WarehouseDto[] = [...warehouses, { id: 4, name: "Szeged", publicName: "Szeged" }];
-            const warn = vi.fn();
-            const service = new UnasProductDbService(stubLogger({ warn }), index);
+            const logger = mock<Logger>();
+            const service = new UnasProductDbService(logger, index);
             const counters = createRunCounters();
             const updates: ProductUpdate[] = [];
 
@@ -169,7 +170,7 @@ describe("UnasProductDbService", () => {
                 }
             );
 
-            expect(warn).toHaveBeenCalledWith(
+            expect(logger.warn).toHaveBeenCalledWith(
                 "Additional stock column missing from UNAS export",
                 expect.objectContaining({ warehouse: "Szeged" })
             );

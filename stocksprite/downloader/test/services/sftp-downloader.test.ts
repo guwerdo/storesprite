@@ -9,7 +9,7 @@ import SftpClient from "ssh2-sftp-client";
 import { SftpDownloader } from "../../src/services/sftp-downloader.js";
 import { DataConnectionDto } from "../../src/types/connection.types.js";
 
-vi.mock("ssh2-sftp-client");
+vi.mock("ssh2-sftp-client", () => ({ default: vi.fn() }));
 
 describe("SftpDownloader Unit Tests", () => {
   let loggerMock: ReturnType<typeof mock<Logger>>;
@@ -43,7 +43,9 @@ describe("SftpDownloader Unit Tests", () => {
       end: vi.fn().mockResolvedValue(true),
     };
 
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp",
@@ -84,7 +86,9 @@ describe("SftpDownloader Unit Tests", () => {
       }),
       end: vi.fn().mockResolvedValue(true),
     };
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp_mod",
@@ -110,7 +114,9 @@ describe("SftpDownloader Unit Tests", () => {
       fastGet: vi.fn(),
       end: vi.fn().mockResolvedValue(true),
     };
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp_none",
@@ -137,7 +143,9 @@ describe("SftpDownloader Unit Tests", () => {
       }),
       end: vi.fn().mockResolvedValue(true),
     };
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp_zero",
@@ -164,7 +172,9 @@ describe("SftpDownloader Unit Tests", () => {
       }),
       end: vi.fn().mockResolvedValue(true),
     };
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp_pw",
@@ -195,7 +205,9 @@ describe("SftpDownloader Unit Tests", () => {
       }),
       end: vi.fn().mockResolvedValue(true),
     };
-    (SftpClient as unknown as vi.Mock).mockImplementation(() => mockSftpInstance);
+    (SftpClient as unknown as vi.Mock).mockImplementation(function () {
+      return mockSftpInstance;
+    });
 
     const connection: DataConnectionDto = {
       id: "conn_sftp_key",

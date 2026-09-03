@@ -1,22 +1,16 @@
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mock } from 'vitest-mock-extended';
 import { UnasService } from './UnasService.js';
 import type { IHttpClient } from '../../types/HttpClient.interface.js';
 import type { IUnasLoginResponse } from '../../types/unas/UnasConnection.interface.js';
 
 describe('UnasService', () => {
-  let postSpy: ReturnType<typeof vi.fn>;
-  let mockHttpClient: IHttpClient;
+  let mockHttpClient: ReturnType<typeof mock<IHttpClient>>;
   let unasService: UnasService;
 
   beforeEach(() => {
-    postSpy = vi.fn();
-    mockHttpClient = {
-      get: vi.fn(),
-      post: postSpy,
-      put: vi.fn(),
-      delete: vi.fn(),
-    };
+    mockHttpClient = mock<IHttpClient>();
     unasService = new UnasService(mockHttpClient);
   });
 
@@ -29,13 +23,13 @@ describe('UnasService', () => {
         webshopInfo: { webshopName: 'Test Webshop' },
       },
     };
-    postSpy.mockResolvedValue(responseData);
+    mockHttpClient.post.mockResolvedValue(responseData);
 
     // Act
     const result = await unasService.login('jwt_token_123');
 
     // Assert
-    expect(postSpy).toHaveBeenCalledWith('/client/unas/login', {}, {
+    expect(mockHttpClient.post).toHaveBeenCalledWith('/client/unas/login', {}, {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(responseData);

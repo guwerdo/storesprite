@@ -1,24 +1,16 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import axios from "axios";
+import { mock } from "vitest-mock-extended";
+import type { Logger } from "log4js";
 import { BackendApiClient } from "../../src/services/backend-api-client.js";
 import type { AppConfig } from "../../src/config/app.config.js";
 import type { RunConfigResponse } from "../../src/types/mapping.interface.js";
-import { stubLogger } from "../helpers/stub-logger.js";
 
-vi.mock("axios", () => {
-    const get = vi.fn();
-    const post = vi.fn();
-    const isAxiosError = vi.fn();
-    return { default: { get, post, isAxiosError } };
-});
+vi.mock("axios");
 
-// The mocked module methods are the spies under test — detaching them (no `this` to
-// bind on a plain mock object) is deliberate, so the rule is disabled for these two.
-/* eslint-disable @typescript-eslint/unbound-method */
-const axiosGetMock = axios.get as unknown as Mock;
-const axiosPostMock = axios.post as unknown as Mock;
-/* eslint-enable @typescript-eslint/unbound-method */
-const axiosIsAxiosErrorMock = axios.isAxiosError as unknown as Mock;
+const axiosGetMock = vi.mocked(axios.get);
+const axiosPostMock = vi.mocked(axios.post);
+const axiosIsAxiosErrorMock = vi.mocked(axios.isAxiosError);
 
 const config: AppConfig = {
     mappingId: "m1",
@@ -41,7 +33,7 @@ const validRunConfig: RunConfigResponse = {
 };
 
 function makeClient(): BackendApiClient {
-    return new BackendApiClient(config, stubLogger());
+    return new BackendApiClient(config, mock<Logger>());
 }
 
 describe("BackendApiClient", () => {

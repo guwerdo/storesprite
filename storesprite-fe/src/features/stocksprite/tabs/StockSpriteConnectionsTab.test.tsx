@@ -2,10 +2,12 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import { ContainerProvider } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
 import type { IConnectionService } from '../../../types/stocksprite/ConnectionService.interface.js';
 import type { ISocketService } from '../../../types/SocketService.interface.js';
+import type { IDataConnection } from '../../../types/stocksprite/DataConnection.interface.js';
 import StockSpriteConnectionsTab from './StockSpriteConnectionsTab.js';
 import { I18nProvider } from '../../../i18n/I18nProvider.js';
 
@@ -20,41 +22,43 @@ vi.mock('@clerk/clerk-react', () => ({
   }),
 }));
 
+function makeConnection(overrides: Partial<IDataConnection> = {}): IDataConnection {
+  return {
+    id: 'conn-x',
+    name: 'Connection',
+    channel: 'HTTP',
+    dataFormat: 'CSV',
+    config: { channel: 'HTTP', url: 'https://example.com/feed.csv' },
+    dataFormatConfig: { format: 'CSV', delimiter: ';' },
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
 describe('StockSpriteConnectionsTab', () => {
-  let getConnectionsSpy: ReturnType<typeof vi.fn>;
-  let createConnectionSpy: ReturnType<typeof vi.fn>;
-  let updateConnectionSpy: ReturnType<typeof vi.fn>;
-  let deleteConnectionSpy: ReturnType<typeof vi.fn>;
-  let mockConnectionService: IConnectionService;
-  let mockSocketService: ISocketService;
+  let mockConnectionService: ReturnType<typeof mock<IConnectionService>>;
+  let mockSocketService: ReturnType<typeof mock<ISocketService>>;
   let testContainer: Container;
 
   beforeEach(() => {
-    getConnectionsSpy = vi.fn().mockResolvedValue({
-      connections: [],
+    mockConnectionService = mock<IConnectionService>();
+    mockConnectionService.getConnections.mockResolvedValue({ connections: [] });
+    mockConnectionService.createConnection.mockResolvedValue({
+      connection: makeConnection({ id: 'conn_new', name: 'API Feed' }),
+      success: true,
     });
-    createConnectionSpy = vi.fn().mockResolvedValue({ connection: { id: 'conn_new', name: 'API Feed' }, success: true });
-    updateConnectionSpy = vi.fn().mockResolvedValue({ connection: { id: 'conn_1', name: 'API Feed' }, success: true });
-    deleteConnectionSpy = vi.fn().mockResolvedValue({ success: true });
+    mockConnectionService.updateConnection.mockResolvedValue({
+      connection: makeConnection({ id: 'conn_1', name: 'API Feed' }),
+      success: true,
+    });
+    mockConnectionService.deleteConnection.mockResolvedValue({ success: true });
+    mockConnectionService.runTest.mockResolvedValue(undefined);
+    mockConnectionService.getTestResult.mockResolvedValue({ testResult: null });
+    mockConnectionService.invalidateConnection.mockResolvedValue(undefined);
 
-    mockConnectionService = {
-      getConnections: getConnectionsSpy,
-      getConnection: vi.fn(),
-      createConnection: createConnectionSpy,
-      updateConnection: updateConnectionSpy,
-      deleteConnection: deleteConnectionSpy,
-      runTest: vi.fn().mockResolvedValue({ status: 'pending' }),
-      getTestResult: vi.fn().mockResolvedValue({ testResult: null }),
-      invalidateConnection: vi.fn().mockResolvedValue({ success: true }),
-    };
-
-    mockSocketService = {
-      connect: vi.fn(),
-      disconnect: vi.fn(),
-      joinTenant: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-    };
+    mockSocketService = mock<ISocketService>();
 
     testContainer = new Container();
     testContainer.bind<IConnectionService>(TYPES.IConnectionService).toConstantValue(mockConnectionService);
@@ -97,7 +101,7 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('renders existing connections in table and opens edit form with credentials on row click', async () => {
-    getConnectionsSpy.mockResolvedValueOnce({
+    mockConnectionService.getConnections.mockResolvedValueOnce({
       connections: [
         {
           id: 'conn-1',
@@ -161,7 +165,7 @@ describe('StockSpriteConnectionsTab', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(createConnectionSpy).toHaveBeenCalledWith(
+      expect(mockConnectionService.createConnection).toHaveBeenCalledWith(
         'test_token',
         expect.objectContaining({
           name: 'API Feed',
@@ -220,7 +224,7 @@ describe('StockSpriteConnectionsTab', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(createConnectionSpy).toHaveBeenCalledWith(
+      expect(mockConnectionService.createConnection).toHaveBeenCalledWith(
         'test_token',
         expect.objectContaining({
           name: 'SFTP Supplier Feed',
@@ -270,7 +274,7 @@ describe('StockSpriteConnectionsTab', () => {
   });
 
   it('renders all localized strings in edit mode with completed test result without raw i18n keys', async () => {
-    getConnectionsSpy.mockResolvedValueOnce({
+    mockConnectionService.getConnections.mockResolvedValueOnce({
       connections: [
         {
           id: 'conn-sftp-1',
@@ -290,7 +294,7 @@ describe('StockSpriteConnectionsTab', () => {
           testResult: {
             success: true,
             started_at: '2026-08-22T21:29:12.000Z',
-            durationMs: 1250,
+            duration_ms: 1250,
             rowCount: 100,
             columnCount: 5,
             fileSize: 20480,

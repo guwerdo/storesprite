@@ -137,11 +137,11 @@ it has rather than containerizing them
   `UnasUpdateService`, `ConnectionIndexRepository` (in-memory) — plus the real
   `@storesprite/unas-json-client` HTTP stack (`login`, `getProductDB`, `setProduct`).
 * **Faked in-process:** the UNAS API is a `node:http` fake on an ephemeral loopback
-  port (`fake-unas-server.ts`); the backend client is an inline `IBackendApiClient`
-  object literal (no HTTP) that hands the service a run-config pointing the real UNAS
-  client at the fake and records the reported progress sequence.
+  port (`fake-unas-server.ts`); the backend client is a `mock<IBackendApiClient>()`
+  (no HTTP) that hands the service a run-config pointing the real UNAS client at the
+  fake and records the reported progress sequence.
 * **Not exercised:** the Inversify composition root / `index.ts` boot — the test
-  composes the services manually with a no-op logger.
+  composes the services manually with a `mock<Logger>()`.
 
 It asserts the golden CSV→XML mapping outcomes (happy path, zeroed stock, partial
 update, no-op, skip) plus batching of >100 diffs into ≤100-SKU `setProduct` calls.

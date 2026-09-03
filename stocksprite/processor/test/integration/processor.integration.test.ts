@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Logger } from "log4js";
+import { mock } from "vitest-mock-extended";
 import { createUnasJsonClient } from "@storesprite/unas-json-client";
 import type { MappingRule, StockMappingItem } from "@storesprite/mapping-rules";
 import type { AppConfig } from "../../src/config/app.config.js";
@@ -44,11 +45,6 @@ function readFixture(fileName: string): string {
 /** Collapses the XML the way the real client builds it (minified, one prolog). */
 function normalizeXml(xml: string): string {
     return xml.replace(/<\?xml[^>]*\?>\s*/g, "").replace(/>\s+</g, "><").trim();
-}
-
-function quietLogger(): Logger {
-    const noop = (): void => undefined;
-    return { trace: noop, debug: noop, info: noop, warn: noop, error: noop, fatal: noop, mark: noop } as unknown as Logger;
 }
 
 function countTags(xml: string, tag: string): number {
@@ -177,7 +173,7 @@ async function runScenario(scenario: Scenario, csvOverrides?: { connectionCsv?: 
             "utf8"
         );
 
-        const logger = quietLogger();
+        const logger = mock<Logger>();
         const runConfig: RunConfigResponse = {
             mapping: scenario.mapping,
             unasConfig: { baseUrl: server.baseUrl, apiKey: "integration-api-key" },

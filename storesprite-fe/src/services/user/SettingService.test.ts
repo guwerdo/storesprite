@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mock } from 'vitest-mock-extended';
 import { SettingService } from './SettingService.js';
 import { ConnectionService } from '../../services/stocksprite/ConnectionService.js';
 import type { IHttpClient } from '../../types/HttpClient.interface.js';
@@ -9,20 +10,11 @@ import type {
 } from '../../types/stocksprite/DataConnection.interface.js';
 
 describe('SettingService', () => {
-  let getSpy: ReturnType<typeof vi.fn>;
-  let putSpy: ReturnType<typeof vi.fn>;
-  let mockHttpClient: IHttpClient;
+  let mockHttpClient: ReturnType<typeof mock<IHttpClient>>;
   let settingService: SettingService;
 
   beforeEach(() => {
-    getSpy = vi.fn();
-    putSpy = vi.fn();
-    mockHttpClient = {
-      get: getSpy,
-      post: vi.fn(),
-      put: putSpy,
-      delete: vi.fn(),
-    };
+    mockHttpClient = mock<IHttpClient>();
     settingService = new SettingService(mockHttpClient);
   });
 
@@ -32,13 +24,13 @@ describe('SettingService', () => {
       settings: { unasApiKey: 'my_key', languageId: 1 },
       languages: [{ id: 1, code: 'en' }, { id: 2, code: 'hu' }],
     };
-    getSpy.mockResolvedValue(responseData);
+    mockHttpClient.get.mockResolvedValue(responseData);
 
     // Act
     const result = await settingService.getSettings('jwt_token_123');
 
     // Assert
-    expect(getSpy).toHaveBeenCalledWith('/client/settings', {
+    expect(mockHttpClient.get).toHaveBeenCalledWith('/client/settings', {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(responseData);
@@ -47,7 +39,7 @@ describe('SettingService', () => {
   it('calls PUT /client/settings with Bearer token and payload', async () => {
     // Arrange
     const saveResponse = { success: true };
-    putSpy.mockResolvedValue(saveResponse);
+    mockHttpClient.put.mockResolvedValue(saveResponse);
 
     // Act
     const result = await settingService.saveSettings('jwt_token_123', {
@@ -56,7 +48,7 @@ describe('SettingService', () => {
     });
 
     // Assert
-    expect(putSpy).toHaveBeenCalledWith(
+    expect(mockHttpClient.put).toHaveBeenCalledWith(
       '/client/settings',
       { unasApiKey: 'new_api_key', languageId: 2 },
       { Authorization: 'Bearer jwt_token_123' },
@@ -66,24 +58,11 @@ describe('SettingService', () => {
 });
 
 describe('ConnectionService', () => {
-  let getSpy: ReturnType<typeof vi.fn>;
-  let postSpy: ReturnType<typeof vi.fn>;
-  let putSpy: ReturnType<typeof vi.fn>;
-  let deleteSpy: ReturnType<typeof vi.fn>;
-  let mockHttpClient: IHttpClient;
+  let mockHttpClient: ReturnType<typeof mock<IHttpClient>>;
   let connectionService: ConnectionService;
 
   beforeEach(() => {
-    getSpy = vi.fn();
-    postSpy = vi.fn();
-    putSpy = vi.fn();
-    deleteSpy = vi.fn();
-    mockHttpClient = {
-      get: getSpy,
-      post: postSpy,
-      put: putSpy,
-      delete: deleteSpy,
-    };
+    mockHttpClient = mock<IHttpClient>();
     connectionService = new ConnectionService(mockHttpClient);
   });
 
@@ -105,13 +84,13 @@ describe('ConnectionService', () => {
         },
       ],
     };
-    getSpy.mockResolvedValue(responseData);
+    mockHttpClient.get.mockResolvedValue(responseData);
 
     // Act
     const result = await connectionService.getConnections('jwt_token_123');
 
     // Assert
-    expect(getSpy).toHaveBeenCalledWith('/client/stocksprite/connections', {
+    expect(mockHttpClient.get).toHaveBeenCalledWith('/client/stocksprite/connections', {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(responseData);
@@ -119,13 +98,13 @@ describe('ConnectionService', () => {
 
   it('calls POST /client/stocksprite/connections/:id/run-test with Bearer token', async () => {
     // Arrange
-    postSpy.mockResolvedValue(undefined);
+    mockHttpClient.post.mockResolvedValue(undefined);
 
     // Act
     await connectionService.runTest('jwt_token_123', 'conn_test_id');
 
     // Assert
-    expect(postSpy).toHaveBeenCalledWith(
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
       '/client/stocksprite/connections/conn_test_id/run-test',
       {},
       { Authorization: 'Bearer jwt_token_123' },
@@ -145,13 +124,13 @@ describe('ConnectionService', () => {
         rows: [['A1', 'Prod 1', '100', '10']],
       },
     };
-    getSpy.mockResolvedValue(resultPayload);
+    mockHttpClient.get.mockResolvedValue(resultPayload);
 
     // Act
     const result = await connectionService.getTestResult('jwt_token_123', 'conn_test_id');
 
     // Assert
-    expect(getSpy).toHaveBeenCalledWith('/client/stocksprite/connections/conn_test_id/test-result', {
+    expect(mockHttpClient.get).toHaveBeenCalledWith('/client/stocksprite/connections/conn_test_id/test-result', {
       Authorization: 'Bearer jwt_token_123',
     });
     expect(result).toEqual(resultPayload);
@@ -159,13 +138,13 @@ describe('ConnectionService', () => {
 
   it('calls DELETE /client/stocksprite/connections/:id/test-result with Bearer token', async () => {
     // Arrange
-    deleteSpy.mockResolvedValue(undefined);
+    mockHttpClient.delete.mockResolvedValue(undefined);
 
     // Act
     await connectionService.invalidateConnection('jwt_token_123', 'conn_test_id');
 
     // Assert
-    expect(deleteSpy).toHaveBeenCalledWith(
+    expect(mockHttpClient.delete).toHaveBeenCalledWith(
       '/client/stocksprite/connections/conn_test_id/test-result',
       { Authorization: 'Bearer jwt_token_123' },
     );

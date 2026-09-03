@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import path from "node:path";
+import { mock } from "vitest-mock-extended";
+import type { Logger } from "log4js";
 import type { IUnasJsonClient } from "@storesprite/unas-json-client";
-import { stubLogger } from "../helpers/stub-logger.js";
 import type { AppConfig } from "../../src/config/app.config.js";
-import type { RunConfigResponse, ProgressBody, UnasClientFactory } from "../../src/types/mapping.interface.js";
+import type { RunConfigResponse, UnasClientFactory } from "../../src/types/mapping.interface.js";
 import { ConnectionIndexRepository } from "../../src/repository/connection-index.repository.js";
 import { ProcessorService } from "../../src/services/processor.service.js";
 import type { IBackendApiClient } from "../../src/services/backend-api-client.js";
@@ -33,8 +34,7 @@ const config: AppConfig = {
 
 interface Harness {
     service: ProcessorService;
-    reportProgress: ReturnType<typeof vi.fn<(mappingId: string, body: ProgressBody) => Promise<void>>>;
-    getRunConfig: ReturnType<typeof vi.fn<(mappingId: string) => Promise<RunConfigResponse>>>;
+    backend: ReturnType<typeof mock<IBackendApiClient>>;
     clientFactory: ReturnType<typeof vi.fn<UnasClientFactory>>;
     feedBuildIndex: ReturnType<
         typeof vi.fn<(filePath: string, mapping: typeof runConfig.mapping) => Promise<{ processedItems: number; skippedEmptySkus: number }>>
@@ -46,16 +46,16 @@ interface Harness {
 
 function makeService(opts: { processedItems?: number; configFailure?: boolean; compareErrorCount?: number } = {}): Harness {
     const { processedItems = 2, configFailure = false, compareErrorCount = 0 } = opts;
-    const logger = stubLogger();
+    const logger = mock<Logger>();
 
-    const reportProgress = vi.fn<(mappingId: string, body: ProgressBody) => Promise<void>>().mockResolvedValue(undefined);
-    const getRunConfig = vi.fn<(mappingId: string) => Promise<RunConfigResponse>>().mockImplementation(() => {
+    const backend = mock<IBackendApiClient>();
+    backend.getRunConfig.mockImplementation(() => {
         if (configFailure) {
             return Promise.reject(new Error("config exploded"));
         }
         return Promise.resolve(runConfig);
     });
-    const backend = { getRunConfig, reportProgress } as unknown as IBackendApiClient;
+    backend.reportProgress.mockResolvedValue(undefined);
 
     const clientFactory = vi.fn<UnasClientFactory>().mockReturnValue({} as IUnasJsonClient);
     const index = new ConnectionIndexRepository();
@@ -86,7 +86,7 @@ function makeService(opts: { processedItems?: number; configFailure?: boolean; c
 
     const service = new ProcessorService(config, logger, backend, clientFactory, index, feed, productDb, update);
 
-    return { service, reportProgress, getRunConfig, clientFactory, feedBuildIndex, productDbFetch, productDbCompare, updateFlush };
+    return { service, backend, clientFactory, feedBuildIndex, productDbFetch, productDbCompare, updateFlush };
 }
 
 describe("ProcessorService", () => {
@@ -95,8 +95,8 @@ describe("ProcessorService", () => {
         const exit = await h.service.run();
 
         expect(exit).toBe(0);
-        expect(h.reportProgress).toHaveBeenCalledTimes(5);
-        expect(h.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual([
+        expect(h.backend.reportProgress).toHaveBeenCalledTimes(5);
+        expect(h.backend.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual([
             "start",
             "parse",
             "download",
@@ -108,7 +108,7 @@ describe("ProcessorService", () => {
         expect(h.productDbFetch).toHaveBeenCalledTimes(1);
         expect(h.updateFlush).toHaveBeenCalledTimes(1);
 
-        const finish = h.reportProgress.mock.calls[4][1];
+        const finish = h.backend.reportProgress.mock.calls[4][1];
         expect(finish).toMatchObject({
             runId: "run-1",
             progress: "finish",
@@ -123,14 +123,14 @@ describe("ProcessorService", () => {
         const exit = await h.service.run();
 
         expect(exit).toBe(1);
-        expect(h.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual([
+        expect(h.backend.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual([
             "start",
             "parse",
             "download",
             "compare",
             "finish",
         ]);
-        expect(h.reportProgress.mock.calls[4][1]).toMatchObject({ progress: "finish", errorCount: 2 });
+        expect(h.backend.reportProgress.mock.calls[4][1]).toMatchObject({ progress: "finish", errorCount: 2 });
     });
 
     it("finishes cleanly (exit 0) when the supplier feed is empty", async () => {
@@ -138,7 +138,7 @@ describe("ProcessorService", () => {
         const exit = await h.service.run();
 
         expect(exit).toBe(0);
-        expect(h.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual(["start", "finish"]);
+        expect(h.backend.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual(["start", "finish"]);
         expect(h.productDbFetch).not.toHaveBeenCalled();
         expect(h.productDbCompare).not.toHaveBeenCalled();
         expect(h.updateFlush).not.toHaveBeenCalled();
@@ -149,8 +149,8 @@ describe("ProcessorService", () => {
         const exit = await h.service.run();
 
         expect(exit).toBe(1);
-        expect(h.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual(["start", "error"]);
-        expect(h.reportProgress.mock.calls[1][1]).toMatchObject({
+        expect(h.backend.reportProgress.mock.calls.map((call) => call[1].progress)).toEqual(["start", "error"]);
+        expect(h.backend.reportProgress.mock.calls[1][1]).toMatchObject({
             progress: "error",
             error: expect.stringContaining("config exploded") as string,
         });

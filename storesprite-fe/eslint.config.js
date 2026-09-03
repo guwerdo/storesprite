@@ -27,4 +27,13 @@ export default defineConfig([
             ],
         },
     },
+    {
+        // vitest-mock-extended `mock<T>()` methods are stateless vi.fn()s — holding a
+        // reference to one in `expect(mock.method)`/`.mockResolvedValue()` is the whole
+        // idiom, so the `this`-scoping check `unbound-method` is a false positive here.
+        files: ["**/*.test.ts", "**/*.test.tsx"],
+        rules: {
+            "@typescript-eslint/unbound-method": "off",
+        },
+    },
 ]);

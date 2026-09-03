@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import ScheduleForm from './ScheduleForm.js';
 import type { ScheduleFormProps } from './ScheduleForm.js';
 import { I18nProvider } from '../../../i18n/I18nProvider.js';
@@ -53,22 +54,10 @@ describe('ScheduleForm', () => {
       ...overrides,
     };
     const container = new Container();
-    container.bind<IMappingService>(TYPES.IMappingService).toConstantValue({
-      getMappings: vi.fn(),
-      createMapping: vi.fn(),
-      updateMapping: vi.fn(),
-      deleteMapping: vi.fn(),
-      getRules: vi.fn(),
-      runMapping: vi.fn(),
-      getHistory: vi.fn().mockResolvedValue({ history: [] }),
-    });
-    container.bind<ISocketService>(TYPES.ISocketService).toConstantValue({
-      connect: vi.fn(),
-      disconnect: vi.fn(),
-      joinTenant: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-    });
+    const mappingService = mock<IMappingService>();
+    mappingService.getHistory.mockResolvedValue({ history: [] });
+    container.bind<IMappingService>(TYPES.IMappingService).toConstantValue(mappingService);
+    container.bind<ISocketService>(TYPES.ISocketService).toConstantValue(mock<ISocketService>());
     return render(
       <I18nProvider>
         <ContainerProvider container={container}>

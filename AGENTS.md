@@ -229,8 +229,7 @@ The monorepo contains three primary services:
         ```
     *   **Testing Conventions**:
         *   *Test Frameworks & Mocking*:
-            *   `storesprite-fe` & `storesprite-be`: Powered by **Vitest**, using `vitest-mock-extended` (or `vi.fn()`) for interface mocks (`import { mock } from "vitest-mock-extended"`).
-            *   `stocksprite` (`downloader` & `processor`): Powered by **Vitest**. The downloader uses `vitest-mock-extended` for interface mocks (`import { mock } from "vitest-mock-extended"`); the processor has no `vitest-mock-extended` dependency and mocks with `vi.fn()` / inline stubs.
+            *   `storesprite-fe`, `storesprite-be`, & `stocksprite` (`downloader` & `processor`): Powered by **Vitest 4**. All use `vitest-mock-extended` (`mock<T>()`) for interface/logger mocks and `vi.mock` automocking + `vi.mocked` for module mocks such as `axios` (`import { mock } from "vitest-mock-extended"`). `storesprite-fe` runs on **Vite 8**.
         *   *File Placement & Naming*: Place tests alongside source files using `.test.ts` or `.spec.ts` (e.g. `unas-updater.test.ts`).
         *   *AAA Pattern*: Organize test bodies clearly with **Arrange**, **Act**, and **Assert** comments.
         *   *Isolation*: Support running single test cases using `-t` or `it.only()`.

@@ -83,7 +83,7 @@ build loudly (barrel consumers can't resolve), never silently:
 * **Dependency Injection**: **InversifyJS** container setup (`src/di/container.ts`, `src/di/types.ts`, `src/plugins/inversify.ts`) registering request-scoped services and repositories.
 * **Databases & Telemetry**: PostgreSQL (multi-tenant user data, UNAS credentials, mapping rules) and OpenSearch (structured log aggregation).
 * **Logging**: `log4js` configured with `jsonWithDataFieldLayout` (structured single-line JSON with context payloads).
-* **Test Runner & Mocking**: **Vitest** using Fastify's App Factory pattern (`buildApp()`), in-memory `fastify.inject()`, and `vitest-mock-extended`. Unit and integration suites are split across `tests/unit/` and `tests/integration/` (see §1).
+* **Test Runner & Mocking**: **Vitest 4** using Fastify's App Factory pattern (`buildApp()`), in-memory `fastify.inject()`, and `vitest-mock-extended`. Unit and integration suites are split across `tests/unit/` and `tests/integration/` (see §1).
 
 ---
 

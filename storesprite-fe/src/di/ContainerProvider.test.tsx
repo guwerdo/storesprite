@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import { ContainerProvider, useInjection } from './ContainerProvider.js';
 import { TYPES } from './types.js';
 import type { IHttpClient } from '../types/HttpClient.interface.js';
@@ -16,12 +17,7 @@ function ApiStatusComponent(): React.JSX.Element {
 
 describe('ContainerProvider + useInjection', () => {
   it('injects a mocked IHttpClient into a component', () => {
-    const mockHttpClient: IHttpClient = {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-    };
+    const mockHttpClient = mock<IHttpClient>();
 
     const testContainer = new Container();
     testContainer.bind<IHttpClient>(TYPES.IHttpClient).toConstantValue(mockHttpClient);

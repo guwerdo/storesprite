@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import axios from "axios";
 import { extractErrorMessage } from "../../src/utils/http-util.js";
 
-vi.mock("axios", () => ({ default: { isAxiosError: vi.fn() } }));
+vi.mock("axios");
 
 const isAxiosError = vi.mocked(axios.isAxiosError);
 

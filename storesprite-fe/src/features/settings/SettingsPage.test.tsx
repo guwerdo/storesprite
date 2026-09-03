@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Container } from 'inversify';
+import { mock } from 'vitest-mock-extended';
 import { ContainerProvider } from '../../di/ContainerProvider.js';
 import { TYPES } from '../../di/types.js';
 import type { ISettingService } from '../../types/user/SettingService.interface.js';
@@ -29,15 +30,13 @@ const makeConnection = (overrides: Partial<IUnasConnection> = {}): IUnasConnecti
 });
 
 describe('SettingsPage', () => {
-  let getSettingsSpy: ReturnType<typeof vi.fn>;
-  let saveSettingsSpy: ReturnType<typeof vi.fn>;
-  let loginSpy: ReturnType<typeof vi.fn>;
-  let mockSettingService: ISettingService;
-  let mockUnasService: IUnasService;
+  let mockSettingService: ReturnType<typeof mock<ISettingService>>;
+  let mockUnasService: ReturnType<typeof mock<IUnasService>>;
   let testContainer: Container;
 
   beforeEach(() => {
-    getSettingsSpy = vi.fn().mockResolvedValue({
+    mockSettingService = mock<ISettingService>();
+    mockSettingService.getSettings.mockResolvedValue({
       settings: {
         unasApiKey: 'initial_unas_key',
         unasApiEndpoint: 'https://api.unas.eu/shop/',
@@ -48,17 +47,11 @@ describe('SettingsPage', () => {
         { id: 2, code: 'hu' },
       ],
     });
-    saveSettingsSpy = vi.fn().mockResolvedValue({ success: true });
-    loginSpy = vi.fn().mockResolvedValue({ connection: makeConnection() });
+    mockSettingService.saveSettings.mockResolvedValue({ success: true });
 
-    mockSettingService = {
-      getSettings: getSettingsSpy,
-      saveSettings: saveSettingsSpy,
-    };
-    mockUnasService = {
-      login: loginSpy,
-      getWarehouses: vi.fn().mockResolvedValue({ warehouses: [] }),
-    };
+    mockUnasService = mock<IUnasService>();
+    mockUnasService.login.mockResolvedValue({ connection: makeConnection() });
+    mockUnasService.getWarehouses.mockResolvedValue({ warehouses: [] });
 
     testContainer = new Container();
     testContainer.bind<ISettingService>(TYPES.ISettingService).toConstantValue(mockSettingService);
@@ -107,7 +100,7 @@ describe('SettingsPage', () => {
 
     // Assert
     await waitFor(() => {
-      expect(saveSettingsSpy).toHaveBeenCalledWith('test_token', {
+      expect(mockSettingService.saveSettings).toHaveBeenCalledWith('test_token', {
         unasApiKey: 'updated_key',
         unasApiEndpoint: 'https://custom.unas.eu/shop/',
         languageId: 2,
@@ -134,7 +127,7 @@ describe('SettingsPage', () => {
     fireEvent.change(endpointInput, { target: { value: '   ' } });
     fireEvent.click(saveButton);
 
-    expect(saveSettingsSpy).not.toHaveBeenCalled();
+    expect(mockSettingService.saveSettings).not.toHaveBeenCalled();
     expect(
       screen.getByText(/UNAS API Endpoint is required|Az UNAS API végpont megadása kötelező/i),
     ).toBeInTheDocument();
@@ -143,7 +136,7 @@ describe('SettingsPage', () => {
     fireEvent.change(endpointInput, { target: { value: 'http://insecure.endpoint.com' } });
     fireEvent.click(saveButton);
 
-    expect(saveSettingsSpy).not.toHaveBeenCalled();
+    expect(mockSettingService.saveSettings).not.toHaveBeenCalled();
     expect(
       screen.getByText(/Please enter a valid HTTPS URL|Kérjük, adjon meg egy érvényes HTTPS URL-t/i),
     ).toBeInTheDocument();
@@ -152,7 +145,7 @@ describe('SettingsPage', () => {
   it('displays error toast when saving settings fails', async () => {
     // Arrange
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    saveSettingsSpy.mockRejectedValueOnce(new Error('API error'));
+    mockSettingService.saveSettings.mockRejectedValueOnce(new Error('API error'));
 
     renderSettingsPage();
 
@@ -202,7 +195,7 @@ describe('SettingsPage', () => {
 
   it('disables the test connection button and shows a prompt when no API key is saved', async () => {
     // Arrange
-    getSettingsSpy.mockResolvedValue({
+    mockSettingService.getSettings.mockResolvedValue({
       settings: { unasApiKey: '', unasApiEndpoint: 'https://api.unas.eu/shop/', languageId: 2 },
       languages: [
         { id: 1, code: 'en' },
@@ -258,7 +251,7 @@ describe('SettingsPage', () => {
 
     // Assert
     await waitFor(() => {
-      expect(loginSpy).toHaveBeenCalledWith('test_token');
+      expect(mockUnasService.login).toHaveBeenCalledWith('test_token');
       expect(screen.getByText(/Connected to webshop: Test Webshop|Webáruházhoz csatlakozva: Test Webshop/i)).toBeInTheDocument();
       expect(screen.getByText(/Checked on:|Ellenőrizve:/i)).toBeInTheDocument();
     });
@@ -266,7 +259,7 @@ describe('SettingsPage', () => {
 
   it('opens and closes the permissions dialog from the result panel', async () => {
     // Arrange
-    getSettingsSpy.mockResolvedValue({
+    mockSettingService.getSettings.mockResolvedValue({
       settings: {
         unasApiKey: 'initial_unas_key',
         unasApiEndpoint: 'https://api.unas.eu/shop/',
@@ -311,7 +304,7 @@ describe('SettingsPage', () => {
   it('shows an error toast when the connection test fails', async () => {
     // Arrange
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    loginSpy.mockRejectedValueOnce(new Error('API error'));
+    mockUnasService.login.mockRejectedValueOnce(new Error('API error'));
 
     renderSettingsPage();
 
