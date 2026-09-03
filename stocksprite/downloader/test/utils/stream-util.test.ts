@@ -36,4 +36,43 @@ describe("StreamUtil Unit Tests", () => {
     expect(await StreamUtil.compareFileHash(file1, file2)).toBe(true);
     expect(await StreamUtil.compareFileHash(file1, file3)).toBe(false);
   });
+
+  it("commitDownloadedFile reports unchanged when the destination is identical", async () => {
+    fs.mkdirSync(testDir, { recursive: true });
+    const dest = path.join(testDir, "existing.csv");
+    const temp = path.join(testDir, "incoming.tmp");
+    fs.writeFileSync(dest, "sku;stock\nA;1\n");
+    fs.writeFileSync(temp, "sku;stock\nA;1\n");
+
+    const isUnchanged = await StreamUtil.commitDownloadedFile(temp, dest);
+
+    expect(isUnchanged).toBe(true);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("sku;stock\nA;1\n");
+    expect(fs.existsSync(temp)).toBe(false);
+  });
+
+  it("commitDownloadedFile reports changed and replaces a differing destination", async () => {
+    fs.mkdirSync(testDir, { recursive: true });
+    const dest = path.join(testDir, "existing.csv");
+    const temp = path.join(testDir, "incoming.tmp");
+    fs.writeFileSync(dest, "sku;stock\nA;1\n");
+    fs.writeFileSync(temp, "sku;stock\nA;2\n");
+
+    const isUnchanged = await StreamUtil.commitDownloadedFile(temp, dest);
+
+    expect(isUnchanged).toBe(false);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("sku;stock\nA;2\n");
+  });
+
+  it("commitDownloadedFile reports changed when no destination exists yet", async () => {
+    fs.mkdirSync(testDir, { recursive: true });
+    const dest = path.join(testDir, "new.csv");
+    const temp = path.join(testDir, "incoming.tmp");
+    fs.writeFileSync(temp, "sku;stock\nA;9\n");
+
+    const isUnchanged = await StreamUtil.commitDownloadedFile(temp, dest);
+
+    expect(isUnchanged).toBe(false);
+    expect(fs.readFileSync(dest, "utf-8")).toBe("sku;stock\nA;9\n");
+  });
 });
