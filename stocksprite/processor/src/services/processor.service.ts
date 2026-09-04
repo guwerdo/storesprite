@@ -62,7 +62,11 @@ export class ProcessorService {
             counters.warningCount += feed.skippedEmptySkus;
 
             if (feed.processedItems === 0) {
-                this._logger.info("Supplier feed is empty; nothing to process");
+                this._logger.info("Supplier feed is empty; nothing to process", {
+                    mappingId,
+                    runId,
+                    processedItems: counters.processedItems,
+                });
                 await this._reportProgress("finish", counters);
                 return 0;
             }
@@ -84,11 +88,14 @@ export class ProcessorService {
             return counters.errorCount > 0 ? 1 : 0;
         } catch (error) {
             const message = stringifyError(error);
-            this._logger.error("Stock processor run failed", { error: message });
+            this._logger.error("Stock processor run failed", { mappingId, runId, error: message });
             try {
                 await this._backend.reportProgress(mappingId, { runId, progress: "error", error: message });
             } catch (reportError) {
                 this._logger.error("Failed to report the run error back to the backend", {
+                    mappingId,
+                    runId,
+                    runError: message,
                     error: stringifyError(reportError),
                 });
             }

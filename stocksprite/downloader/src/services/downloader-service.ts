@@ -55,14 +55,15 @@ export class DownloaderService implements IDownloaderService {
       this._logger.warn(
         allConnections.length === 0
           ? `No data connections configured for user '${userId}'.`
-          : `User '${userId}' has ${allConnections.length} connection(s), but none are active (isActive = false).`
+          : `User '${userId}' has ${allConnections.length} connection(s), but none are active (isActive = false).`,
+        { userId, total: allConnections.length, active: activeConnections.length }
       );
     }
 
     const results: ConnectionProcessResult[] = [];
 
     for (const connection of activeConnections) {
-      this._logger.info(`--- Processing connection '${connection.name}' [ID: ${connection.id}] ---`, {
+      this._logger.info(`Processing connection '${connection.name}'`, {
         connectionId: connection.id,
         name: connection.name,
         channel: connection.channel,
