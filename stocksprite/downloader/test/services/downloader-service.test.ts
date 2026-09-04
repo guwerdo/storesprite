@@ -173,6 +173,61 @@ describe("DownloaderService Unit Tests", () => {
     expect(summary.results[0].status).toBe("ERROR");
   });
 
+  it("should throw when neither CONNECTION_ID nor a test connection is set", async () => {
+    service = new DownloaderService(
+      { ...config, connectionId: undefined },
+      loggerMock,
+      apiClientMock,
+      downloaderFactory,
+      converterFactory
+    );
+
+    await expect(service.run()).rejects.toThrow(
+      "Missing required environment variable: CONNECTION_ID"
+    );
+  });
+
+  it("should log a warning and skip the run-error report when MAPPING_ID/RUN_ID are absent", async () => {
+    apiClientMock.getConnectionById.mockRejectedValue(new Error("Connection '345' not found"));
+
+    service = new DownloaderService(
+      { ...config, mappingId: undefined, runId: undefined },
+      loggerMock,
+      apiClientMock,
+      downloaderFactory,
+      converterFactory
+    );
+
+    const summary = await service.run();
+
+    expect(apiClientMock.reportRunError).not.toHaveBeenCalled();
+    expect(loggerMock.warn).toHaveBeenCalledWith(
+      "Mapping run identity missing; skipping run-error report",
+      { mappingId: undefined, runId: undefined }
+    );
+    expect(summary.errorCount).toBe(1);
+    expect(summary.results[0].status).toBe("ERROR");
+  });
+
+  it("should log and still finish when reporting the run error to the backend fails", async () => {
+    apiClientMock.getConnectionById.mockRejectedValue(new Error("Connection '345' not found"));
+    apiClientMock.reportRunError.mockRejectedValue(new Error("net down"));
+
+    const summary = await service.run();
+
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("Connection '345' not found")
+    );
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      "Failed to report mapping run error to backend",
+      expect.objectContaining({ mappingId: "map_1", runId: "run_1" })
+    );
+    expect(summary.errorCount).toBe(1);
+    expect(summary.results[0].status).toBe("ERROR");
+  });
+
   it("should execute test mode, stream CSV sample rows and report stage progress and results", async () => {
     config.testConnectionId = "test_conn_123";
 

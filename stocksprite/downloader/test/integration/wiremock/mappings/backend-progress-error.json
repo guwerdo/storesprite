@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPattern": "/api/internal/stocksprite/mappings/[^/]+/progress"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "ok": true
+    }
+  }
+}

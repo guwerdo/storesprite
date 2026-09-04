@@ -314,4 +314,48 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
       60000
     );
   });
+
+  describe("run-error reporting to the backend", () => {
+    it("POSTs the run error when MAPPING_ID and RUN_ID are provided", async () => {
+      cleanTempDir();
+
+      const env = {
+        ...baseEnv("conn_missing"),
+        MAPPING_ID: "mapping_roundtrip",
+        RUN_ID: "run_roundtrip",
+      };
+      const { exitCode, stdout } = runDownloaderContainer(env);
+
+      console.log(`[Integration Test Output - roundtrip]:\n` + stdout);
+      expect(
+        exitCode,
+        `downloader exited ${exitCode} (expected 1).\n--- stdout (tail) ---\n${stdout.slice(-8000)}`
+      ).toBe(1);
+
+      // reportRunError is awaited before the container exits, so by the time
+      // `docker run` returns the POST has reached WireMock. Read it back from
+      // the request journal (admin API) and assert its shape.
+      const admin = await fetch(`http://${MOCK_HOST}:8089/__admin/requests`).then((r) => r.json());
+      const progressPosts = (
+        admin.requests as Array<{ request: { method: string; url: string; body: string } }>
+      )
+        .filter((r) => r.request.method === "POST")
+        .filter((r) => r.request.url.includes("/mappings/mapping_roundtrip/progress"));
+
+      expect(
+        progressPosts.length,
+        `expected a progress POST in the WireMock journal (${admin.requests?.length} requests logged)`
+      ).toBeGreaterThan(0);
+      // WireMock's journal records the URL as a path (no scheme/host).
+      expect(progressPosts[0].request.url).toBe(
+        "/api/internal/stocksprite/mappings/mapping_roundtrip/progress"
+      );
+      const body = JSON.parse(progressPosts[0].request.body);
+      expect(body).toMatchObject({
+        runId: "run_roundtrip",
+        progress: "error",
+      });
+      expect(body.error).toContain("Connection 'conn_missing' not found");
+    }, 60000);
+  });
 });
