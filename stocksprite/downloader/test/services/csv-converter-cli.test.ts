@@ -73,7 +73,7 @@ describe("CsvConverter CLI selection (CliUtil mocked)", () => {
     expect(fs.readFileSync(outFile, "utf-8")).toBe(cliOutput);
     expect(loggerMock.info).toHaveBeenCalledWith(
       "CSV conversion finished via csvformat CLI",
-      expect.objectContaining({ connectionId: "conn_csv" })
+      expect.objectContaining({ outputCsvPath: outFile })
     );
   });
 
@@ -90,11 +90,11 @@ describe("CsvConverter CLI selection (CliUtil mocked)", () => {
     expect(fs.readFileSync(outFile, "utf-8")).toBe("sku;name;stock\n1;Item;2\n");
     expect(loggerMock.warn).toHaveBeenCalledWith(
       "csvformat CLI conversion failed or tool not found, falling back to streaming CSV converter",
-      expect.objectContaining({ connectionId: "conn_csv" })
+      expect.objectContaining({ error: expect.any(String) })
     );
     expect(loggerMock.info).toHaveBeenCalledWith(
       "CSV conversion finished via stream fallback",
-      expect.objectContaining({ connectionId: "conn_csv" })
+      expect.objectContaining({ outputCsvPath: outFile })
     );
   });
 });

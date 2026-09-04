@@ -26,7 +26,6 @@ export class CsvConverter implements IDataConverter {
     const encoding = formatConfig?.encoding || "utf-8";
 
     this._logger.info("Converting raw CSV to standardized format", {
-      connectionId: connection.id,
       inputRawPath,
       outputCsvPath,
       inputDelimiter,
@@ -44,12 +43,11 @@ export class CsvConverter implements IDataConverter {
         outputFilePath: outputCsvPath,
       });
 
-      return this._finalize(outputCsvPath, connection.id, "csvformat CLI");
+      return this._finalize(outputCsvPath, "csvformat CLI");
     } catch (cliError) {
       this._logger.warn(
         "csvformat CLI conversion failed or tool not found, falling back to streaming CSV converter",
         {
-          connectionId: connection.id,
           error: ErrorUtil.stringifyError(cliError),
         }
       );
@@ -57,18 +55,17 @@ export class CsvConverter implements IDataConverter {
       // Fallback streaming conversion for pure portability (constant O(1) memory)
       await this._streamConvertCsv(inputRawPath, outputCsvPath, inputDelimiter, encoding);
 
-      return this._finalize(outputCsvPath, connection.id, "stream fallback");
+      return this._finalize(outputCsvPath, "stream fallback");
     }
   }
 
-  private _finalize(outputCsvPath: string, connectionId: string, mode: string): ConvertResult {
+  private _finalize(outputCsvPath: string, mode: string): ConvertResult {
     const byteCount = FileUtil.getFileSize(outputCsvPath);
     if (byteCount === 0) {
       throw new Error(`Converted CSV output file '${outputCsvPath}' is empty (0 bytes).`);
     }
 
     this._logger.info(`CSV conversion finished via ${mode}`, {
-      connectionId,
       outputCsvPath,
       byteCount,
     });

@@ -24,7 +24,6 @@ export class XmlConverter implements IDataConverter {
     const encoding = formatConfig?.encoding || "utf-8";
 
     this._logger.info("Converting raw XML to standardized CSV format via SAX stream", {
-      connectionId: connection.id,
       inputRawPath,
       outputCsvPath,
       targetRowTag,
@@ -161,7 +160,6 @@ export class XmlConverter implements IDataConverter {
         }
 
         this._logger.info("XML to CSV conversion finished successfully", {
-          connectionId: connection.id,
           outputCsvPath,
           rowCount,
           byteCount,

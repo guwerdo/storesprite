@@ -2,12 +2,24 @@ import log4js from "log4js";
 import type { LoggingEvent, Logger } from "log4js";
 
 /**
- * Single-line JSON layout: { ts, level, category, msg, context }. The second
+ * Single-line JSON layout: { ts, level, category, correlation, msg, context }. The second
  * log4js argument (an object) becomes `context`. The processor is ephemeral and
  * runs on a tmpfs, so logs go to the console (stdout → Cloud Logging) only —
  * no file appender, no durable disk.
  */
+
+/** Read once at configure time. Fixed four-key object; unset env vars become null (D5/O5). */
+function readCorrelation(): Record<string, string | null> {
+    return {
+        mappingId: process.env.MAPPING_ID?.trim() || null,
+        runId: process.env.RUN_ID?.trim() || null,
+        connectionId: process.env.CONNECTION_ID?.trim() || null,
+        userId: process.env.USER_ID?.trim() || null,
+    };
+}
+
 export function jsonWithDataFieldLayout(): (logEvent: LoggingEvent) => string {
+    const correlation = readCorrelation();
     return (logEvent: LoggingEvent): string => {
         // log4js types logEvent.data as `any[]`, so every read is `any`. The strict
         // no-unsafe-assignment rule is noise here: we deliberately forward the raw
@@ -18,6 +30,7 @@ export function jsonWithDataFieldLayout(): (logEvent: LoggingEvent) => string {
             ts: new Date(logEvent.startTime).toISOString(),
             level: logEvent.level.levelStr,
             category: logEvent.categoryName,
+            correlation,
             msg: typeof rawMessage === "string" ? rawMessage : "",
         };
         const extra = logEvent.data[1];

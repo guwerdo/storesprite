@@ -23,8 +23,6 @@ export class SftpDownloader implements IDownloader {
     const credentials = connection.credentials as SftpCredentials | null;
 
     this._logger.info("Starting SFTP download", {
-      connectionId: connection.id,
-      name: connection.name,
       host: config.host,
       remoteDir: config.remoteDir,
     });
@@ -75,7 +73,6 @@ export class SftpDownloader implements IDownloader {
 
       const remoteFilePath = path.posix.join(remoteDir, selectedFile.name);
       this._logger.info("Selected remote SFTP file for download", {
-        connectionId: connection.id,
         remoteFilePath,
         fileSize: selectedFile.size,
       });
@@ -85,21 +82,16 @@ export class SftpDownloader implements IDownloader {
       const byteCount = FileUtil.getFileSize(tempFilePath);
       if (byteCount === 0) {
         FileUtil.deleteFileIfExists(tempFilePath);
-        throw new Error(`SFTP download for '${connection.name}' received empty file (0 bytes).`);
+        throw new Error(`SFTP download for connection '${connection.id}' received empty file (0 bytes).`);
       }
 
       const isUnchanged = await StreamUtil.commitDownloadedFile(tempFilePath, destinationPath);
 
       if (isUnchanged) {
-        this._logger.info("SFTP downloaded content is identical to existing file on disk (unchanged)", {
-          connectionId: connection.id,
-          name: connection.name,
-        });
+        this._logger.info("SFTP downloaded content is identical to existing file on disk (unchanged)");
       }
 
       this._logger.info("SFTP download completed successfully", {
-        connectionId: connection.id,
-        name: connection.name,
         destinationPath,
         byteCount,
         isUnchanged,
@@ -114,8 +106,6 @@ export class SftpDownloader implements IDownloader {
       FileUtil.deleteFileIfExists(tempFilePath);
       const errorMsg = ErrorUtil.stringifyError(error);
       this._logger.error("SFTP download failed", {
-        connectionId: connection.id,
-        name: connection.name,
         error: errorMsg,
       });
       throw error;

@@ -6,7 +6,7 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
 
 ## 1. Single Responsibility & Workflow
 
-1. **Fetches Configuration**: Accepts a `CONNECTION_ID` (plus `USER_ID` for context/logging), calls `storesprite-be` (`GET /api/internal/stocksprite/connections/:connectionId` with `x-internal-token`), and refuses to run when that connection is inactive or missing.
+1. **Fetches Configuration**: Accepts a `CONNECTION_ID` and `USER_ID` (logged as `correlation.userId`), calls `storesprite-be` (`GET /api/internal/stocksprite/connections/:connectionId` with `x-internal-token`), and refuses to run when that connection is inactive or missing.
 2. **Streams Multi-Protocol Downloads**:
    - **HTTP**: Low-memory streaming GET/POST downloads with authentication (None, Basic, Bearer, ApiKey) and automatic detection of empty bodies or HTML error/redirect pages.
    - **SFTP**: Streaming downloads from remote SFTP servers with password or private key authentication and file selection strategies (`LATEST_ALPHABETICAL`, `LATEST_MODIFIED`, `EXACT_MATCH`).
@@ -17,7 +17,7 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
    - Raw downloads: `temp/${connection.id}.raw.${ext}` (e.g. `temp/345.raw.xml`, `temp/2.raw.csv`).
    - Standardized converted outputs: `temp/${connection.id}.csv` (e.g. `temp/345.csv`, `temp/2.csv`).
 5. **Logging**:
-   - Writes single-line JSON logs (`{ ts, level, category, msg, context }`, category `downloader`) to `stdout` and local log file `temp/downloader.log` using `log4js` — the same structured layout as the processor, so both ephemeral workers are filterable by component in Cloud Logging.
+   - Writes single-line JSON logs (`{ ts, level, category, correlation, msg, context }`, category `downloader`) to `stdout` and local log file `temp/downloader.log` using `log4js` — the same structured layout as the processor, so both ephemeral workers are filterable by component in Cloud Logging.
 
 ---
 

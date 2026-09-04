@@ -25,7 +25,7 @@ export class BackendApiClient implements IBackendApiClient {
 
   public async getConnectionById(connectionId: string): Promise<DataConnectionDto> {
     const url = `${this._config.backendUrl}/api/internal/stocksprite/connections/${connectionId}`;
-    this._logger.info("Fetching single connection from backend", { connectionId, url });
+    this._logger.info("Fetching single connection from backend", { url });
 
     try {
       const response = await axios.get<{ connection: DataConnectionDto }>(url, {
@@ -43,7 +43,6 @@ export class BackendApiClient implements IBackendApiClient {
     } catch (error) {
       const errorMsg = this._extractErrorMessage(error);
       this._logger.error("Failed to fetch connection from backend", {
-        connectionId,
         url,
         error: errorMsg,
       });
@@ -56,7 +55,7 @@ export class BackendApiClient implements IBackendApiClient {
     result: Partial<ConnectionTestResult>
   ): Promise<void> {
     const url = `${this._config.backendUrl}/api/internal/stocksprite/connections/${connectionId}/test-result`;
-    this._logger.info("Reporting test result to backend", { connectionId, progress: result.progress });
+    this._logger.info("Reporting test result to backend", { progress: result.progress });
 
     try {
       await axios.patch(url, result, {
@@ -68,7 +67,6 @@ export class BackendApiClient implements IBackendApiClient {
     } catch (error) {
       const errorMsg = this._extractErrorMessage(error);
       this._logger.error("Failed to report test result to backend", {
-        connectionId,
         url,
         error: errorMsg,
       });
@@ -78,7 +76,7 @@ export class BackendApiClient implements IBackendApiClient {
 
   public async reportRunError(mappingId: string, runId: string, error: string): Promise<void> {
     const url = `${this._config.backendUrl}/api/internal/stocksprite/mappings/${mappingId}/progress`;
-    this._logger.info("Reporting mapping run error to backend", { mappingId, runId, url });
+    this._logger.info("Reporting mapping run error to backend", { url });
 
     try {
       await axios.post(
@@ -94,8 +92,6 @@ export class BackendApiClient implements IBackendApiClient {
     } catch (err) {
       const errorMsg = this._extractErrorMessage(err);
       this._logger.error("Failed to report mapping run error to backend", {
-        mappingId,
-        runId,
         url,
         error: errorMsg,
       });

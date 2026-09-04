@@ -45,6 +45,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     }
 
     void this._runContainer(this._imageName(), {
+      CONNECTION_ID: connectionId,
       TEST_CONNECTION: connectionId,
       USER_ID: userId,
       INTERNAL_TOKEN: token,

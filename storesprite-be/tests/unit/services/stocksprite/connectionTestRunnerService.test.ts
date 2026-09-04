@@ -134,6 +134,8 @@ describe("ConnectionTestRunnerService", () => {
     const env = envEntries(runArgs);
     expect(env).toEqual([
       "-e",
+      "CONNECTION_ID=conn9",
+      "-e",
       "TEST_CONNECTION=conn9",
       "-e",
       "USER_ID=u1",

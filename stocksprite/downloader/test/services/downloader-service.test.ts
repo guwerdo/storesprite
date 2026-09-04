@@ -202,8 +202,7 @@ describe("DownloaderService Unit Tests", () => {
 
     expect(apiClientMock.reportRunError).not.toHaveBeenCalled();
     expect(loggerMock.warn).toHaveBeenCalledWith(
-      "Mapping run identity missing; skipping run-error report",
-      { mappingId: undefined, runId: undefined }
+      "Mapping run identity missing; skipping run-error report"
     );
     expect(summary.errorCount).toBe(1);
     expect(summary.results[0].status).toBe("ERROR");
@@ -222,7 +221,7 @@ describe("DownloaderService Unit Tests", () => {
     );
     expect(loggerMock.error).toHaveBeenCalledWith(
       "Failed to report mapping run error to backend",
-      expect.objectContaining({ mappingId: "map_1", runId: "run_1" })
+      expect.objectContaining({ error: expect.any(String) })
     );
     expect(summary.errorCount).toBe(1);
     expect(summary.results[0].status).toBe("ERROR");

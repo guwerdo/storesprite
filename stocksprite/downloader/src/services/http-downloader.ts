@@ -24,8 +24,6 @@ export class HttpDownloader implements IDownloader {
     const credentials = connection.credentials as HttpCredentials | null;
 
     this._logger.info("Starting HTTP download", {
-      connectionId: connection.id,
-      name: connection.name,
       url: config.url,
     });
 
@@ -86,7 +84,7 @@ export class HttpDownloader implements IDownloader {
               writeStream.destroy();
               reject(
                 new Error(
-                  `HTTP response for '${connection.name}' returned an HTML web page instead of CSV/XML data.`
+                  `HTTP response for connection '${connection.id}' returned an HTML web page instead of CSV/XML data.`
                 )
               );
               return;
@@ -112,22 +110,17 @@ export class HttpDownloader implements IDownloader {
 
       if (totalBytes === 0) {
         FileUtil.deleteFileIfExists(tempFilePath);
-        throw new Error(`HTTP download for '${connection.name}' received empty response (0 bytes).`);
+        throw new Error(`HTTP download for connection '${connection.id}' received empty response (0 bytes).`);
       }
 
       // Replace target destination with new file, reporting whether content is unchanged
       const isUnchanged = await StreamUtil.commitDownloadedFile(tempFilePath, destinationPath);
 
       if (isUnchanged) {
-        this._logger.info("Downloaded content is identical to existing file on disk (unchanged)", {
-          connectionId: connection.id,
-          name: connection.name,
-        });
+        this._logger.info("Downloaded content is identical to existing file on disk (unchanged)");
       }
 
       this._logger.info("HTTP download completed successfully", {
-        connectionId: connection.id,
-        name: connection.name,
         destinationPath,
         byteCount: totalBytes,
         isUnchanged,
@@ -142,8 +135,6 @@ export class HttpDownloader implements IDownloader {
       FileUtil.deleteFileIfExists(tempFilePath);
       const errorMsg = ErrorUtil.stringifyError(error);
       this._logger.error("HTTP download failed", {
-        connectionId: connection.id,
-        name: connection.name,
         error: errorMsg,
       });
       throw error;

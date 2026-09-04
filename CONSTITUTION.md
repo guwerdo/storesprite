@@ -172,8 +172,9 @@ This document outlines the non-negotiable principles, architectural invariants, 
      * `ts`: ISO-8601 timestamp string (`new Date().toISOString()`).
      * `level`: Log level string (`INFO`, `WARN`, `ERROR`).
      * `category`: Service module or logger name.
+     * `correlation`: On `stocksprite` ephemeral-worker log lines, a nested object `{ mappingId, runId, connectionId, userId }` stamped from the job's env so every line is traceable by run/mapping/connection/user; each field is `null` when its env var is unset.
      * `msg`: Human-readable log message.
-     * `context`: Structured key-value object containing contextual payload details (e.g. `sku`, `userId`, `error`, `url`).
+     * `context`: Structured key-value object containing contextual payload details (e.g. `sku`, `error`, `url`). Run-level ids live only in `correlation`, never repeated in `context`.
 
 2. **Mandatory Error & Event Logging**:
    * **Errors & Exceptions (`logger.error`)**: All caught exceptions, UNAS API failures, CSV parsing errors, database query failures, and unauthorized request attempts MUST be logged as `ERROR` with serialized error details (`Util.stringifyError(error)` or stack traces).

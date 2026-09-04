@@ -38,7 +38,7 @@ export class ProcessorService {
     public async run(): Promise<number> {
         const counters = createRunCounters();
         const { mappingId, runId } = this._config;
-        this._logger.info("Stock processor run started", { mappingId, runId });
+        this._logger.info("Stock processor run started");
 
         try {
             await this._backend.reportProgress(mappingId, { runId, progress: "start" });
@@ -46,7 +46,6 @@ export class ProcessorService {
             const runConfig = await this._backend.getRunConfig(mappingId);
             const { mapping } = runConfig;
             this._logger.info("Run configuration fetched", {
-                connectionId: mapping.connectionId,
                 warehouseCount: runConfig.warehouses.length,
             });
 
@@ -63,8 +62,6 @@ export class ProcessorService {
 
             if (feed.processedItems === 0) {
                 this._logger.info("Supplier feed is empty; nothing to process", {
-                    mappingId,
-                    runId,
                     processedItems: counters.processedItems,
                 });
                 await this._reportProgress("finish", counters);
@@ -84,17 +81,15 @@ export class ProcessorService {
             await this._update.flush(counters);
 
             await this._reportProgress("finish", counters);
-            this._logger.info("Stock processor run finished", { mappingId, runId, ...counters });
+            this._logger.info("Stock processor run finished", { ...counters });
             return counters.errorCount > 0 ? 1 : 0;
         } catch (error) {
             const message = stringifyError(error);
-            this._logger.error("Stock processor run failed", { mappingId, runId, error: message });
+            this._logger.error("Stock processor run failed", { error: message });
             try {
                 await this._backend.reportProgress(mappingId, { runId, progress: "error", error: message });
             } catch (reportError) {
                 this._logger.error("Failed to report the run error back to the backend", {
-                    mappingId,
-                    runId,
                     runError: message,
                     error: stringifyError(reportError),
                 });

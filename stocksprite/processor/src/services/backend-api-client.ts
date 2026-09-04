@@ -31,7 +31,7 @@ export class BackendApiClient implements IBackendApiClient {
 
     public async getRunConfig(mappingId: string): Promise<RunConfigResponse> {
         const url = `${this._config.backendUrl}/api/internal/stocksprite/mappings/${mappingId}/run-config`;
-        this._logger.info("Fetching run configuration from backend", { mappingId, url });
+        this._logger.info("Fetching run configuration from backend", { url });
         try {
             const response = await axios.get<unknown>(url, {
                 headers: { "x-internal-token": this._config.internalToken },
@@ -42,13 +42,13 @@ export class BackendApiClient implements IBackendApiClient {
                 const detail = this._validateRunConfig.errors
                     ? this._validateRunConfig.errors.map((e) => `${e.instancePath} ${e.message ?? ""}`.trim()).join("; ")
                     : "unknown validation error";
-                this._logger.error("Run configuration failed Ajv validation", { mappingId, detail });
+                this._logger.error("Run configuration failed Ajv validation", { detail });
                 throw new Error(`Run config validation failed: ${detail}`);
             }
             return body as RunConfigResponse;
         } catch (error) {
             const message = extractErrorMessage(error, "Failed to fetch run configuration");
-            this._logger.error("Failed to fetch run configuration", { mappingId, error: message });
+            this._logger.error("Failed to fetch run configuration", { error: message });
             throw new Error(`Failed to fetch run configuration for mapping '${mappingId}': ${message}`);
         }
     }
@@ -60,10 +60,10 @@ export class BackendApiClient implements IBackendApiClient {
                 headers: { "x-internal-token": this._config.internalToken },
                 timeout: 15000,
             });
-            this._logger.info("Reported progress to backend", { mappingId, progress: body.progress });
+            this._logger.info("Reported progress to backend", { progress: body.progress });
         } catch (error) {
             const message = extractErrorMessage(error, "Failed to report progress");
-            this._logger.error("Failed to report progress", { mappingId, progress: body.progress, error: message });
+            this._logger.error("Failed to report progress", { progress: body.progress, error: message });
             throw new Error(
                 `Failed to report progress '${body.progress}' for mapping '${mappingId}': ${message}`
             );

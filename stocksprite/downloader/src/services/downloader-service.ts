@@ -46,8 +46,6 @@ export class DownloaderService implements IDownloaderService {
     }
 
     this._logger.info("Starting Downloader session (single-connection mapping run)", {
-      userId: this._config.userId,
-      connectionId,
       outputDir,
       backendUrl: this._config.backendUrl,
     });
@@ -73,8 +71,6 @@ export class DownloaderService implements IDownloaderService {
       formatType = connection.dataFormat;
 
       this._logger.info("Fetched connection for mapping run", {
-        connectionId,
-        name: connectionName,
         channel: channelType,
         dataFormat: formatType,
       });
@@ -91,10 +87,7 @@ export class DownloaderService implements IDownloaderService {
       // 2+3. Download the feed, then convert it to standardized CSV.
       const isUnchanged = await this._downloadAndConvert(connection, rawFilePath, csvFilePath);
 
-      this._logger.info(
-        `Successfully processed connection '${connectionName}' [ID: ${connectionId}]`,
-        { connectionId, csvFilePath, isUnchanged }
-      );
+      this._logger.info("Successfully processed connection", { csvFilePath, isUnchanged });
 
       return {
         userId,
@@ -117,27 +110,18 @@ export class DownloaderService implements IDownloaderService {
       };
     } catch (error) {
       const errorMsg = ErrorUtil.stringifyError(error);
-      this._logger.error(`Error processing connection '${connectionName}' [ID: ${connectionId}]`, {
-        connectionId,
-        name: connectionName,
-        error: errorMsg,
-      });
+      this._logger.error("Error processing connection", { error: errorMsg });
 
       if (mappingId && runId) {
         try {
           await this._apiClient.reportRunError(mappingId, runId, errorMsg);
         } catch (reportErr) {
           this._logger.error("Failed to report mapping run error to backend", {
-            mappingId,
-            runId,
             error: ErrorUtil.stringifyError(reportErr),
           });
         }
       } else {
-        this._logger.warn("Mapping run identity missing; skipping run-error report", {
-          mappingId,
-          runId,
-        });
+        this._logger.warn("Mapping run identity missing; skipping run-error report");
       }
 
       return {
@@ -184,7 +168,7 @@ export class DownloaderService implements IDownloaderService {
     const { userId, outputDir } = this._config;
     FileUtil.ensureDirExists(outputDir);
 
-    this._logger.info("Executing single connection test mode", { connectionId, userId });
+    this._logger.info("Executing single connection test mode");
 
     const csvFilePath = FileUtil.getCsvFilePath(outputDir, `test_${connectionId}`);
     let rawFilePath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, "CSV");
@@ -225,7 +209,6 @@ export class DownloaderService implements IDownloaderService {
       });
 
       this._logger.info("Connection test completed successfully", {
-        connectionId,
         rowCount: sample.rowCount,
         columnCount: sample.columnCount,
         durationMs,
@@ -254,7 +237,7 @@ export class DownloaderService implements IDownloaderService {
       const durationMs = Date.now() - startTime;
       const finishedAt = new Date().toISOString();
 
-      this._logger.error("Connection test failed", { connectionId, error: errorMsg });
+      this._logger.error("Connection test failed", { error: errorMsg });
 
       try {
         await this._apiClient.reportTestResult(connectionId, {
@@ -266,7 +249,6 @@ export class DownloaderService implements IDownloaderService {
         });
       } catch (reportErr) {
         this._logger.error("Failed to report test failure to backend", {
-          connectionId,
           error: ErrorUtil.stringifyError(reportErr),
         });
       }
