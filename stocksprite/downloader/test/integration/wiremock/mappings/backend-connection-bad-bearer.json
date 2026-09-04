@@ -1,0 +1,33 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_bad_bearer"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_bad_bearer",
+        "name": "HTTP Bad Bearer Auth",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/bearer/feed_bearer.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ","
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "BEARER",
+          "token": "invalid_wrong_token"
+        }
+      }
+    }
+  }
+}

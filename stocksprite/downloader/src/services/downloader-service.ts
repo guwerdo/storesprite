@@ -10,7 +10,6 @@ import { IConverterFactory } from "../types/data-converter.interface.js";
 import {
   IDownloaderService,
   DownloaderExecutionSummary,
-  ConnectionProcessResult,
 } from "../types/downloader-service.interface.js";
 import { DataConnectionChannel, DataConnectionFormat } from "../types/connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
@@ -28,117 +27,139 @@ export class DownloaderService implements IDownloaderService {
   ) {}
 
   public async run(): Promise<DownloaderExecutionSummary> {
-    const { userId, outputDir, testConnectionId } = this._config;
+    const { outputDir, testConnectionId, connectionId } = this._config;
 
-    // Check if running in single connection test mode
+    // Single-connection test mode (legacy) is unchanged and wins first.
     if (testConnectionId) {
       return this._runTestMode(testConnectionId);
     }
 
-    this._logger.info("Starting Downloader session", {
-      userId,
+    FileUtil.ensureDirExists(outputDir);
+
+    if (!connectionId) {
+      const errorMsg =
+        "Missing required environment variable: CONNECTION_ID (and no TEST_CONNECTION set)";
+      this._logger.error("Downloader session aborted", { error: errorMsg });
+      throw new Error(errorMsg);
+    }
+
+    this._logger.info("Starting Downloader session (single-connection mapping run)", {
+      userId: this._config.userId,
+      connectionId,
       outputDir,
       backendUrl: this._config.backendUrl,
     });
 
-    FileUtil.ensureDirExists(outputDir);
+    return this._runMappingConnection(connectionId);
+  }
 
-    const allConnections = await this._apiClient.getUserConnections(userId);
-    const activeConnections = allConnections.filter((c) => c.isActive);
+  private async _runMappingConnection(
+    connectionId: string
+  ): Promise<DownloaderExecutionSummary> {
+    const { userId, outputDir, mappingId, runId } = this._config;
 
-    this._logger.info("Retrieved user data connections", {
-      total: allConnections.length,
-      active: activeConnections.length,
-    });
+    let connectionName = "Unknown";
+    let channelType: DataConnectionChannel = "HTTP";
+    let formatType: DataConnectionFormat = "CSV";
 
-    if (activeConnections.length === 0) {
-      this._logger.warn(
-        allConnections.length === 0
-          ? `No data connections configured for user '${userId}'.`
-          : `User '${userId}' has ${allConnections.length} connection(s), but none are active (isActive = false).`,
-        { userId, total: allConnections.length, active: activeConnections.length }
-      );
-    }
+    try {
+      // 1. Fetch the one connection this mapping run targets.
+      const connection = await this._apiClient.getConnectionById(connectionId);
+      connectionName = connection.name;
+      channelType = connection.channel;
+      formatType = connection.dataFormat;
 
-    const results: ConnectionProcessResult[] = [];
-
-    for (const connection of activeConnections) {
-      this._logger.info(`Processing connection '${connection.name}'`, {
-        connectionId: connection.id,
-        name: connection.name,
-        channel: connection.channel,
-        dataFormat: connection.dataFormat,
+      this._logger.info("Fetched connection for mapping run", {
+        connectionId,
+        name: connectionName,
+        channel: channelType,
+        dataFormat: formatType,
       });
 
-      const rawFilePath = FileUtil.getRawFilePath(outputDir, connection.id, connection.dataFormat);
-      const csvFilePath = FileUtil.getCsvFilePath(outputDir, connection.id);
+      if (!connection.isActive) {
+        throw new Error(
+          `Connection '${connectionId}' is not active (isActive=false); refusing to download`
+        );
+      }
 
-      try {
-        // Step 1: Download
-        const downloader = this._downloaderFactory.getDownloader(connection.channel);
-        const downloadResult = await downloader.download(connection, rawFilePath);
+      const rawFilePath = FileUtil.getRawFilePath(outputDir, connectionId, connection.dataFormat);
+      const csvFilePath = FileUtil.getCsvFilePath(outputDir, connectionId);
 
-        // Step 2: Convert to Standardized CSV
-        const converter = this._converterFactory.getConverter(connection.dataFormat);
-        await converter.convert(connection, rawFilePath, csvFilePath);
+      // 2. Download the feed.
+      const downloader = this._downloaderFactory.getDownloader(connection.channel);
+      const downloadResult = await downloader.download(connection, rawFilePath);
 
-        results.push({
-          connectionId: connection.id,
-          name: connection.name,
-          channel: connection.channel,
-          dataFormat: connection.dataFormat,
-          status: "OK",
-          isUnchanged: downloadResult.isUnchanged,
-          rawFilePath,
-          csvFilePath,
-        });
+      // 3. Convert to standardized CSV.
+      const converter = this._converterFactory.getConverter(connection.dataFormat);
+      await converter.convert(connection, rawFilePath, csvFilePath);
 
-        this._logger.info(`Successfully processed connection '${connection.name}' [ID: ${connection.id}]`, {
-          connectionId: connection.id,
-          csvFilePath,
-          isUnchanged: downloadResult.isUnchanged,
-        });
-      } catch (error) {
-        const errorMsg = ErrorUtil.stringifyError(error);
-        this._logger.error(`Error processing connection '${connection.name}' [ID: ${connection.id}]`, {
-          connectionId: connection.id,
-          name: connection.name,
-          error: errorMsg,
-        });
+      this._logger.info(
+        `Successfully processed connection '${connectionName}' [ID: ${connectionId}]`,
+        { connectionId, csvFilePath, isUnchanged: downloadResult.isUnchanged }
+      );
 
-        results.push({
-          connectionId: connection.id,
-          name: connection.name,
-          channel: connection.channel,
-          dataFormat: connection.dataFormat,
-          status: "ERROR",
-          error: errorMsg,
-          rawFilePath,
-          csvFilePath,
+      return {
+        userId,
+        totalConnections: 1,
+        activeConnections: 1,
+        successCount: 1,
+        errorCount: 0,
+        results: [
+          {
+            connectionId,
+            name: connectionName,
+            channel: channelType,
+            dataFormat: formatType,
+            status: "OK",
+            isUnchanged: downloadResult.isUnchanged,
+            rawFilePath,
+            csvFilePath,
+          },
+        ],
+      };
+    } catch (error) {
+      const errorMsg = ErrorUtil.stringifyError(error);
+      this._logger.error(`Error processing connection '${connectionName}' [ID: ${connectionId}]`, {
+        connectionId,
+        name: connectionName,
+        error: errorMsg,
+      });
+
+      if (mappingId && runId) {
+        try {
+          await this._apiClient.reportRunError(mappingId, runId, errorMsg);
+        } catch (reportErr) {
+          this._logger.error("Failed to report mapping run error to backend", {
+            mappingId,
+            runId,
+            error: ErrorUtil.stringifyError(reportErr),
+          });
+        }
+      } else {
+        this._logger.warn("Mapping run identity missing; skipping run-error report", {
+          mappingId,
+          runId,
         });
       }
+
+      return {
+        userId,
+        totalConnections: 1,
+        activeConnections: 0,
+        successCount: 0,
+        errorCount: 1,
+        results: [
+          {
+            connectionId,
+            name: connectionName,
+            channel: channelType,
+            dataFormat: formatType,
+            status: "ERROR",
+            error: errorMsg,
+          },
+        ],
+      };
     }
-
-    const successCount = results.filter((r) => r.status === "OK").length;
-    const errorCount = results.filter((r) => r.status === "ERROR").length;
-
-    const summary: DownloaderExecutionSummary = {
-      userId,
-      totalConnections: allConnections.length,
-      activeConnections: activeConnections.length,
-      successCount,
-      errorCount,
-      results,
-    };
-
-    const statusSummary = results.map((r) => `${r.name} (${r.connectionId}): ${r.status}`).join(", ");
-    this._logger.info(`Downloader session completed. ${statusSummary}`, {
-      userId,
-      successCount,
-      errorCount,
-    });
-
-    return summary;
   }
 
   private async _runTestMode(connectionId: string): Promise<DownloaderExecutionSummary> {

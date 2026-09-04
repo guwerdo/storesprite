@@ -1,0 +1,36 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_bad_sftp"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_bad_sftp",
+        "name": "SFTP Bad Password Auth",
+        "channel": "SFTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "SFTP",
+          "host": "mock-datasource-server",
+          "port": 22,
+          "remoteDir": "/home/sftpuser/upload"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ","
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "PASSWORD",
+          "username": "sftpuser",
+          "password": "wrong_incorrect_password"
+        }
+      }
+    }
+  }
+}

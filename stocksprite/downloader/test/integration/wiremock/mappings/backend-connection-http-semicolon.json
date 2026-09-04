@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_semicolon"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_semicolon",
+        "name": "HTTP Semicolon Delimited Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_semicolon.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ";"
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

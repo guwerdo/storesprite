@@ -101,6 +101,6 @@ export class SchedulerService implements ISchedulerService {
       backendUrl,
     });
 
-    void this._runner.runMapping(mapping.id, run.id, userId, token, backendUrl);
+    void this._runner.runMapping(mapping.connection.id, mapping.id, run.id, userId, token, backendUrl);
   }
 }

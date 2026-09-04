@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/api/internal/stocksprite/users/non_existing_user/connections"
+    "url": "/api/internal/stocksprite/connections/conn_missing"
   },
   "response": {
     "status": 404,
@@ -9,7 +9,7 @@
       "Content-Type": "application/json"
     },
     "jsonBody": {
-      "error": "User 'non_existing_user' not found"
+      "error": "Connection 'conn_missing' not found"
     }
   }
 }

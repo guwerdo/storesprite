@@ -23,36 +23,6 @@ export class BackendApiClient implements IBackendApiClient {
     return base;
   }
 
-  public async getUserConnections(userId: string): Promise<DataConnectionDto[]> {
-    const url = `${this._config.backendUrl}/api/internal/stocksprite/users/${userId}/connections`;
-    this._logger.info("Fetching user connections from backend", { userId, url });
-
-    try {
-      const response = await axios.get<{ connections: DataConnectionDto[] }>(url, {
-        headers: {
-          "x-internal-token": this._config.internalToken,
-        },
-        timeout: 10000,
-      });
-
-      const connections = response.data?.connections || [];
-      this._logger.info("Successfully fetched user connections", {
-        userId,
-        count: connections.length,
-      });
-
-      return connections;
-    } catch (error) {
-      const errorMsg = this._extractErrorMessage(error);
-      this._logger.error("Failed to fetch user connections from backend", {
-        userId,
-        url,
-        error: errorMsg,
-      });
-      throw new Error(`Failed to fetch user connections for user '${userId}': ${errorMsg}`);
-    }
-  }
-
   public async getConnectionById(connectionId: string): Promise<DataConnectionDto> {
     const url = `${this._config.backendUrl}/api/internal/stocksprite/connections/${connectionId}`;
     this._logger.info("Fetching single connection from backend", { connectionId, url });
@@ -103,6 +73,33 @@ export class BackendApiClient implements IBackendApiClient {
         error: errorMsg,
       });
       throw new Error(`Failed to report test result for '${connectionId}': ${errorMsg}`);
+    }
+  }
+
+  public async reportRunError(mappingId: string, runId: string, error: string): Promise<void> {
+    const url = `${this._config.backendUrl}/api/internal/stocksprite/mappings/${mappingId}/progress`;
+    this._logger.info("Reporting mapping run error to backend", { mappingId, runId, url });
+
+    try {
+      await axios.post(
+        url,
+        { runId, progress: "error", error },
+        {
+          headers: {
+            "x-internal-token": this._config.internalToken,
+          },
+          timeout: 15000,
+        }
+      );
+    } catch (err) {
+      const errorMsg = this._extractErrorMessage(err);
+      this._logger.error("Failed to report mapping run error to backend", {
+        mappingId,
+        runId,
+        url,
+        error: errorMsg,
+      });
+      throw new Error(`Failed to report run error for mapping '${mappingId}': ${errorMsg}`);
     }
   }
 }

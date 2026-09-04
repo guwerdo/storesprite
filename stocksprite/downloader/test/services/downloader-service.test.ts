@@ -41,6 +41,9 @@ describe("DownloaderService Unit Tests", () => {
       internalToken: "token_123",
       backendUrl: "http://backend:3000",
       outputDir: testDir,
+      connectionId: "345",
+      mappingId: "map_1",
+      runId: "run_1",
     };
 
     service = new DownloaderService(config, loggerMock, apiClientMock, downloaderFactory, converterFactory);
@@ -54,33 +57,20 @@ describe("DownloaderService Unit Tests", () => {
     }
   });
 
-  it("should orchestrate download and conversion for active connections", async () => {
-    const mockConnections: DataConnectionDto[] = [
-      {
-        id: "345",
-        name: "Madalbal",
-        channel: "HTTP",
-        dataFormat: "XML",
-        isActive: true,
-        config: { channel: "HTTP", url: "https://example.com/madalbal.xml" },
-        dataFormatConfig: { format: "XML", rowPath: "product" },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "inactive_conn",
-        name: "Old Supplier",
-        channel: "HTTP",
-        dataFormat: "CSV",
-        isActive: false,
-        config: { channel: "HTTP", url: "https://example.com/old.csv" },
-        dataFormatConfig: { format: "CSV", delimiter: "," },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+  it("should download and convert the single mapped connection into 345.csv", async () => {
+    const mockConn: DataConnectionDto = {
+      id: "345",
+      name: "Madalbal",
+      channel: "HTTP",
+      dataFormat: "XML",
+      isActive: true,
+      config: { channel: "HTTP", url: "https://example.com/madalbal.xml" },
+      dataFormatConfig: { format: "XML", rowPath: "product" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    apiClientMock.getUserConnections.mockResolvedValue(mockConnections);
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
     downloaderMock.download.mockResolvedValue({
       destinationPath: path.join(testDir, "345.raw.xml"),
       isUnchanged: false,
@@ -94,40 +84,93 @@ describe("DownloaderService Unit Tests", () => {
 
     const summary = await service.run();
 
-    expect(summary.totalConnections).toBe(2);
+    expect(apiClientMock.getConnectionById).toHaveBeenCalledWith("345");
+    expect(summary.totalConnections).toBe(1);
     expect(summary.activeConnections).toBe(1);
     expect(summary.successCount).toBe(1);
     expect(summary.errorCount).toBe(0);
-    expect(summary.results[0].connectionId).toBe("345");
-    expect(summary.results[0].rawFilePath).toBe(path.join(testDir, "345.raw.xml"));
-    expect(summary.results[0].csvFilePath).toBe(path.join(testDir, "345.csv"));
+    expect(summary.results[0]).toMatchObject({
+      connectionId: "345",
+      name: "Madalbal",
+      status: "OK",
+      rawFilePath: path.join(testDir, "345.raw.xml"),
+      csvFilePath: path.join(testDir, "345.csv"),
+    });
   });
 
-  it("should record errors and continue when a connection download fails", async () => {
-    const mockConnections: DataConnectionDto[] = [
-      {
-        id: "2",
-        name: "Broken Feed",
-        channel: "HTTP",
-        dataFormat: "CSV",
-        isActive: true,
-        config: { channel: "HTTP", url: "https://example.com/broken.csv" },
-        dataFormatConfig: { format: "CSV", delimiter: ";" },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+  it("should report a mapping run error when the download fails", async () => {
+    const mockConn: DataConnectionDto = {
+      id: "345",
+      name: "Broken Feed",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: true,
+      config: { channel: "HTTP", url: "https://example.com/broken.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: ";" },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    apiClientMock.getUserConnections.mockResolvedValue(mockConnections);
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
     downloaderMock.download.mockRejectedValue(new Error("Connection timed out"));
 
     const summary = await service.run();
 
-    expect(summary.activeConnections).toBe(1);
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("Connection timed out")
+    );
+    expect(summary.activeConnections).toBe(0);
     expect(summary.successCount).toBe(0);
     expect(summary.errorCount).toBe(1);
     expect(summary.results[0].status).toBe("ERROR");
     expect(summary.results[0].error).toContain("Connection timed out");
+  });
+
+  it("should refuse to download an inactive connection and report the run error", async () => {
+    const mockConn: DataConnectionDto = {
+      id: "345",
+      name: "Old Supplier",
+      channel: "HTTP",
+      dataFormat: "CSV",
+      isActive: false,
+      config: { channel: "HTTP", url: "https://example.com/old.csv" },
+      dataFormatConfig: { format: "CSV", delimiter: "," },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    apiClientMock.getConnectionById.mockResolvedValue(mockConn);
+
+    const summary = await service.run();
+
+    expect(downloaderMock.download).not.toHaveBeenCalled();
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("not active")
+    );
+    expect(summary.successCount).toBe(0);
+    expect(summary.errorCount).toBe(1);
+    expect(summary.results[0].status).toBe("ERROR");
+    expect(summary.results[0].error).toContain("isActive=false");
+  });
+
+  it("should report a mapping run error when the mapped connection is missing", async () => {
+    apiClientMock.getConnectionById.mockRejectedValue(new Error("Connection '345' not found"));
+
+    const summary = await service.run();
+
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("Connection '345' not found")
+    );
+    expect(summary.successCount).toBe(0);
+    expect(summary.errorCount).toBe(1);
+    expect(summary.results[0].name).toBe("Unknown");
+    expect(summary.results[0].status).toBe("ERROR");
   });
 
   it("should execute test mode, stream CSV sample rows and report stage progress and results", async () => {
@@ -277,18 +320,9 @@ describe("DownloaderService Unit Tests", () => {
     );
   });
 
-  it("should record an error and continue when a connection uses an unsupported channel", async () => {
-    const goodConnection: DataConnectionDto = {
-      id: "good_1",
-      name: "Good Feed",
-      channel: "HTTP",
-      dataFormat: "CSV",
-      isActive: true,
-      config: { channel: "HTTP", url: "https://example.com/good.csv" },
-      dataFormatConfig: { format: "CSV", delimiter: ";" },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  it("should report a mapping run error when the connection uses an unsupported channel", async () => {
+    config.connectionId = "ftp_1";
+
     const ftpConnection = {
       id: "ftp_1",
       name: "FTP Feed",
@@ -301,30 +335,24 @@ describe("DownloaderService Unit Tests", () => {
       updatedAt: new Date().toISOString(),
     } as unknown as DataConnectionDto;
 
-    apiClientMock.getUserConnections.mockResolvedValue([goodConnection, ftpConnection]);
-    downloaderMock.download.mockResolvedValue({
-      destinationPath: path.join(testDir, "good_1.raw.csv"),
-      isUnchanged: false,
-      byteCount: 10,
-    });
-    converterMock.convert.mockResolvedValue({
-      outputPath: path.join(testDir, "good_1.csv"),
-      rowCount: 1,
-      byteCount: 4,
-    });
+    apiClientMock.getConnectionById.mockResolvedValue(ftpConnection);
 
     const summary = await service.run();
 
-    expect(summary.successCount).toBe(1);
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("Unsupported download channel: 'FTP'")
+    );
+    expect(summary.successCount).toBe(0);
     expect(summary.errorCount).toBe(1);
-    const ftpResult = summary.results.find((r) => r.connectionId === "ftp_1");
-    expect(ftpResult?.status).toBe("ERROR");
-    expect(ftpResult?.error).toContain("Unsupported download channel: 'FTP'");
-    // The earlier good connection was still processed, so the loop continued.
-    expect(summary.results.find((r) => r.connectionId === "good_1")?.status).toBe("OK");
+    expect(summary.results[0].status).toBe("ERROR");
+    expect(summary.results[0].error).toContain("Unsupported download channel: 'FTP'");
   });
 
-  it("should record an error when a connection uses an unsupported data format", async () => {
+  it("should report a mapping run error when the connection uses an unsupported data format", async () => {
+    config.connectionId = "json_1";
+
     const jsonConnection = {
       id: "json_1",
       name: "JSON Feed",
@@ -337,15 +365,15 @@ describe("DownloaderService Unit Tests", () => {
       updatedAt: new Date().toISOString(),
     } as unknown as DataConnectionDto;
 
-    apiClientMock.getUserConnections.mockResolvedValue([jsonConnection]);
-    downloaderMock.download.mockResolvedValue({
-      destinationPath: path.join(testDir, "json_1.raw.json"),
-      isUnchanged: false,
-      byteCount: 9,
-    });
+    apiClientMock.getConnectionById.mockResolvedValue(jsonConnection);
 
     const summary = await service.run();
 
+    expect(apiClientMock.reportRunError).toHaveBeenCalledWith(
+      "map_1",
+      "run_1",
+      expect.stringContaining("Unsupported data format: 'JSON'")
+    );
     expect(summary.successCount).toBe(0);
     expect(summary.errorCount).toBe(1);
     expect(summary.results[0].status).toBe("ERROR");

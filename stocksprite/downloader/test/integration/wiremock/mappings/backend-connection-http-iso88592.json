@@ -1,0 +1,33 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_iso88592"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_iso88592",
+        "name": "HTTP ISO-8859-2 Latin-2 Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_iso88592.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": "|",
+          "encoding": "ISO-8859-2"
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

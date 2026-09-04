@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_inactive"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_inactive",
+        "name": "Inactive Supplier Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_semicolon.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ";"
+        },
+        "isActive": false,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

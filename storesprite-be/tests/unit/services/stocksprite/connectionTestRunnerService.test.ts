@@ -95,7 +95,7 @@ describe("ConnectionTestRunnerService", () => {
   it("runMapping: spawns docker run with the mapping environment once the image exists", async () => {
     const impl = mockSpawnSuccess();
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
     await settle();
 
     expect(impl).toHaveBeenCalledTimes(2);
@@ -106,6 +106,8 @@ describe("ConnectionTestRunnerService", () => {
     expect(runArgs.slice(0, 4)).toEqual(["run", "--rm", "-d", "--network=test-net"]);
     const env = envEntries(runArgs);
     expect(env).toEqual([
+      "-e",
+      "CONNECTION_ID=conn1",
       "-e",
       "MAPPING_ID=map1",
       "-e",
@@ -162,7 +164,7 @@ describe("ConnectionTestRunnerService", () => {
     });
     spawnMock.mockImplementation(impl as unknown as typeof spawn);
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
     await settle();
 
     expect(impl).toHaveBeenCalledTimes(3);
@@ -202,7 +204,7 @@ describe("ConnectionTestRunnerService", () => {
     });
     spawnMock.mockImplementation(impl as unknown as typeof spawn);
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
     await settle();
 
     expect(impl.mock.calls[1][1]).toEqual([
@@ -236,7 +238,7 @@ describe("ConnectionTestRunnerService", () => {
     });
     spawnMock.mockImplementation(impl as unknown as typeof spawn);
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
     await settle();
 
     expect(impl.mock.calls[1][1]).toEqual([
@@ -252,7 +254,7 @@ describe("ConnectionTestRunnerService", () => {
   it("skips the spawn entirely under the test driver", async () => {
     process.env.INTERNAL_DRIVER = "noop";
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
 
     expect(spawnMock).not.toHaveBeenCalled();
   });
@@ -260,7 +262,7 @@ describe("ConnectionTestRunnerService", () => {
   it("skips the spawn entirely under the cloud_run driver", async () => {
     process.env.INTERNAL_DRIVER = "cloud_run";
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
 
     expect(spawnMock).not.toHaveBeenCalled();
   });
@@ -269,7 +271,7 @@ describe("ConnectionTestRunnerService", () => {
     delete process.env.INTERNAL_DRIVER;
     process.env.NODE_ENV = "production";
 
-    await service.runMapping("map1", "run1", "u1", "tok", "http://be:3000");
+    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
 
     expect(spawnMock).not.toHaveBeenCalled();
   });

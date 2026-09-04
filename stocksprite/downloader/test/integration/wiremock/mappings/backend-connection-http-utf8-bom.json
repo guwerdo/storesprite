@@ -1,0 +1,33 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_utf8_bom"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_utf8_bom",
+        "name": "HTTP UTF-8-BOM Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_utf8_bom.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ",",
+          "encoding": "UTF-8-BOM"
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

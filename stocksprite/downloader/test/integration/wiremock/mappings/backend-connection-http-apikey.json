@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_apikey"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_apikey",
+        "name": "HTTP API Key Auth Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/apikey/feed_apikey.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ","
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "API_KEY",
+          "headerName": "X-Supplier-API-Key",
+          "headerValue": "mock_api_key_456"
+        }
+      }
+    }
+  }
+}

@@ -31,6 +31,7 @@ describe("SchedulerService", () => {
     null,
     { success: true, columns: ["sku"] }
   );
+  conn.id = "conn1";
 
   const makeMapping = (schedule: unknown, lastRunAt?: Date): Mapping => {
     const m = new Mapping(user, conn, "M", "sku", []);
@@ -78,7 +79,9 @@ describe("SchedulerService", () => {
 
     // Runner dispatch is fire-and-forget
     expect(runnerMock.runMapping).toHaveBeenCalledTimes(1);
-    const [, runId, userId, token, backendUrl] = runnerMock.runMapping.mock.calls[0];
+    const [connectionId, mappingId, runId, userId, token, backendUrl] = runnerMock.runMapping.mock.calls[0];
+    expect(connectionId).toBe("conn1");
+    expect(mappingId).toBe("m1");
     expect(runId).toBe("run1");
     expect(userId).toBe("u1");
     expect(token).toBe("");
@@ -98,7 +101,7 @@ describe("SchedulerService", () => {
 
     await service.runDue(now);
 
-    expect(runnerMock.runMapping).toHaveBeenCalledWith("m1", "run1", "u1", "secret-token", "http://be:3000");
+    expect(runnerMock.runMapping).toHaveBeenCalledWith("conn1", "m1", "run1", "u1", "secret-token", "http://be:3000");
 
     if (originalToken === undefined) delete process.env.INTERNAL_TOKEN;
     else process.env.INTERNAL_TOKEN = originalToken;

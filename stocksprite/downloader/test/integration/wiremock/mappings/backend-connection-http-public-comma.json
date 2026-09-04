@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_public_comma"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_public_comma",
+        "name": "HTTP Public Comma Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_public_comma.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ","
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

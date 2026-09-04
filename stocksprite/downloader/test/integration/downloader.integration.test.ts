@@ -44,7 +44,21 @@ function sshdIsReady(host: string): Promise<boolean> {
   });
 }
 
-function runDownloaderContainer(userId: string): { exitCode: number; stdout: string; stderr: string } {
+// A mapping run: the container is booted with CONNECTION_ID (plus USER_ID etc.) and
+// downloads/converts exactly that one connection to <OUTPUT_DIR>/<CONNECTION_ID>.csv.
+function baseEnv(connectionId: string): Record<string, string> {
+  return {
+    USER_ID: "integration_runner",
+    INTERNAL_TOKEN: "mock_internal_token",
+    BACKEND_URL: "http://mock-backend:8080",
+    OUTPUT_DIR: "/app/temp",
+    CONNECTION_ID: connectionId,
+  };
+}
+
+function runDownloaderContainer(
+  env: Record<string, string>
+): { exitCode: number; stdout: string; stderr: string } {
   const containerName = `storesprite-dl-int-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   // Do NOT bind-mount the temp dir into the container: this harness runs from
@@ -53,29 +67,22 @@ function runDownloaderContainer(userId: string): { exitCode: number; stdout: str
   // mount an empty directory there, so the downloader's output would never reach
   // the host temp dir the assertions read. Instead run a named container, read
   // its exit code, `docker cp` the produced files back out, then remove it.
-  const run = spawnSync(
-    "docker",
-    [
-      "run",
-      "--name",
-      containerName,
-      "--network",
-      "storesprite-integration-net",
-      "-e",
-      `USER_ID=${userId}`,
-      "-e",
-      "INTERNAL_TOKEN=mock_internal_token",
-      "-e",
-      "BACKEND_URL=http://mock-backend:8080",
-      "-e",
-      "OUTPUT_DIR=/app/temp",
-      "storesprite-downloader:test-integration",
-    ],
-    {
-      encoding: "utf-8",
-      cwd: REPO_ROOT,
-    }
-  );
+  const dockerArgs: string[] = [
+    "run",
+    "--name",
+    containerName,
+    "--network",
+    "storesprite-integration-net",
+  ];
+  for (const [key, value] of Object.entries(env)) {
+    dockerArgs.push("-e", `${key}=${value}`);
+  }
+  dockerArgs.push("storesprite-downloader:test-integration");
+
+  const run = spawnSync("docker", dockerArgs, {
+    encoding: "utf-8",
+    cwd: REPO_ROOT,
+  });
 
   try {
     // Pull the downloader's output (converted CSVs + downloader.log) out of the
@@ -115,7 +122,8 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
       }
     );
 
-    // 2. Start mock-backend and mock-datasource-server services
+    // 2. Start mock-backend and mock-datasource-server services (rebuilding mock-backend
+    //    so the new single-connection WireMock mappings in wiremock/mappings are baked in).
     console.log("[Integration Test] Starting mock-backend and mock-datasource-server services via docker-compose...");
     execSync(`docker compose -f "${COMPOSE_FILE}" up -d --build mock-backend mock-datasource-server`, {
       cwd: TEST_INTEGRATION_DIR,
@@ -163,137 +171,147 @@ describe("StoreSprite Downloader Container Integration Test Suite", () => {
     }
   });
 
-  it("should successfully download and standardize all 12 protocols/auth/encoding combinations (Happy Path)", () => {
-    cleanTempDir();
+  const happyPathCases: Array<{ id: string; assertCsv: (content: string) => void }> = [
+    {
+      id: "conn_http_public_comma",
+      assertCsv: (content) => {
+        expect(content).toContain("PROD-001;Tool Set A;19.99;150");
+      },
+    },
+    {
+      id: "conn_http_pipe",
+      assertCsv: (content) => {
+        expect(content).toContain("PIPE-101;Heavy Hammer;12.99;80");
+      },
+    },
+    {
+      id: "conn_http_semicolon",
+      assertCsv: (content) => {
+        expect(content).toContain("SEMI-201;Screwdriver Set;15.00;95");
+      },
+    },
+    {
+      id: "conn_http_bearer",
+      assertCsv: (content) => {
+        expect(content).toContain("BEARER-301;Safety Goggles;6.50;500");
+      },
+    },
+    {
+      id: "conn_http_apikey",
+      assertCsv: (content) => {
+        expect(content).toContain("APIKEY-401;Cordless Screwdriver;45.00;30");
+      },
+    },
+    {
+      id: "conn_http_basic",
+      assertCsv: (content) => {
+        expect(content).toContain("BASIC-501;Toolbox Metal 3-Tier;38.50;25");
+      },
+    },
+    {
+      id: "conn_http_xml",
+      assertCsv: (content) => {
+        expect(content).toContain("XML-601");
+        expect(content).toContain("Digital Caliper 150mm");
+      },
+    },
+    {
+      id: "conn_sftp_password",
+      assertCsv: (content) => {
+        expect(content).toContain("SFTP-701;Hex Key Set 9pc;14.50;110");
+      },
+    },
+    {
+      id: "conn_sftp_key",
+      assertCsv: (content) => {
+        expect(content).toContain("SFTP-701;Hex Key Set 9pc;14.50;110");
+      },
+    },
+    {
+      id: "conn_http_win1250",
+      assertCsv: (content) => {
+        expect(content).toContain("Cikkszám;Terméknév;Ár;Készlet");
+        expect(content).toContain("HU-901;Árvíztűrő tükörfúrógép;14990;25");
+        expect(content).toContain("HU-902;Ütvefúró és vésőgép;28500;10");
+      },
+    },
+    {
+      id: "conn_http_utf8_bom",
+      assertCsv: (content) => {
+        expect(content.charCodeAt(0)).not.toBe(0xfeff);
+        expect(content).toContain("sku;megnevezés;ár;raktár");
+        expect(content).toContain("BOM-101;Láncfűrész fém fogazattal;34990;12");
+      },
+    },
+    {
+      id: "conn_http_iso88592",
+      assertCsv: (content) => {
+        expect(content).toContain("Azonosító;Megnevezés;Egységár;Raktár");
+        expect(content).toContain("ISO-001;Csavarhúzó készlet (9 részes);4500;85");
+      },
+    },
+  ];
 
-    const { exitCode, stdout, stderr } = runDownloaderContainer("test_user_all_protocols");
+  describe("single-connection mapping runs (Happy Path)", () => {
+    it.each(
+      happyPathCases.map(
+        ({ id, assertCsv }) => [id, assertCsv] as [string, (content: string) => void]
+      )
+    )("downloads and converts the one mapped connection %s", (id, assertCsv) => {
+      cleanTempDir();
 
-    console.log("[Integration Test Output - Happy Path]:\n" + stdout);
-    // Embed the downloader's own output in the failure so a flaky/non-zero run is
-    // self-diagnosing: the session summary + "Error processing connection ..." lines
-    // name the exact connection(s) that failed instead of vanishing with the temp dir.
-    expect(
-      exitCode,
-      `downloader exited ${exitCode} (expected 0).\n--- stdout (tail) ---\n${stdout.slice(-8000)}${
-        stderr ? `\n--- stderr (tail) ---\n${stderr.slice(-2000)}` : ""
-      }`
-    ).toBe(0);
-    expect(stdout).toContain("Downloader completed successfully without errors");
+      const { exitCode, stdout, stderr } = runDownloaderContainer(baseEnv(id));
 
-    // Verify all 12 converted CSV files exist in temp/
-    const files = fs.readdirSync(TEMP_DIR);
-    console.log("[Integration Test Downloaded Files]:", files);
-    const convertedCsvFiles = files.filter((f) => f.endsWith(".csv") && !f.endsWith(".raw.csv"));
-    expect(convertedCsvFiles.length).toBe(12);
+      console.log(`[Integration Test Output - ${id}]:\n` + stdout);
+      // Embed the downloader's own output in the failure so a flaky/non-zero run is
+      // self-diagnosing: the session summary + "Error processing connection ..." lines
+      // name the exact connection that failed instead of vanishing with the temp dir.
+      expect(
+        exitCode,
+        `downloader exited ${exitCode} (expected 0).\n--- stdout (tail) ---\n${stdout.slice(-8000)}${
+          stderr ? `\n--- stderr (tail) ---\n${stderr.slice(-2000)}` : ""
+        }`
+      ).toBe(0);
+      expect(stdout).toContain("Downloader completed successfully without errors");
 
-    // 1. HTTP Public Comma
-    const publicComma = files.find((f) => f.includes("conn_http_public_comma") && f.endsWith(".csv"));
-    expect(publicComma).toBeDefined();
-    const publicCommaContent = fs.readFileSync(path.join(TEMP_DIR, publicComma!), "utf-8");
-    expect(publicCommaContent).toContain("PROD-001;Tool Set A;19.99;150");
+      // The converted output must be exactly <connectionId>.csv (single-connection run).
+      const csvPath = path.join(TEMP_DIR, `${id}.csv`);
+      const files = fs.readdirSync(TEMP_DIR);
+      expect(
+        fs.existsSync(csvPath),
+        `expected ${csvPath} to exist. temp/ contains: ${files.join(", ")}`
+      ).toBe(true);
+      assertCsv(fs.readFileSync(csvPath, "utf-8"));
+    }, 60000);
+  });
 
-    // 2. HTTP Pipe Delimited -> Standardized to Semicolon
-    const pipeFile = files.find((f) => f.includes("conn_http_pipe") && f.endsWith(".csv"));
-    expect(pipeFile).toBeDefined();
-    const pipeContent = fs.readFileSync(path.join(TEMP_DIR, pipeFile!), "utf-8");
-    expect(pipeContent).toContain("PIPE-101;Heavy Hammer;12.99;80");
+  const negativeCases: Array<{ id: string; label: string }> = [
+    { id: "conn_malformed_xml", label: "Malformed XML" },
+    { id: "conn_bad_bearer", label: "Bad Bearer token" },
+    { id: "conn_bad_sftp", label: "Bad SFTP password" },
+    { id: "conn_missing", label: "Connection not found (404)" },
+    { id: "conn_inactive", label: "Inactive connection" },
+  ];
 
-    // 3. HTTP Semicolon Delimited
-    const semiFile = files.find((f) => f.includes("conn_http_semicolon") && f.endsWith(".csv"));
-    expect(semiFile).toBeDefined();
-    const semiContent = fs.readFileSync(path.join(TEMP_DIR, semiFile!), "utf-8");
-    expect(semiContent).toContain("SEMI-201;Screwdriver Set;15.00;95");
+  describe("negative single-connection runs", () => {
+    it.each(negativeCases.map(({ id, label }) => [id, label] as [string, string]))(
+      "%s exits 1 and logs the per-connection error (%s)",
+      (id, label) => {
+        cleanTempDir();
 
-    // 4. HTTP Bearer Auth
-    const bearerFile = files.find((f) => f.includes("conn_http_bearer") && f.endsWith(".csv"));
-    expect(bearerFile).toBeDefined();
-    const bearerContent = fs.readFileSync(path.join(TEMP_DIR, bearerFile!), "utf-8");
-    expect(bearerContent).toContain("BEARER-301;Safety Goggles;6.50;500");
+        const { exitCode, stdout, stderr } = runDownloaderContainer(baseEnv(id));
 
-    // 5. HTTP API Key Header Auth
-    const apikeyFile = files.find((f) => f.includes("conn_http_apikey") && f.endsWith(".csv"));
-    expect(apikeyFile).toBeDefined();
-    const apikeyContent = fs.readFileSync(path.join(TEMP_DIR, apikeyFile!), "utf-8");
-    expect(apikeyContent).toContain("APIKEY-401;Cordless Screwdriver;45.00;30");
-
-    // 6. HTTP Basic Auth
-    const basicFile = files.find((f) => f.includes("conn_http_basic") && f.endsWith(".csv"));
-    expect(basicFile).toBeDefined();
-    const basicContent = fs.readFileSync(path.join(TEMP_DIR, basicFile!), "utf-8");
-    expect(basicContent).toContain("BASIC-501;Toolbox Metal 3-Tier;38.50;25");
-
-    // 7. HTTP XML Product Feed converted to CSV
-    const xmlFile = files.find((f) => f.includes("conn_http_xml") && f.endsWith(".csv"));
-    expect(xmlFile).toBeDefined();
-    const xmlContent = fs.readFileSync(path.join(TEMP_DIR, xmlFile!), "utf-8");
-    expect(xmlContent).toContain("XML-601");
-    expect(xmlContent).toContain("Digital Caliper 150mm");
-
-    // 8. SFTP Password Auth
-    const sftpPassFile = files.find((f) => f.includes("conn_sftp_password") && f.endsWith(".csv"));
-    expect(sftpPassFile).toBeDefined();
-    const sftpPassContent = fs.readFileSync(path.join(TEMP_DIR, sftpPassFile!), "utf-8");
-    expect(sftpPassContent).toContain("SFTP-701;Hex Key Set 9pc;14.50;110");
-
-    // 9. SFTP SSH Key Auth
-    const sftpKeyFile = files.find((f) => f.includes("conn_sftp_key") && f.endsWith(".csv"));
-    expect(sftpKeyFile).toBeDefined();
-    const sftpKeyContent = fs.readFileSync(path.join(TEMP_DIR, sftpKeyFile!), "utf-8");
-    expect(sftpKeyContent).toContain("SFTP-701;Hex Key Set 9pc;14.50;110");
-
-    // 10. HTTP Windows-1250 Hungarian characters preserved in UTF-8
-    const win1250File = files.find((f) => f.includes("conn_http_win1250") && f.endsWith(".csv"));
-    expect(win1250File).toBeDefined();
-    const win1250Content = fs.readFileSync(path.join(TEMP_DIR, win1250File!), "utf-8");
-    expect(win1250Content).toContain("Cikkszám;Terméknév;Ár;Készlet");
-    expect(win1250Content).toContain("HU-901;Árvíztűrő tükörfúrógép;14990;25");
-    expect(win1250Content).toContain("HU-902;Ütvefúró és vésőgép;28500;10");
-
-    // 11. HTTP UTF-8 with BOM stripped cleanly
-    const bomFile = files.find((f) => f.includes("conn_http_utf8_bom") && f.endsWith(".csv"));
-    expect(bomFile).toBeDefined();
-    const bomContent = fs.readFileSync(path.join(TEMP_DIR, bomFile!), "utf-8");
-    expect(bomContent.charCodeAt(0)).not.toBe(0xfeff);
-    expect(bomContent).toContain("sku;megnevezés;ár;raktár");
-    expect(bomContent).toContain("BOM-101;Láncfűrész fém fogazattal;34990;12");
-
-    // 12. HTTP ISO-8859-2 Latin-2 preserved in UTF-8
-    const isoFile = files.find((f) => f.includes("conn_http_iso88592") && f.endsWith(".csv"));
-    expect(isoFile).toBeDefined();
-    const isoContent = fs.readFileSync(path.join(TEMP_DIR, isoFile!), "utf-8");
-    expect(isoContent).toContain("Azonosító;Megnevezés;Egységár;Raktár");
-    expect(isoContent).toContain("ISO-001;Csavarhúzó készlet (9 részes);4500;85");
-  }, 60000);
-
-  it("should catch and gracefully handle malformed XML feeds (Negative Test)", () => {
-    cleanTempDir();
-
-    const { exitCode, stdout } = runDownloaderContainer("test_user_malformed");
-
-    console.log("[Integration Test Output - Malformed XML]:\n" + stdout);
-    expect(exitCode).toBe(1);
-    expect(stdout).toContain("Error processing connection");
-    expect(stdout).toContain("Downloader finished with errors");
-  }, 30000);
-
-  it("should catch and gracefully report invalid authentication failures (Negative Test)", () => {
-    cleanTempDir();
-
-    const { exitCode, stdout } = runDownloaderContainer("test_user_bad_auth");
-
-    console.log("[Integration Test Output - Bad Auth]:\n" + stdout);
-    expect(exitCode).toBe(1);
-    expect(stdout).toContain("Error processing connection");
-    expect(stdout).toContain("Downloader finished with errors");
-  }, 30000);
-
-  it("should fail immediately with exit code 1 when backend returns 404 User Not Found (Negative Test)", () => {
-    cleanTempDir();
-
-    const { exitCode, stdout } = runDownloaderContainer("non_existing_user");
-
-    console.log("[Integration Test Output - 404 User]:\n" + stdout);
-    expect(exitCode).toBe(1);
-    expect(stdout).toContain("Fatal exception during downloader execution");
-  }, 30000);
+        console.log(`[Integration Test Output - ${label}]:\n` + stdout);
+        expect(
+          exitCode,
+          `downloader exited ${exitCode} (expected 1).\n--- stdout (tail) ---\n${stdout.slice(-8000)}${
+            stderr ? `\n--- stderr (tail) ---\n${stderr.slice(-2000)}` : ""
+          }`
+        ).toBe(1);
+        expect(stdout).toContain("Downloader finished with errors");
+        expect(stdout).toContain("Error processing connection");
+      },
+      60000
+    );
+  });
 });

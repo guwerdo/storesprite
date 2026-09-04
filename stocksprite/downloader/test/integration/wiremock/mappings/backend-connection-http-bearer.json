@@ -1,0 +1,33 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_http_bearer"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_http_bearer",
+        "name": "HTTP Bearer Auth Feed",
+        "channel": "HTTP",
+        "dataFormat": "CSV",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/bearer/feed_bearer.csv"
+        },
+        "dataFormatConfig": {
+          "format": "CSV",
+          "delimiter": ","
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "BEARER",
+          "token": "mock_bearer_token_123"
+        }
+      }
+    }
+  }
+}

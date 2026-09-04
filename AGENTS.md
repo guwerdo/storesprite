@@ -28,20 +28,21 @@ StoreSprite operates on a three-tier multi-tenant architecture consisting of a p
    * **Security Boundaries & Endpoints**:
      * `/api/webhooks/clerk`: Verifies raw body Svix cryptographic signatures before syncing user records to PostgreSQL.
      * `/api/client/*`: Protected via `@clerk/fastify` and `getAuth()` for client UI operations.
-     * `/api/internal/stocksprite/*`: Protected via a `preHandler` hook enforcing the `x-internal-token` header. Guards the worker↔backend contract: workers fetch tenant connections (`/users/:userId/connections`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
+     * `/api/internal/stocksprite/*`: Protected via a `preHandler` hook enforcing the `x-internal-token` header. Guards the worker↔backend contract: workers fetch the single connection a job targets (`/connections/:connectionId`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
    * **Real-Time Gateway**: Uses Socket.IO to manage isolated tenant broadcast rooms (`tenant_${userId}`).
-   * **Worker Orchestrator**: Spawns an ephemeral `stocksprite` container (downloader → processor) per job, injecting `USER_ID` / `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, and `BACKEND_URL`.
+   * **Worker Orchestrator**: Spawns an ephemeral `stocksprite` container (downloader → processor) per job, injecting `USER_ID`, `CONNECTION_ID`, `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, and `BACKEND_URL`.
 
 3. **On-Demand Worker (`stocksprite`)**:
    * Ephemeral single container (built from `stocksprite/Dockerfile`) running two
      TypeScript CLI stages in sequence: the **`downloader`** then the **`processor`**.
-   * **Execution Lifecycle** (booted on-demand by `storesprite-be` with `USER_ID` /
-     `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`):
-     1. `downloader` (`stocksprite/downloader`): Fetches the tenant's active supplier
-        connections from `storesprite-be` (`GET /api/internal/stocksprite/users/:userId/connections`,
-        guarded by `x-internal-token`), stream-downloads each feed (HTTP/SFTP, all auth
-        schemes), and converts it in-place to standardized `;`-delimited CSV — `csvkit`
-        for CSV delimiters/encodings, a streaming SAX parser for XML — under `temp/`.
+   * **Execution Lifecycle** (booted on-demand by `storesprite-be` with `USER_ID`,
+     `CONNECTION_ID`, `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`):
+     1. `downloader` (`stocksprite/downloader`): Fetches the run's one connection from
+        `storesprite-be` (`GET /api/internal/stocksprite/connections/:connectionId`,
+        guarded by `x-internal-token`), refuses an inactive or missing connection, and
+        otherwise stream-downloads that feed (HTTP/SFTP, all auth schemes) and converts
+        it in-place to standardized `;`-delimited CSV — `csvkit` for CSV
+        delimiters/encodings, a streaming SAX parser for XML — under `temp/<connectionId>.csv`.
      2. `processor` (`stocksprite/processor`): One mapping run — fetches + Ajv-validates the
         run config (`GET /mappings/:mappingId/run-config`), stream-joins the supplier CSV with
         the UNAS product DB per `@storesprite/mapping-rules`, batch-sends `setProduct` to the
@@ -157,14 +158,14 @@ The monorepo contains three primary services:
     *   **Security Routes**:
         *   `/api/webhooks/clerk`: Svix raw buffer signature verification.
         *   `/api/client/*`: Clerk JWT protected routes for user actions.
-        *   `/api/internal/stocksprite/*`: Protected via `INTERNAL_TOKEN` `preHandler` hook. Guards the worker↔backend contract: workers fetch tenant connections (`/users/:userId/connections`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
-    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID` / `MAPPING_ID` + `RUN_ID`, and `INTERNAL_TOKEN`).
+        *   `/api/internal/stocksprite/*`: Protected via `INTERNAL_TOKEN` `preHandler` hook. Guards the worker↔backend contract: workers fetch the single connection a job targets (`/connections/:connectionId`) and mapping run-configs (`/mappings/:mappingId/run-config`), and report run progress (`/mappings/:mappingId/progress`).
+    *   **Orchestrator**: Spawns and manages on-demand `stocksprite` container instances per tenant (injecting `USER_ID`, `CONNECTION_ID`, `MAPPING_ID` + `RUN_ID`, and `INTERNAL_TOKEN`).
 *   **`stocksprite/` (On-Demand Worker: downloader + processor)**:
     *   Two TypeScript CLI subprojects packaged in ONE combined Docker container
         (`stocksprite/Dockerfile`) that runs them in sequence per job.
     *   Runs **on-demand** for a specific user / mapping run:
-        1. Booted by `storesprite-be` with `USER_ID` / `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`.
-        2. `downloader` fetches the tenant's active supplier connections from `storesprite-be`, stream-downloads each feed (HTTP/SFTP) and converts it to standardized CSV (`temp/<connectionId>.csv`).
+        1. Booted by `storesprite-be` with `USER_ID`, `CONNECTION_ID`, `MAPPING_ID` + `RUN_ID`, `INTERNAL_TOKEN`, `BACKEND_URL`.
+        2. `downloader` fetches the run's one connection by id from `storesprite-be` (`GET .../connections/:connectionId`), refuses an inactive or missing connection, and otherwise stream-downloads that feed (HTTP/SFTP) and converts it to standardized CSV (`temp/<connectionId>.csv`).
         3. `processor` fetches + validates the run config, stream-joins the supplier CSV with the UNAS product DB per mapping rules, and batch-sends `setProduct` updates to the tenant's UNAS webshop, reporting progress to `storesprite-be`.
         4. Container exits (0/1) upon job completion.
 

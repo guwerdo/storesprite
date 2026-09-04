@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/internal/stocksprite/connections/conn_malformed_xml"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "connection": {
+        "id": "conn_malformed_xml",
+        "name": "HTTP Malformed XML Feed",
+        "channel": "HTTP",
+        "dataFormat": "XML",
+        "config": {
+          "channel": "HTTP",
+          "url": "http://mock-datasource-server:80/public/feed_malformed.xml"
+        },
+        "dataFormatConfig": {
+          "format": "XML",
+          "rowPath": "products/product"
+        },
+        "isActive": true,
+        "credentials": {
+          "authType": "NONE"
+        }
+      }
+    }
+  }
+}

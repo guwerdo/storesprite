@@ -25,40 +25,24 @@ describe("BackendApiClient Unit Tests", () => {
     client = new BackendApiClient(config, loggerMock);
   });
 
-  it("should fetch user connections with x-internal-token header", async () => {
-    const mockConnections: DataConnectionDto[] = [
-      {
-        id: "conn_1",
-        name: "Cromwell",
-        channel: "SFTP",
-        dataFormat: "CSV",
-        isActive: true,
-        config: { channel: "SFTP", host: "sftp.test.com", remoteDir: "/" },
-        dataFormatConfig: { format: "CSV", delimiter: "," },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+  it("should report a mapping run error via POST with the internal token", async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ status: 200 });
 
-    vi.mocked(axios.get).mockResolvedValueOnce({
-      data: { connections: mockConnections },
-    });
+    await client.reportRunError("map_1", "run_1", "boom");
 
-    const result = await client.getUserConnections("user_test");
-
-    expect(result).toEqual(mockConnections);
-    expect(axios.get).toHaveBeenCalledWith(
-      "http://backend:3000/api/internal/stocksprite/users/user_test/connections",
-      expect.objectContaining({
-        headers: { "x-internal-token": "test_token" },
-      })
+    expect(axios.post).toHaveBeenCalledWith(
+      "http://backend:3000/api/internal/stocksprite/mappings/map_1/progress",
+      { runId: "run_1", progress: "error", error: "boom" },
+      expect.objectContaining({ headers: { "x-internal-token": "test_token" } })
     );
   });
 
-  it("should throw formatted error when request fails", async () => {
-    vi.mocked(axios.get).mockRejectedValueOnce(new Error("Network Error"));
+  it("should throw a formatted error when reporting a mapping run error fails", async () => {
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error("net down"));
 
-    await expect(client.getUserConnections("user_test")).rejects.toThrow("Failed to fetch user connections");
+    await expect(client.reportRunError("map_1", "run_1", "boom")).rejects.toThrow(
+      "Failed to report run error for mapping 'map_1'"
+    );
     expect(loggerMock.error).toHaveBeenCalled();
   });
 

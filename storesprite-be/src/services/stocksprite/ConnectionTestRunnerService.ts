@@ -53,6 +53,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
   }
 
   public async runMapping(
+    connectionId: string,
     mappingId: string,
     runId: string,
     userId: string,
@@ -62,6 +63,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     await Promise.resolve();
     const driver = this._resolveDriver();
     this._logger?.info("Dispatching mapping runner", {
+      connectionId,
       mappingId,
       runId,
       userId,
@@ -80,6 +82,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     }
 
     void this._runContainer(this._imageName(), {
+      CONNECTION_ID: connectionId,
       MAPPING_ID: mappingId,
       RUN_ID: runId,
       USER_ID: userId,

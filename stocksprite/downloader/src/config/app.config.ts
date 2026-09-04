@@ -9,6 +9,9 @@ export interface AppConfig {
   backendUrl: string;
   outputDir: string;
   testConnectionId?: string;
+  connectionId?: string;
+  mappingId?: string;
+  runId?: string;
 }
 
 export function getAppConfig(): AppConfig {
@@ -24,6 +27,9 @@ export function getAppConfig(): AppConfig {
   const backendUrl = (process.env.BACKEND_URL?.trim() || "http://storesprite-be:3000").replace(/\/+$/, "");
   const outputDir = process.env.OUTPUT_DIR?.trim() || path.resolve(process.cwd(), "temp");
   const testConnectionId = process.env.TEST_CONNECTION?.trim() || undefined;
+  const connectionId = process.env.CONNECTION_ID?.trim() || undefined;
+  const mappingId = process.env.MAPPING_ID?.trim() || undefined;
+  const runId = process.env.RUN_ID?.trim() || undefined;
 
   return {
     userId,
@@ -31,5 +37,8 @@ export function getAppConfig(): AppConfig {
     backendUrl,
     outputDir,
     testConnectionId,
+    connectionId,
+    mappingId,
+    runId,
   };
 }

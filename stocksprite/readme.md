@@ -6,7 +6,7 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
 
 ## 1. Single Responsibility & Workflow
 
-1. **Fetches Configuration**: Accepts a `USER_ID`, calls `storesprite-be` (`GET /api/internal/stocksprite/users/:userId/connections` with `x-internal-token`), and filters for `isActive: true` connections.
+1. **Fetches Configuration**: Accepts a `CONNECTION_ID` (plus `USER_ID` for context/logging), calls `storesprite-be` (`GET /api/internal/stocksprite/connections/:connectionId` with `x-internal-token`), and refuses to run when that connection is inactive or missing.
 2. **Streams Multi-Protocol Downloads**:
    - **HTTP**: Low-memory streaming GET/POST downloads with authentication (None, Basic, Bearer, ApiKey) and automatic detection of empty bodies or HTML error/redirect pages.
    - **SFTP**: Streaming downloads from remote SFTP servers with password or private key authentication and file selection strategies (`LATEST_ALPHABETICAL`, `LATEST_MODIFIED`, `EXACT_MATCH`).
@@ -68,12 +68,18 @@ To run the container attached to the shared Docker network (`storesprite-shared-
 docker run --rm \
   --network storesprite-shared-net \
   -e USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp" \
+  -e CONNECTION_ID="345" \
   -e INTERNAL_TOKEN="mock_worker_token" \
   -e BACKEND_URL="http://storesprite-be:3000" \
   -e OUTPUT_DIR="/app/temp" \
   -v C:\my-git\storesprite\stocksprite\downloader\temp:/app/temp \
   storesprite-downloader
 ```
+> **Note:** a downloader container fetches and processes **exactly one** feed per
+> run. `CONNECTION_ID` selects which single connection to download; the output
+> lands at `<OUTPUT_DIR>/<CONNECTION_ID>.csv`. The mapping layer (the combined
+> image, or Cloud Run Jobs) passes `CONNECTION_ID` at dispatch so each container
+> handles one mapping.
 
 ---
 
@@ -88,12 +94,14 @@ npm test
 
 ### Container Integration Test Suite (`npm run test:integration`)
 The integration test suite spins up a real test environment on the host via `downloader/test/integration/docker-compose-test-integration.yaml`:
-* **WireMock (`mock-backend`)**: Mocks `storesprite-be` connection retrieval endpoints (`GET /api/internal/stocksprite/users/:userId/connections`).
+* **WireMock (`mock-backend`)**: Mocks `storesprite-be` single-connection retrieval (`GET /api/internal/stocksprite/connections/:connectionId`).
 * **Mock Datasource Server (`mock-datasource-server`)**: An Alpine-based container hosting real **Nginx HTTP** and **OpenSSH SFTP** servers.
 * **Downloader Container (`storesprite-downloader:test-integration`)**: Runs the downloader-only runtime stage (`--target downloader-runtime` of the production multi-stage image) against the test network.
 
 #### Scenarios Covered:
-1. **Happy Path (12 Combinations: 9 Protocols/Auth + 3 Encodings)**:
+Each scenario runs one downloader container booted with a single `CONNECTION_ID`,
+which downloads/converts exactly that one connection to `<OUTPUT_DIR>/<id>.csv`:
+1. **Happy Path — 12 Single-Connection Runs (9 Protocols/Auth + 3 Encodings)**:
    - HTTP Public (Comma Delimited CSV)
    - HTTP Pipe Delimited CSV
    - HTTP Semicolon Delimited CSV
@@ -107,11 +115,13 @@ The integration test suite spins up a real test environment on the host via `dow
    - HTTP UTF-8 with BOM CSV, BOM stripped
    - HTTP ISO-8859-2 (Latin-2) CSV, converted to UTF-8
 2. **Negative Test: Malformed XML**:
-   - Asserts downstream XML parser catches broken XML syntax and completes with error summary.
+   - Asserts downstream XML parser catches broken XML syntax and exits 1 with an error summary.
 3. **Negative Test: Invalid Authentication**:
-   - Asserts HTTP 401 Bearer Token and SFTP password failures are captured, logged, and isolated.
-4. **Negative Test: 404 User Not Found**:
-   - Asserts downloader terminates immediately with exit code 1 when backend returns 404.
+   - Asserts HTTP 401 Bearer Token and bad SFTP password runs exit 1, logged and isolated per connection.
+4. **Negative Test: Connection Not Found (404)**:
+   - Asserts downloader exits 1 immediately when the backend returns 404 for the `CONNECTION_ID`.
+5. **Negative Test: Inactive Connection**:
+   - Asserts downloader refuses to run and exits 1 when the fetched connection has `isActive: false`.
 
 #### Running Integration Tests:
 Run the integration test inside the `stocksprite-dev` container (or from your host
