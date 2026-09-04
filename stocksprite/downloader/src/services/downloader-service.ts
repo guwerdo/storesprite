@@ -11,7 +11,11 @@ import {
   IDownloaderService,
   DownloaderExecutionSummary,
 } from "../types/downloader-service.interface.js";
-import { DataConnectionChannel, DataConnectionFormat } from "../types/connection.types.js";
+import {
+  DataConnectionChannel,
+  DataConnectionFormat,
+  DataConnectionDto,
+} from "../types/connection.types.js";
 import { FileUtil } from "../utils/file-util.js";
 import { ErrorUtil } from "../utils/error-util.js";
 import { CsvUtil } from "../utils/csv-util.js";
@@ -34,8 +38,6 @@ export class DownloaderService implements IDownloaderService {
       return this._runTestMode(testConnectionId);
     }
 
-    FileUtil.ensureDirExists(outputDir);
-
     if (!connectionId) {
       const errorMsg =
         "Missing required environment variable: CONNECTION_ID (and no TEST_CONNECTION set)";
@@ -57,6 +59,7 @@ export class DownloaderService implements IDownloaderService {
     connectionId: string
   ): Promise<DownloaderExecutionSummary> {
     const { userId, outputDir, mappingId, runId } = this._config;
+    FileUtil.ensureDirExists(outputDir);
 
     let connectionName = "Unknown";
     let channelType: DataConnectionChannel = "HTTP";
@@ -85,17 +88,12 @@ export class DownloaderService implements IDownloaderService {
       const rawFilePath = FileUtil.getRawFilePath(outputDir, connectionId, connection.dataFormat);
       const csvFilePath = FileUtil.getCsvFilePath(outputDir, connectionId);
 
-      // 2. Download the feed.
-      const downloader = this._downloaderFactory.getDownloader(connection.channel);
-      const downloadResult = await downloader.download(connection, rawFilePath);
-
-      // 3. Convert to standardized CSV.
-      const converter = this._converterFactory.getConverter(connection.dataFormat);
-      await converter.convert(connection, rawFilePath, csvFilePath);
+      // 2+3. Download the feed, then convert it to standardized CSV.
+      const isUnchanged = await this._downloadAndConvert(connection, rawFilePath, csvFilePath);
 
       this._logger.info(
         `Successfully processed connection '${connectionName}' [ID: ${connectionId}]`,
-        { connectionId, csvFilePath, isUnchanged: downloadResult.isUnchanged }
+        { connectionId, csvFilePath, isUnchanged }
       );
 
       return {
@@ -111,7 +109,7 @@ export class DownloaderService implements IDownloaderService {
             channel: channelType,
             dataFormat: formatType,
             status: "OK",
-            isUnchanged: downloadResult.isUnchanged,
+            isUnchanged,
             rawFilePath,
             csvFilePath,
           },
@@ -162,6 +160,25 @@ export class DownloaderService implements IDownloaderService {
     }
   }
 
+  private async _downloadAndConvert(
+    connection: DataConnectionDto,
+    rawFilePath: string,
+    csvFilePath: string,
+    reportStage?: (stage: "download" | "convert") => Promise<void>
+  ): Promise<boolean> {
+    if (reportStage) {
+      await reportStage("download");
+    }
+    const downloader = this._downloaderFactory.getDownloader(connection.channel);
+    const downloadResult = await downloader.download(connection, rawFilePath);
+    if (reportStage) {
+      await reportStage("convert");
+    }
+    const converter = this._converterFactory.getConverter(connection.dataFormat);
+    await converter.convert(connection, rawFilePath, csvFilePath);
+    return downloadResult.isUnchanged;
+  }
+
   private async _runTestMode(connectionId: string): Promise<DownloaderExecutionSummary> {
     const startTime = Date.now();
     const { userId, outputDir } = this._config;
@@ -184,30 +201,17 @@ export class DownloaderService implements IDownloaderService {
       formatType = connection.dataFormat;
       rawFilePath = FileUtil.getRawFilePath(outputDir, `test_${connectionId}`, connection.dataFormat);
 
-      // 2. Report progress: download
-      await this._apiClient.reportTestResult(connectionId, {
-        progress: "download",
+      // 2. Download + convert, reporting stage progress to the backend between stages.
+      await this._downloadAndConvert(connection, rawFilePath, csvFilePath, async (stage) => {
+        await this._apiClient.reportTestResult(connectionId, { progress: stage });
       });
 
-      // 3. Download data
-      const downloader = this._downloaderFactory.getDownloader(connection.channel);
-      await downloader.download(connection, rawFilePath);
-
-      // 4. Report progress: convert
-      await this._apiClient.reportTestResult(connectionId, {
-        progress: "convert",
-      });
-
-      // 5. Convert data to standardized CSV
-      const converter = this._converterFactory.getConverter(connection.dataFormat);
-      await converter.convert(connection, rawFilePath, csvFilePath);
-
-      // 6. Analyze converted CSV (streaming extraction)
+      // 3. Analyze converted CSV (streaming extraction)
       const sample = await this._analyzeCsv(csvFilePath);
       const durationMs = Date.now() - startTime;
       const finishedAt = new Date().toISOString();
 
-      // 7. Report progress: finish with success
+      // 4. Report progress: finish with success
       await this._apiClient.reportTestResult(connectionId, {
         progress: "finish",
         success: true,
