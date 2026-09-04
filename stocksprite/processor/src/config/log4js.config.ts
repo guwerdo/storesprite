@@ -1,8 +1,6 @@
 import log4js from "log4js";
 import type { LoggingEvent, Logger } from "log4js";
 
-const LOG_CATEGORIES = ["default", "parse", "compare", "send"] as const;
-
 /**
  * Single-line JSON layout: { ts, level, category, msg, context }. The second
  * log4js argument (an object) becomes `context`. The processor is ephemeral and
@@ -33,18 +31,21 @@ export function jsonWithDataFieldLayout(): (logEvent: LoggingEvent) => string {
 
 export function configureLogger(): void {
     log4js.addLayout("jsonWithDataField", jsonWithDataFieldLayout);
-    const categories: Record<string, log4js.Configuration["categories"][string]> = {};
-    for (const category of LOG_CATEGORIES) {
-        categories[category] = { appenders: ["console"], level: process.env.LOG_LEVEL ?? "info" };
-    }
     log4js.configure({
         appenders: {
             console: { type: "console", layout: { type: "jsonWithDataField" } },
         },
-        categories,
+        categories: {
+            // log4js requires a "default" category to be defined (fallback routing);
+            // the processor never logs under it. Every processor log line instead
+            // carries category "processor" so log-system filters can tell downloader
+            // logs from processor logs apart.
+            default: { appenders: ["console"], level: process.env.LOG_LEVEL ?? "info" },
+            processor: { appenders: ["console"], level: process.env.LOG_LEVEL ?? "info" },
+        },
     });
 }
 
-export function getLogger(category = "default"): Logger {
+export function getLogger(category = "processor"): Logger {
     return log4js.getLogger(category);
 }

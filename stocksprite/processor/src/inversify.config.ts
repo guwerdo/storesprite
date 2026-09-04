@@ -28,7 +28,7 @@ export function createContainer(customConfig?: AppConfig, customLogger?: Logger)
     let logger = customLogger;
     if (logger === undefined) {
         configureLogger();
-        logger = getLogger("default");
+        logger = getLogger("processor");
     }
     container.bind<Logger>(TYPES.Logger).toConstantValue(logger);
 

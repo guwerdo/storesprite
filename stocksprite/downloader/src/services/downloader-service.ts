@@ -241,7 +241,7 @@ export class DownloaderService implements IDownloaderService {
       } catch (reportErr) {
         this._logger.error("Failed to report test failure to backend", {
           connectionId,
-          error: String(reportErr),
+          error: ErrorUtil.stringifyError(reportErr),
         });
       }
 

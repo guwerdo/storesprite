@@ -17,7 +17,7 @@ The **StoreSprite Downloader Service** is a lightweight, strongly typed TypeScri
    - Raw downloads: `temp/${connection.id}.raw.${ext}` (e.g. `temp/345.raw.xml`, `temp/2.raw.csv`).
    - Standardized converted outputs: `temp/${connection.id}.csv` (e.g. `temp/345.csv`, `temp/2.csv`).
 5. **Logging**:
-   - Writes structured logs to `stdout` and local log file `temp/downloader.log` using `log4js`.
+   - Writes single-line JSON logs (`{ ts, level, category, msg, context }`, category `downloader`) to `stdout` and local log file `temp/downloader.log` using `log4js` — the same structured layout as the processor, so both ephemeral workers are filterable by component in Cloud Logging.
 
 ---
 
