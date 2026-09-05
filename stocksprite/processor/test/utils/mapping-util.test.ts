@@ -99,13 +99,8 @@ describe("mapping-util", () => {
         });
 
         it("truncates after converting, so the resulting length never exceeds UNAS_SKU_MAX_LENGTH", () => {
-            const converted = "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + ".";
-            expect(converted.length).toBe(UNAS_SKU_MAX_LENGTH);
-            expect(toUnasSku(converted)).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
-
-            const twoDisallowed = "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "..";
-            expect(twoDisallowed.length).toBe(UNAS_SKU_MAX_LENGTH + 1);
-            expect(toUnasSku(twoDisallowed)).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
+            expect(toUnasSku("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + ".")).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
+            expect(toUnasSku("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "..")).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
         });
 
         it("returns an empty string unchanged", () => {

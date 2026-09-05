@@ -45,10 +45,7 @@ export function getStringValue(value: unknown): string | undefined {
  * Mirrors how UNAS rewrites disallowed SKU characters when storing a product.
  */
 export function toUnasSku(sku: string): string {
-    const normalized = sku.replace(/[^A-Za-z0-9_-]/g, "_");
-    return normalized.length > UNAS_SKU_MAX_LENGTH
-        ? normalized.slice(0, UNAS_SKU_MAX_LENGTH)
-        : normalized;
+    return sku.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, UNAS_SKU_MAX_LENGTH);
 }
 
 export function negativeToZero(value: number): number {

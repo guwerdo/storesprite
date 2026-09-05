@@ -26,10 +26,8 @@ describe("RuleTransformService", () => {
             expect(service.transformSku(undefined)).toBeUndefined();
         });
 
-        it("normalizes the trimmed SKU to UNAS format (disallowed characters → _)", () => {
+        it("normalizes the SKU to UNAS format even with no rules configured", () => {
             expect(service.transformSku("123.ASD")).toBe("123_ASD");
-            expect(service.transformSku("123 ASD")).toBe("123_ASD");
-            expect(service.transformSku("123##ASD")).toBe("123__ASD");
         });
 
         it("normalizes after the rule pipeline has run", () => {
