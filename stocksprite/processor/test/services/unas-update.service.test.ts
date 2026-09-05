@@ -139,14 +139,4 @@ describe("UnasUpdateService", () => {
         await service.flush(counters);
         expect(setProduct).not.toHaveBeenCalled();
     });
-
-    it("normalizes the SKU to UNAS format before buffering", async () => {
-        const setProduct = vi.fn<SetProductHandler>((request) => Promise.resolve(okResponses(request.products)));
-        const { service, counters } = makeHarness(setProduct);
-
-        await service.queue(makeProduct("123.ASD"), counters);
-        await service.flush(counters);
-
-        expect(setProduct.mock.calls[0][0].products[0].sku).toBe("123_ASD");
-    });
 });

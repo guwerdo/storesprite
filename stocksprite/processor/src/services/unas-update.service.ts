@@ -5,7 +5,6 @@ import type { IUnasJsonClient, ISetProduct } from "@storesprite/unas-json-client
 import { TYPES } from "../types/binding-keys.js";
 import type { RunCounters } from "../types/connection.interface.js";
 import { delay } from "../utils/http-util.js";
-import { toUnasSku } from "../utils/mapping-util.js";
 
 /** UNAS accepts up to 100 products per setProduct call. */
 export const MAX_BATCH_SIZE = 100;
@@ -32,9 +31,9 @@ export class UnasUpdateService {
         this._client = client;
     }
 
-    /** Enqueue one diff; flushes as soon as the buffer reaches 100. The SKU is normalized to UNAS format before buffering. */
+    /** Enqueue one diff; flushes as soon as the buffer reaches 100. */
     public async queue(update: ISetProduct, counters: RunCounters): Promise<void> {
-        this._buffer.push({ ...update, sku: toUnasSku(update.sku) });
+        this._buffer.push(update);
         if (this._buffer.length >= MAX_BATCH_SIZE) {
             await this.flush(counters);
         }
