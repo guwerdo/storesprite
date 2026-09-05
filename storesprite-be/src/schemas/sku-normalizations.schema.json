@@ -1,0 +1,76 @@
+{
+  "$ref": "#/definitions/SkuNormalizations",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "SkuConversionExample": {
+      "additionalProperties": false,
+      "description": "Wire shape of one `before -> after` SKU conversion example.",
+      "properties": {
+        "after": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
+    "SkuNormalizations": {
+      "additionalProperties": false,
+      "description": "SKU normalizations applied while parsing the supplier CSV, carried on the `finish` progress report and persisted on the run-history row. Hand-synced with stocksprite (processor) and storesprite-fe (field names must stay identical across the three).",
+      "properties": {
+        "converted": {
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "examples": {
+              "items": {
+                "$ref": "#/definitions/SkuConversionExample"
+              },
+              "maxItems": 5,
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "examples"
+          ],
+          "type": "object"
+        },
+        "truncated": {
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "examples": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 5,
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "examples"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "converted",
+        "truncated"
+      ],
+      "type": "object"
+    }
+  }
+}

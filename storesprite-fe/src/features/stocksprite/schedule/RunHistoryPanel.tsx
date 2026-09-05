@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useAuth } from '@clerk/clerk-react';
 import { useInjection } from '../../../di/ContainerProvider.js';
 import { TYPES } from '../../../di/types.js';
@@ -208,6 +209,49 @@ export default function RunHistoryPanel({ mappingId, refreshSignal = 0 }: RunHis
                   <TableRow key={row.id}>
                     <TableCell>
                       <Chip size="small" color={statusColor(row.status)} label={t(`stocksprite.history.status.${row.status}`)} />
+                      {row.skuNormalizations &&
+                        (row.skuNormalizations.converted.count > 0 || row.skuNormalizations.truncated.count > 0) && (
+                          <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {row.skuNormalizations.converted.count > 0 && (
+                              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <WarningAmberIcon color="warning" sx={{ fontSize: 14 }} />
+                                  <Typography variant="caption" color="warning.main">
+                                    {t('stocksprite.history.sku.converted', { count: row.skuNormalizations.converted.count })}
+                                  </Typography>
+                                </Box>
+                                {row.skuNormalizations.converted.examples.length > 0 && (
+                                  <Box sx={{ pl: 2.25 }}>
+                                    {row.skuNormalizations.converted.examples.map((example, i) => (
+                                      <Typography key={i} variant="caption" component="div" color="text.secondary">
+                                        {example.before} → {example.after}
+                                      </Typography>
+                                    ))}
+                                  </Box>
+                                )}
+                              </Box>
+                            )}
+                            {row.skuNormalizations.truncated.count > 0 && (
+                              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <WarningAmberIcon color="warning" sx={{ fontSize: 14 }} />
+                                  <Typography variant="caption" color="warning.main">
+                                    {t('stocksprite.history.sku.truncated', { count: row.skuNormalizations.truncated.count })}
+                                  </Typography>
+                                </Box>
+                                {row.skuNormalizations.truncated.examples.length > 0 && (
+                                  <Box sx={{ pl: 2.25 }}>
+                                    {row.skuNormalizations.truncated.examples.map((original, i) => (
+                                      <Typography key={i} variant="caption" component="div" color="text.secondary">
+                                        {original}
+                                      </Typography>
+                                    ))}
+                                  </Box>
+                                )}
+                              </Box>
+                            )}
+                          </Box>
+                        )}
                       {row.error && (
                         <Box sx={{ mt: 0.5 }}>
                           <Typography variant="caption" color="error">

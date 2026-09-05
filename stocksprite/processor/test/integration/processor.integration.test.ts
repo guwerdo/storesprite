@@ -165,7 +165,23 @@ const scenarios: Scenario[] = [
         warehouses: [MAIN_WAREHOUSE],
         golden: "sku-conversion.expected.xml",
         expectExit: 0,
-        expectFinish: { processedItems: 3, updatedItems: 3, unchangedItems: 0, errorCount: 0 },
+        expectFinish: {
+            processedItems: 3,
+            updatedItems: 3,
+            unchangedItems: 0,
+            errorCount: 0,
+            skuNormalizations: {
+                converted: {
+                    count: 3,
+                    examples: [
+                        { before: "123.ASD", after: "123_ASD" },
+                        { before: "A B", after: "A_B" },
+                        { before: "C##D", after: "C__D" },
+                    ],
+                },
+                truncated: { count: 0, examples: [] },
+            },
+        },
     },
 ];
 
@@ -278,5 +294,46 @@ describe("processor → UNAS CSV-to-XML integration", () => {
 
         const allSkus = [...sends.flatMap((body) => [...body.matchAll(/<Sku>([^<]+)<\/Sku>/g)].map((m) => m[1]))];
         expect(new Set(allSkus).size).toBe(count);
+    });
+
+    it("reports truncated SKU normalizations on the finish body", async () => {
+        const long = "Z".repeat(55);
+        const truncated = "Z".repeat(50);
+        const scenario: Scenario = {
+            name: "truncate",
+            connectionId: "conn-truncate",
+            mapping: {
+                id: "mapping-truncate",
+                connectionId: "conn-truncate",
+                skuField: "SKU",
+                skuRules: [],
+                stockMappings: [{ column: "Main", warehouseId: 1 }],
+            },
+            warehouses: [MAIN_WAREHOUSE],
+            expectExit: 0,
+            expectFinish: {
+                processedItems: 1,
+                updatedItems: 1,
+                unchangedItems: 0,
+                errorCount: 0,
+                skuNormalizations: {
+                    converted: { count: 0, examples: [] },
+                    truncated: { count: 1, examples: [long] },
+                },
+            },
+        };
+
+        const { exit, bodies, sends } = await runScenario(scenario, {
+            connectionCsv: `SKU;Main\n${long};7`,
+            dbCsv: `Cikkszám,Raktárkészlet\n${truncated},0`,
+        });
+
+        expect(exit).toBe(0);
+        expect(bodies.map((body) => body.progress)).toEqual(["start", "parse", "download", "compare", "finish"]);
+        expect(sends).toHaveLength(1);
+        expect(normalizeXml(sends[0])).toContain(`<Sku>${truncated}</Sku>`);
+
+        const finish = bodies[bodies.length - 1];
+        expect(finish).toMatchObject(scenario.expectFinish);
     });
 });

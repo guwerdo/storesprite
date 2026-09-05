@@ -20,6 +20,7 @@ import {
   ConnectionTestResult,
 } from "../types/stocksprite/DataConnectionRepository.interface.js";
 import { StockMappingItem, MappingRule, MappingSchedule } from "../types/stocksprite/MappingRepository.interface.js";
+import { SkuNormalizations } from "../types/stocksprite/MappingHistoryRepository.interface.js";
 import { IJsonSchemaValidator } from "../types/JsonSchemaValidator.interface.js";
 
 export class SchemaValidationError extends Error {
@@ -45,6 +46,7 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   private readonly _validateStockMappings: ValidateFunction<StockMappingItem[]>;
   private readonly _validateMappingRules: ValidateFunction<MappingRule[]>;
   private readonly _validateSchedule: ValidateFunction<MappingSchedule>;
+  private readonly _validateSkuNormalizations: ValidateFunction<SkuNormalizations>;
 
   constructor(
     @inject(TYPES.Logger)
@@ -64,6 +66,7 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
     this._validateStockMappings = this._compileSchema<StockMappingItem[]>("stock-mapping-items.schema.json");
     this._validateMappingRules = this._compileSchema<MappingRule[]>("mapping-rules.schema.json");
     this._validateSchedule = this._compileSchema<MappingSchedule>("mapping-schedule.schema.json");
+    this._validateSkuNormalizations = this._compileSchema<SkuNormalizations>("sku-normalizations.schema.json");
   }
 
   public validateTestResult(testResult: unknown): ConnectionTestResult {
@@ -87,6 +90,13 @@ export class JsonSchemaValidator implements IJsonSchemaValidator {
   public validateSchedule(schedule: unknown): MappingSchedule {
     this._requireObject(schedule, "Schedule");
     return this._assertValid(this._validateSchedule, schedule, "schedule", { schedule });
+  }
+
+  public validateSkuNormalizations(skuNormalizations: unknown): SkuNormalizations {
+    this._requireObject(skuNormalizations, "SKU normalizations");
+    return this._assertValid(this._validateSkuNormalizations, skuNormalizations, "sku normalizations", {
+      skuNormalizations,
+    });
   }
 
   public validateConfig(channel: DataConnectionChannel, config: unknown): ConnectionConfig {

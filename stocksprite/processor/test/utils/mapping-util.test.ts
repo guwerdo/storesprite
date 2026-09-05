@@ -6,6 +6,7 @@ import {
     getNumberValue,
     getStringValue,
     negativeToZero,
+    normalizeSku,
     stocksEqual,
     toStockArray,
     toUnasSku,
@@ -105,6 +106,38 @@ describe("mapping-util", () => {
 
         it("returns an empty string unchanged", () => {
             expect(toUnasSku("")).toBe("");
+        });
+    });
+
+    describe("normalizeSku", () => {
+        it("passes a valid SKU through unchanged", () => {
+            expect(normalizeSku("123-ASD_a")).toEqual({ sku: "123-ASD_a", converted: false, truncated: false });
+        });
+
+        it("flags a conversion when a disallowed character is rewritten", () => {
+            expect(normalizeSku("123.ASD")).toEqual({ sku: "123_ASD", converted: true, truncated: false });
+            expect(normalizeSku("A B")).toEqual({ sku: "A_B", converted: true, truncated: false });
+            expect(normalizeSku("C##D")).toEqual({ sku: "C__D", converted: true, truncated: false });
+        });
+
+        it("flags a truncation when the result exceeds UNAS_SKU_MAX_LENGTH", () => {
+            const long = "a".repeat(UNAS_SKU_MAX_LENGTH + 5);
+            expect(normalizeSku(long)).toEqual({
+                sku: "a".repeat(UNAS_SKU_MAX_LENGTH),
+                converted: false,
+                truncated: true,
+            });
+        });
+
+        it("flags both converted and truncated when an over-long SKU has a disallowed character", () => {
+            const input = "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "..";
+            const result = normalizeSku(input);
+            expect(result).toEqual({
+                sku: "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_",
+                converted: true,
+                truncated: true,
+            });
+            expect(result.sku).toHaveLength(UNAS_SKU_MAX_LENGTH);
         });
     });
 

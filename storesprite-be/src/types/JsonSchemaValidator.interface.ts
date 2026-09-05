@@ -5,6 +5,7 @@ import {
   ConnectionTestResult,
 } from "./stocksprite/DataConnectionRepository.interface.js";
 import { StockMappingItem, MappingRule, MappingSchedule } from "./stocksprite/MappingRepository.interface.js";
+import { SkuNormalizations } from "./stocksprite/MappingHistoryRepository.interface.js";
 import { DataConnectionChannel, DataConnectionFormat } from "../entities/stocksprite/DataConnection.js";
 
 export interface IJsonSchemaValidator {
@@ -15,4 +16,5 @@ export interface IJsonSchemaValidator {
   validateStockMappings(items: unknown): StockMappingItem[];
   validateMappingRules(rules: unknown): MappingRule[];
   validateSchedule(schedule: unknown): MappingSchedule;
+  validateSkuNormalizations(skuNormalizations: unknown): SkuNormalizations;
 }

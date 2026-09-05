@@ -182,6 +182,7 @@ describe("Internal API run-config + progress (Mocked Dependencies)", () => {
       warningCount: 0,
       errorCount: 0,
       error: null,
+      skuNormalizations: null,
     });
 
     it("persists parse progress and relays a progress event", async () => {
@@ -276,6 +277,57 @@ describe("Internal API run-config + progress (Mocked Dependencies)", () => {
       expect(row.error).toBe("boom");
       expect(row.finishedAt).toBeInstanceOf(Date);
       expect(historyRepositoryMock.save).toHaveBeenCalledWith(row);
+    });
+
+    it("persists skuNormalizations from a valid finish", async () => {
+      (mappingRepositoryMock.getById as any).mockResolvedValue(mapping);
+      const row = makeRow();
+      (historyRepositoryMock.findById as any).mockResolvedValue(row);
+      vi.spyOn(app.io, "to").mockReturnValue({ emit: vi.fn() } as never);
+
+      const skuNormalizations = {
+        converted: { count: 2, examples: [{ before: "123.ASD", after: "123_ASD" }] },
+        truncated: { count: 0, examples: [] },
+      };
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/internal/stocksprite/mappings/map1/progress",
+        headers: internalHeaders,
+        payload: { runId: "run1", progress: "finish", updatedItems: 1, errorCount: 0, skuNormalizations },
+      });
+
+      expect(response.statusCode).toBe(204);
+      expect(row.status).toBe("success");
+      expect(row.skuNormalizations).toEqual(skuNormalizations);
+      expect(historyRepositoryMock.save).toHaveBeenCalledWith(row);
+    });
+
+    it("hard-fails with 400 and marks the run failed when skuNormalizations is malformed", async () => {
+      (mappingRepositoryMock.getById as any).mockResolvedValue(mapping);
+      const row = makeRow();
+      (historyRepositoryMock.findById as any).mockResolvedValue(row);
+      const emitSpy = vi.fn();
+      vi.spyOn(app.io, "to").mockReturnValue({ emit: emitSpy } as never);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/internal/stocksprite/mappings/map1/progress",
+        headers: internalHeaders,
+        payload: {
+          runId: "run1",
+          progress: "finish",
+          errorCount: 0,
+          skuNormalizations: { converted: { count: "x", examples: [] }, truncated: { count: 0, examples: [] } },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(row.status).toBe("failed");
+      expect(row.error).toContain("sku normalizations");
+      expect(row.finishedAt).toBeInstanceOf(Date);
+      expect(historyRepositoryMock.save).toHaveBeenCalledWith(row);
+      // The 400 return happens before the finish relay is emitted.
+      expect(emitSpy).not.toHaveBeenCalled();
     });
 
     it("relays but does not persist when the runId belongs to another mapping", async () => {

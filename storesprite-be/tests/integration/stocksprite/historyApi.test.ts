@@ -150,11 +150,15 @@ describe("History API Integration Tests", () => {
       headers: { "x-internal-token": token },
       payload: { runId, progress: "parse", processedItems: 12 },
     });
+    const skuNormalizations = {
+      converted: { count: 1, examples: [{ before: "123.ASD", after: "123_ASD" }] },
+      truncated: { count: 0, examples: [] },
+    };
     const finish = await app.inject({
       method: "POST",
       url: `/api/internal/stocksprite/mappings/${mappingId}/progress`,
       headers: { "x-internal-token": token },
-      payload: { runId, progress: "finish", updatedItems: 10, unchangedItems: 2 },
+      payload: { runId, progress: "finish", updatedItems: 10, unchangedItems: 2, skuNormalizations },
     });
     expect(finish.statusCode).toBe(204);
 
@@ -175,8 +179,44 @@ describe("History API Integration Tests", () => {
       warningCount: 0,
       errorCount: 0,
       error: null,
+      skuNormalizations,
     });
     expect(rows[0].finishedAt).not.toBeNull();
+  });
+
+  it("returns null skuNormalizations on the DTO when a finish reported none", async () => {
+    const mappingId = await seedDueMapping();
+
+    const dispatch = await app.inject({
+      method: "POST",
+      url: "/api/internal/stocksprite/scheduler/run",
+      headers: { "x-internal-token": token },
+    });
+    expect(dispatch.statusCode).toBe(200);
+
+    let history = await app.inject({
+      method: "GET",
+      url: `/api/client/stocksprite/mappings/${mappingId}/history`,
+      headers: { authorization: `Bearer ${userId}` },
+    });
+    const runningRow = JSON.parse(history.payload).history[0];
+    const runId = runningRow.id;
+
+    const finish = await app.inject({
+      method: "POST",
+      url: `/api/internal/stocksprite/mappings/${mappingId}/progress`,
+      headers: { "x-internal-token": token },
+      payload: { runId, progress: "finish", updatedItems: 0, unchangedItems: 0 },
+    });
+    expect(finish.statusCode).toBe(204);
+
+    history = await app.inject({
+      method: "GET",
+      url: `/api/client/stocksprite/mappings/${mappingId}/history`,
+      headers: { authorization: `Bearer ${userId}` },
+    });
+    const rows = JSON.parse(history.payload).history;
+    expect(rows[0].skuNormalizations).toBeNull();
   });
 
   it("marks the run failed when the container reports an error", async () => {

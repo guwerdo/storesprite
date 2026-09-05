@@ -26,6 +26,8 @@ export type {
 export type {
   IMappingHistoryRepository,
   MappingHistoryDto,
+  SkuNormalizations,
+  SkuConversionExample,
 } from "../types/stocksprite/MappingHistoryRepository.interface.js";
 export type { IMappingService } from "../types/stocksprite/MappingService.interface.js";
 export type { ISchedulerService } from "../types/stocksprite/SchedulerService.interface.js";

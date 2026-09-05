@@ -473,6 +473,12 @@ export const en = {
         processed: 'Processed',
         updated: 'Updated',
       },
+      sku: {
+        converted_one: 'Rewrote {{count}} SKU that contained characters not allowed by UNAS',
+        converted_other: 'Rewrote {{count}} SKUs that contained characters not allowed by UNAS',
+        truncated_one: 'Truncated {{count}} SKU that was longer than 50 characters',
+        truncated_other: 'Truncated {{count}} SKUs that were longer than 50 characters',
+      },
     },
     config: {
       title: 'Stock Sprite Configuration',

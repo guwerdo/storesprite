@@ -475,6 +475,12 @@ export const hu: Translations = {
         processed: 'Feldolgozott',
         updated: 'Frissített',
       },
+      sku: {
+        converted_one: '{{count}} SKU átírva, mert az UNAS által nem engedélyezett karaktert tartalmazott',
+        converted_other: '{{count}} SKU átírva, mert az UNAS által nem engedélyezett karaktert tartalmazott',
+        truncated_one: '{{count}} SKU lerövidítve, mert 50 karakternél hosszabb volt',
+        truncated_other: '{{count}} SKU lerövidítve, mert 50 karakternél hosszabb volt',
+      },
     },
     config: {
       title: 'Stock Sprite Konfiguráció',

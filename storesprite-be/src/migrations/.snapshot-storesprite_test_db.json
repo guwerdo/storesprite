@@ -849,6 +849,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "sku_normalizations": {
+          "name": "sku_normalizations",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "stocksprite_history",

@@ -9,6 +9,8 @@ import {
   IMappingHistoryRepository,
   ISettingService,
   IUnasService,
+  IJsonSchemaValidator,
+  SkuNormalizations,
 } from "../../di/index.js";
 import { Util } from "../../utils/index.js";
 import { requireInternalToken } from "./internalAuth.js";
@@ -24,6 +26,7 @@ interface MappingProgressBody {
   unchangedItems?: number;
   warningCount?: number;
   errorCount?: number;
+  skuNormalizations?: SkuNormalizations;
 }
 
 const mappingProgressSchema = {
@@ -42,6 +45,9 @@ const mappingProgressSchema = {
       unchangedItems: { type: "integer", minimum: 0 },
       warningCount: { type: "integer", minimum: 0 },
       errorCount: { type: "integer", minimum: 0 },
+      // Passthrough so Fastify does not strip it (default removeAdditional:true); the
+      // strict shape is validated in the finish branch via JsonSchemaValidator.
+      skuNormalizations: { type: "object" },
     },
   },
 };
@@ -198,6 +204,7 @@ export default function internalApi(fastify: FastifyInstance, _opts: unknown, do
       const body = request.body as MappingProgressBody;
       const mappingRepository = request.server.container.get<IMappingRepository>(TYPES.IMappingRepository);
       const historyRepo = request.server.container.get<IMappingHistoryRepository>(TYPES.IMappingHistoryRepository);
+      const validator = request.server.container.get<IJsonSchemaValidator>(TYPES.IJsonSchemaValidator);
       const logger = request.server.container.get<Logger>(TYPES.Logger);
 
       const mapping = await mappingRepository.getById(id);
@@ -213,11 +220,30 @@ export default function internalApi(fastify: FastifyInstance, _opts: unknown, do
         if (body.progress === "parse") {
           history.processedItems = body.processedItems ?? 0;
         } else if (body.progress === "finish") {
+          // Validate the skuNormalizations jsonb first and hard-fail on a malformed
+          // payload (mark the run failed, return 400) so no bad data is persisted.
+          let skuNormalizations: SkuNormalizations | null = null;
+          try {
+            skuNormalizations =
+              body.skuNormalizations !== undefined
+                ? validator.validateSkuNormalizations(body.skuNormalizations)
+                : null;
+          } catch (err: unknown) {
+            const message = Util.stringifyError(err);
+            logger.error("Invalid skuNormalizations on finish", { runId: body.runId, error: message });
+            history.status = "failed";
+            history.error = message;
+            history.finishedAt = new Date();
+            await historyRepo.save(history);
+            return reply.code(400).send({ error: (err as Error).message || "Invalid skuNormalizations" });
+          }
+
           const errorCount = body.errorCount ?? 0;
           history.updatedItems = body.updatedItems ?? 0;
           history.unchangedItems = body.unchangedItems ?? 0;
           history.warningCount = body.warningCount ?? 0;
           history.errorCount = errorCount;
+          history.skuNormalizations = skuNormalizations;
           history.status = errorCount > 0 ? "partial" : "success";
           history.finishedAt = new Date();
         } else if (body.progress === "error") {

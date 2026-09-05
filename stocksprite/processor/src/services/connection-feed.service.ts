@@ -7,12 +7,16 @@ import { TYPES } from "../types/binding-keys.js";
 import type { MappingDto } from "../types/mapping.interface.js";
 import { ConnectionIndexRepository } from "../repository/connection-index.repository.js";
 import { RuleTransformService } from "./rule-transform.service.js";
+import { createEmptySkuNormalizations } from "../types/connection.interface.js";
+import type { SkuNormalizations } from "../types/connection.interface.js";
 
 export interface FeedIndexResult {
     /** Total data rows read (header excluded, empty-SKU rows and duplicates included). */
     processedItems: number;
     /** Rows skipped because the SKU resolved empty. */
     skippedEmptySkus: number;
+    /** SKU normalizations applied while parsing (empty shape when none). */
+    skuNormalizations: SkuNormalizations;
 }
 
 export interface FeedRowMatch {
@@ -34,8 +38,16 @@ export class ConnectionFeedService {
     ) {}
 
     /** Maps one supplier row to its desired state. Returns undefined when the SKU is empty. */
-    public desiredForRow(row: Record<string, unknown>, mapping: MappingDto): FeedRowMatch | undefined {
-        const sku = this._ruleTransform.transformSku(row[mapping.skuField], mapping.skuRules ?? []);
+    public desiredForRow(
+        row: Record<string, unknown>,
+        mapping: MappingDto,
+        normalizations?: SkuNormalizations
+    ): FeedRowMatch | undefined {
+        const sku = this._ruleTransform.transformSku(
+            row[mapping.skuField],
+            mapping.skuRules ?? [],
+            normalizations
+        );
         if (sku === undefined) {
             return undefined;
         }
@@ -58,9 +70,10 @@ export class ConnectionFeedService {
     ): Promise<FeedIndexResult> {
         let processedItems = 0;
         let skippedEmptySkus = 0;
+        const skuNormalizations = createEmptySkuNormalizations();
         for await (const row of rows) {
             processedItems += 1;
-            const match = this.desiredForRow(row, mapping);
+            const match = this.desiredForRow(row, mapping, skuNormalizations);
             if (match === undefined) {
                 skippedEmptySkus += 1;
                 this._logger.warn("Skipping supplier row: empty SKU", { rowNumber: processedItems });
@@ -69,6 +82,6 @@ export class ConnectionFeedService {
             this._index.add(match.sku, match.desired);
         }
         this._logger.info("Supplier feed parsed", { processedItems, skippedEmptySkus, indexedSkus: this._index.size });
-        return { processedItems, skippedEmptySkus };
+        return { processedItems, skippedEmptySkus, skuNormalizations };
     }
 }

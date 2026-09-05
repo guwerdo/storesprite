@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RuleTransformService } from "../../src/services/rule-transform.service.js";
+import { createEmptySkuNormalizations } from "../../src/types/connection.interface.js";
 
 const service = new RuleTransformService();
 
@@ -7,6 +8,29 @@ describe("RuleTransformService", () => {
     describe("transformSku", () => {
         it("returns a trimmed SKU when no rules apply", () => {
             expect(service.transformSku("  ABC-1  ")).toBe("ABC-1");
+        });
+
+        it("records no normalization when the SKU is already valid", () => {
+            const normalizations = createEmptySkuNormalizations();
+            expect(service.transformSku("  ABC-1  ", [], normalizations)).toBe("ABC-1");
+            expect(normalizations).toEqual(createEmptySkuNormalizations());
+        });
+
+        it("records a conversion when a disallowed character is rewritten", () => {
+            const normalizations = createEmptySkuNormalizations();
+            expect(service.transformSku("123.ASD", [], normalizations)).toBe("123_ASD");
+            expect(normalizations.converted).toEqual({
+                count: 1,
+                examples: [{ before: "123.ASD", after: "123_ASD" }],
+            });
+            expect(normalizations.truncated).toEqual({ count: 0, examples: [] });
+        });
+
+        it("records a truncation when the SKU exceeds 50 characters", () => {
+            const normalizations = createEmptySkuNormalizations();
+            const long = "z".repeat(55);
+            expect(service.transformSku(long, [], normalizations)).toBe("z".repeat(50));
+            expect(normalizations.truncated).toEqual({ count: 1, examples: [long] });
         });
 
         it("runs the rule pipeline on the cell value", () => {

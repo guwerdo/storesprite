@@ -59,6 +59,7 @@ export class ProcessorService {
             const feed = await this._feed.buildIndex(feedPath, mapping);
             counters.processedItems = feed.processedItems;
             counters.warningCount += feed.skippedEmptySkus;
+            counters.skuNormalizations = feed.skuNormalizations;
 
             if (feed.processedItems === 0) {
                 this._logger.info("Supplier feed is empty; nothing to process", {

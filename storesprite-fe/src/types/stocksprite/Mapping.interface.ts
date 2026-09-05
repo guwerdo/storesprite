@@ -69,6 +69,31 @@ export interface IMappingRulesResponse {
 export type MappingRunStatus = 'running' | 'success' | 'partial' | 'failed';
 export type MappingRunTrigger = 'schedule' | 'manual';
 
+/** One `before → after` rewrite example from a single run's SKU normalization pass. */
+export interface ISkuConversionExample {
+  before: string;
+  after: string;
+}
+
+/**
+ * Summary of the SKU rewrites a processor run performed while feeding UNAS.
+ * Mirrors the backend `SkuNormalizations` wire shape.
+ */
+export interface ISkuNormalizations {
+  converted: {
+    /** Total count of SKUs whose characters were rewritten (duplicates included). */
+    count: number;
+    /** Up to 5 distinct examples, each an original → normalized pair. */
+    examples: ISkuConversionExample[];
+  };
+  truncated: {
+    /** Total count of SKUs that exceeded the max length and were cut. */
+    count: number;
+    /** Up to 5 distinct original SKUs that were truncated. */
+    examples: string[];
+  };
+}
+
 /** Wire shape of one run-history row returned by `GET /client/stocksprite/mappings/:id/history`. */
 export interface IMappingHistoryDto {
   id: string;
@@ -85,6 +110,8 @@ export interface IMappingHistoryDto {
   warningCount: number;
   errorCount: number;
   error: string | null;
+  /** SKU normalization findings from the run, or null when none were surfaced. */
+  skuNormalizations: ISkuNormalizations | null;
 }
 
 export interface IMappingHistoryResponse {

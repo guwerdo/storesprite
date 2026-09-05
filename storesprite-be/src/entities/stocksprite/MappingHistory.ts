@@ -1,5 +1,6 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
 import { Mapping } from "./Mapping.js";
+import type { SkuNormalizations } from "../../types/stocksprite/MappingHistoryRepository.interface.js";
 
 export type HistoryStatus = "running" | "success" | "partial" | "failed";
 export type HistoryTrigger = "schedule" | "manual";
@@ -33,6 +34,9 @@ export class MappingHistory {
 
   @Property({ type: "text", nullable: true })
   error?: string | null;
+
+  @Property({ type: "jsonb", nullable: true })
+  skuNormalizations?: SkuNormalizations | null;
 
   @Property({ type: "timestamptz", defaultRaw: "CURRENT_TIMESTAMP", onUpdate: () => new Date() })
   updatedAt: Date = new Date();

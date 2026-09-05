@@ -39,13 +39,31 @@ export function getStringValue(value: unknown): string | undefined {
     return value;
 }
 
+/** Result of a SKU normalization, reporting which transformations were applied. */
+export interface SkuNormalization {
+    sku: string;
+    converted: boolean;
+    truncated: boolean;
+}
+
 /**
  * Normalizes a SKU to UNAS format: only [A-Za-z0-9_-] survive, any other
  * character becomes "_", and the result is truncated to UNAS_SKU_MAX_LENGTH.
  * Mirrors how UNAS rewrites disallowed SKU characters when storing a product.
  */
+export function normalizeSku(sku: string): SkuNormalization {
+    const replaced = sku.replace(/[^A-Za-z0-9_-]/g, "_");
+    const truncated = replaced.length > UNAS_SKU_MAX_LENGTH;
+    return {
+        sku: truncated ? replaced.slice(0, UNAS_SKU_MAX_LENGTH) : replaced,
+        converted: replaced !== sku,
+        truncated,
+    };
+}
+
+/** Normalizes a SKU to UNAS format, returning only the resulting string. */
 export function toUnasSku(sku: string): string {
-    return sku.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, UNAS_SKU_MAX_LENGTH);
+    return normalizeSku(sku).sku;
 }
 
 export function negativeToZero(value: number): number {

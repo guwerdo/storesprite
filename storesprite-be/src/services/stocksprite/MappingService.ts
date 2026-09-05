@@ -186,6 +186,7 @@ export class MappingService implements IMappingService {
       warningCount: entity.warningCount,
       errorCount: entity.errorCount,
       error: entity.error ?? null,
+      skuNormalizations: entity.skuNormalizations ?? null,
     };
   }
 

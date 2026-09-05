@@ -100,6 +100,30 @@ describe("ConnectionFeedService", () => {
             const result = await service.buildIndexFromRows(asyncRows([]), mapping);
             expect(result.processedItems).toBe(0);
             expect(result.skippedEmptySkus).toBe(0);
+            expect(result.skuNormalizations).toEqual({
+                converted: { count: 0, examples: [] },
+                truncated: { count: 0, examples: [] },
+            });
+        });
+
+        it("returns populated skuNormalizations for invalid and over-long SKUs", async () => {
+            const service = new ConnectionFeedService(mock<Logger>(), new ConnectionIndexRepository(), new RuleTransformService());
+            const long = "q".repeat(55);
+            const rows = [
+                { SKU: "A.1", Raktár: "1" },
+                { SKU: "A.1", Raktár: "2" },
+                { SKU: long, Raktár: "3" },
+            ];
+            const result = await service.buildIndexFromRows(asyncRows(rows), mapping);
+
+            expect(result.skuNormalizations.converted.count).toBe(2);
+            expect(result.skuNormalizations.converted.examples).toEqual([
+                { before: "A.1", after: "A_1" },
+            ]);
+            expect(result.skuNormalizations.truncated).toEqual({
+                count: 1,
+                examples: [long],
+            });
         });
     });
 

@@ -36,6 +36,7 @@ function makeHistoryRow(overrides: Partial<IMappingHistoryDto>): IMappingHistory
     warningCount: 0,
     errorCount: 0,
     error: null,
+    skuNormalizations: null,
     ...overrides,
   };
 }
@@ -170,5 +171,79 @@ describe('RunHistoryPanel', () => {
 
     // Assert
     expect(getHistoryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders a warning line with examples when SKUs were converted', async () => {
+    // Arrange
+    getHistoryMock.mockResolvedValue({
+      history: [
+        makeHistoryRow({
+          skuNormalizations: {
+            converted: {
+              count: 2,
+              examples: [
+                { before: '123.ASD', after: '123_ASD' },
+                { before: 'a.b-c', after: 'a_b_c' },
+              ],
+            },
+            truncated: { count: 0, examples: [] },
+          },
+        }),
+      ],
+    });
+
+    // Act
+    renderPanel();
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByText(/Rewrote 2 SKUs that contained characters not allowed by UNAS/)).toBeInTheDocument();
+    });
+    expect(screen.getByText('123.ASD → 123_ASD')).toBeInTheDocument();
+    expect(screen.getByText('a.b-c → a_b_c')).toBeInTheDocument();
+    // Truncation warning must be absent when nothing was truncated.
+    expect(screen.queryByText(/Truncated \d+ SKU/)).not.toBeInTheDocument();
+  });
+
+  it('renders a warning line with the original SKUs when SKUs were truncated', async () => {
+    // Arrange
+    const tooLong = 'A'.repeat(55);
+    getHistoryMock.mockResolvedValue({
+      history: [
+        makeHistoryRow({
+          skuNormalizations: {
+            converted: { count: 0, examples: [] },
+            truncated: { count: 1, examples: [tooLong] },
+          },
+        }),
+      ],
+    });
+
+    // Act
+    renderPanel();
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByText(/Truncated 1 SKU that was longer than 50 characters/)).toBeInTheDocument();
+    });
+    expect(screen.getByText(tooLong)).toBeInTheDocument();
+    expect(screen.queryByText(/Rewrote \d+ SKU/)).not.toBeInTheDocument();
+  });
+
+  it('renders no SKU warnings when the run surfaced no normalizations', async () => {
+    // Arrange
+    getHistoryMock.mockResolvedValue({
+      history: [makeHistoryRow({ warningCount: 1 })],
+    });
+
+    // Act
+    renderPanel();
+
+    // Assert
+    await waitFor(() => {
+      expect(screen.getByText('Total runs: 1')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Rewrote \d+ SKU/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Truncated \d+ SKU/)).not.toBeInTheDocument();
   });
 });

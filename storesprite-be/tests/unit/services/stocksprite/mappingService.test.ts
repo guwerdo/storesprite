@@ -325,6 +325,7 @@ describe("MappingService Unit Tests", () => {
           warningCount: 0,
           errorCount: 0,
           error: null,
+          skuNormalizations: null,
         },
         {
           id: "run0",
@@ -339,6 +340,7 @@ describe("MappingService Unit Tests", () => {
           warningCount: 0,
           errorCount: 1,
           error: "boom",
+          skuNormalizations: null,
         },
       ]);
     });
