@@ -152,6 +152,21 @@ const scenarios: Scenario[] = [
         expectExit: 0,
         expectFinish: { processedItems: 1, updatedItems: 0, unchangedItems: 0, errorCount: 0, warningCount: 1 },
     },
+    {
+        name: "sku-conversion",
+        connectionId: "conn-sku-conversion",
+        mapping: {
+            id: "mapping-sku-conversion",
+            connectionId: "conn-sku-conversion",
+            skuField: "SKU",
+            skuRules: [],
+            stockMappings: [{ column: "Main", warehouseId: 1 }],
+        },
+        warehouses: [MAIN_WAREHOUSE],
+        golden: "sku-conversion.expected.xml",
+        expectExit: 0,
+        expectFinish: { processedItems: 3, updatedItems: 3, unchangedItems: 0, errorCount: 0 },
+    },
 ];
 
 interface RunOutcome {

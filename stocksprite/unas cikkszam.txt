@@ -1,0 +1,9 @@
+https://unas.hu/tudastar/api/termekek-adatszerkezet
+
+
+Sku   string mandatory GET SET
+A termék cikkszáma. Csak angol kis és nagy betűk, számok, valamint "-" és "_" karakter használható. Max. hossza 50 karakter!
+
+
+SkuNew   string SET
+A termék új cikkszáma. Csak angol kis és nagy betűk, számok, valamint "-" és "_" karakter használható. Max. hossza 50 karakter!

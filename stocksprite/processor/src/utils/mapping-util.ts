@@ -3,6 +3,9 @@ import type { ISetProductStock } from "@storesprite/unas-json-client";
 /** UNAS's main warehouse id: its stock is the unprefixed "Raktárkészlet" column and its serialized stock omits `warehouseId`. */
 export const MAIN_WAREHOUSE_ID = 1;
 
+/** UNAS SKU max length (see UNAS "Sku" field spec). */
+export const UNAS_SKU_MAX_LENGTH = 50;
+
 /** Converts a value to a number. When `lenient`, an empty or non-numeric string yields undefined instead of throwing. */
 export function getNumberValue(value: unknown, lenient = false): number | undefined {
     if (typeof value === "number") {
@@ -34,6 +37,18 @@ export function getStringValue(value: unknown): string | undefined {
         return undefined;
     }
     return value;
+}
+
+/**
+ * Normalizes a SKU to UNAS format: only [A-Za-z0-9_-] survive, any other
+ * character becomes "_", and the result is truncated to UNAS_SKU_MAX_LENGTH.
+ * Mirrors how UNAS rewrites disallowed SKU characters when storing a product.
+ */
+export function toUnasSku(sku: string): string {
+    const normalized = sku.replace(/[^A-Za-z0-9_-]/g, "_");
+    return normalized.length > UNAS_SKU_MAX_LENGTH
+        ? normalized.slice(0, UNAS_SKU_MAX_LENGTH)
+        : normalized;
 }
 
 export function negativeToZero(value: number): number {

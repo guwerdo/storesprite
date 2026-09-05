@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
     MAIN_WAREHOUSE_ID,
+    UNAS_SKU_MAX_LENGTH,
     computeFinalStocks,
     getNumberValue,
     getStringValue,
     negativeToZero,
     stocksEqual,
     toStockArray,
+    toUnasSku,
 } from "../../src/utils/mapping-util.js";
 
 describe("mapping-util", () => {
@@ -48,6 +50,66 @@ describe("mapping-util", () => {
             expect(getStringValue(null)).toBeUndefined();
             expect(getStringValue(undefined)).toBeUndefined();
             expect(getStringValue(123)).toBeUndefined();
+        });
+    });
+
+    describe("toUnasSku", () => {
+        it("leaves already-valid SKUs unchanged", () => {
+            expect(toUnasSku("123asdASD")).toBe("123asdASD");
+            expect(toUnasSku("123-ASD")).toBe("123-ASD");
+            expect(toUnasSku("123_ASD")).toBe("123_ASD");
+            expect(toUnasSku("a1-B2_C3")).toBe("a1-B2_C3");
+            expect(toUnasSku("ABC")).toBe("ABC");
+            expect(toUnasSku("abc")).toBe("abc");
+        });
+
+        it("replaces a single disallowed character with an underscore", () => {
+            expect(toUnasSku("123.ASD")).toBe("123_ASD");
+            expect(toUnasSku("123 ASD")).toBe("123_ASD");
+            expect(toUnasSku("123/ASD")).toBe("123_ASD");
+            expect(toUnasSku("123+ASD")).toBe("123_ASD");
+            expect(toUnasSku("123@ASD")).toBe("123_ASD");
+            expect(toUnasSku("123!ASD")).toBe("123_ASD");
+        });
+
+        it("replaces every disallowed character with its own underscore", () => {
+            expect(toUnasSku("123##ASD")).toBe("123__ASD");
+            expect(toUnasSku("!@#$%")).toBe("_____");
+        });
+
+        it("replaces accented / non-ASCII characters with underscores", () => {
+            expect(toUnasSku("éáű")).toBe("___");
+        });
+
+        it("preserves case while converting", () => {
+            expect(toUnasSku("AbC.123")).toBe("AbC_123");
+        });
+
+        it("converts several disallowed characters mixed with valid ones", () => {
+            expect(toUnasSku("a.b c#d-e_f")).toBe("a_b_c_d-e_f");
+        });
+
+        it("keeps a SKU at exactly UNAS_SKU_MAX_LENGTH characters", () => {
+            expect(toUnasSku("a".repeat(UNAS_SKU_MAX_LENGTH))).toBe("a".repeat(UNAS_SKU_MAX_LENGTH));
+        });
+
+        it("truncates a SKU longer than UNAS_SKU_MAX_LENGTH to that length", () => {
+            expect(toUnasSku("a".repeat(UNAS_SKU_MAX_LENGTH + 1))).toBe("a".repeat(UNAS_SKU_MAX_LENGTH));
+            expect(toUnasSku("b".repeat(60))).toBe("b".repeat(UNAS_SKU_MAX_LENGTH));
+        });
+
+        it("truncates after converting, so the resulting length never exceeds UNAS_SKU_MAX_LENGTH", () => {
+            const converted = "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + ".";
+            expect(converted.length).toBe(UNAS_SKU_MAX_LENGTH);
+            expect(toUnasSku(converted)).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
+
+            const twoDisallowed = "a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "..";
+            expect(twoDisallowed.length).toBe(UNAS_SKU_MAX_LENGTH + 1);
+            expect(toUnasSku(twoDisallowed)).toBe("a".repeat(UNAS_SKU_MAX_LENGTH - 1) + "_");
+        });
+
+        it("returns an empty string unchanged", () => {
+            expect(toUnasSku("")).toBe("");
         });
     });
 

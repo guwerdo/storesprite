@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Products>
+  <Product>
+    <Sku>123_ASD</Sku>
+    <Action>modify</Action>
+    <Stocks>
+      <Status>
+        <Active>1</Active>
+      </Status>
+      <Stock>
+        <IsActive>yes</IsActive>
+        <Qty>10</Qty>
+      </Stock>
+    </Stocks>
+  </Product>
+  <Product>
+    <Sku>A_B</Sku>
+    <Action>modify</Action>
+    <Stocks>
+      <Status>
+        <Active>1</Active>
+      </Status>
+      <Stock>
+        <IsActive>yes</IsActive>
+        <Qty>20</Qty>
+      </Stock>
+    </Stocks>
+  </Product>
+  <Product>
+    <Sku>C__D</Sku>
+    <Action>modify</Action>
+    <Stocks>
+      <Status>
+        <Active>1</Active>
+      </Status>
+      <Stock>
+        <IsActive>yes</IsActive>
+        <Qty>30</Qty>
+      </Stock>
+    </Stocks>
+  </Product>
+</Products>
