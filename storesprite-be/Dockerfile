@@ -10,6 +10,9 @@ RUN npm install && npm run build
 WORKDIR /workspace/packages/unas-json-client
 RUN npm install && npm run build
 
+WORKDIR /workspace/packages/mapping-rules
+RUN npm install && npm run build
+
 # Install and build backend
 COPY storesprite-be/package*.json /workspace/storesprite-be/
 WORKDIR /workspace/storesprite-be
