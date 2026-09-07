@@ -169,7 +169,37 @@ export default function connectionsApi(fastify: FastifyInstance, _opts: unknown,
         const token = process.env.INTERNAL_TOKEN || "";
         const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://storesprite-be:3000";
 
-        void runnerService.runTest(id, userId, token, backendUrl);
+        // A launch failure (worker image build/pull, docker daemon) happens before any
+        // container exists to report back over the internal API, so without this the UI
+        // would hang forever at "Initiating connection test...". Report it ourselves:
+        // persist a failed test result and broadcast it, mirroring how the worker's own
+        // finish result is reported by the internal API.
+        runnerService.runTest(id, userId, token, backendUrl).catch(async (err: unknown) => {
+          const message = Util.describeError(err);
+          logger.error("Connection test failed to launch worker container", { id, userId, error: message });
+          try {
+            const finishedAt = new Date().toISOString();
+            const failed = await connectionService.saveTestResult(id, {
+              progress: "finish",
+              success: false,
+              errorMessage: message,
+              finished_at: finishedAt,
+              duration_ms: Math.max(0, Date.parse(finishedAt) - Date.parse(startedAt)),
+            });
+            if (failed?.userId) {
+              fastify.io.to(`tenant_${failed.userId}`).emit("connection_test_result", {
+                connectionId: id,
+                testResult: failed.testResult,
+              });
+            }
+          } catch (reportErr: unknown) {
+            logger.error("Failed to report connection test launch failure", {
+              id,
+              userId,
+              error: Util.stringifyError(reportErr),
+            });
+          }
+        });
 
         return reply.code(202).send();
       } catch (err: unknown) {

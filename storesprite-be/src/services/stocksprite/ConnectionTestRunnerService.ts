@@ -3,7 +3,6 @@ import path from "node:path";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../../di/types.js";
-import { Util } from "../../utils/index.js";
 import { IConnectionTestRunnerService } from "../../types/stocksprite/ConnectionTestRunnerService.interface.js";
 
 /**
@@ -44,7 +43,10 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       return;
     }
 
-    void this._runContainer(this._imageName(), {
+    // Awaiting the container launch lets a build/pull/daemon failure reject runTest so
+    // the caller can report it. `docker run -d` returns as soon as the container starts;
+    // the worker then reports progress back over the internal API, so this is not a wait.
+    await this._runContainer(this._imageName(), {
       CONNECTION_ID: connectionId,
       TEST_CONNECTION: connectionId,
       USER_ID: userId,
@@ -82,7 +84,9 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       return;
     }
 
-    void this._runContainer(this._imageName(), {
+    // See runTest: launching is awaited so a failure rejects instead of leaving the run
+    // history row dangling in "running" with no worker ever reporting back.
+    await this._runContainer(this._imageName(), {
       CONNECTION_ID: connectionId,
       MAPPING_ID: mappingId,
       RUN_ID: runId,
@@ -155,14 +159,11 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
   private async _runContainer(imageName: string, env: Record<string, string>): Promise<void> {
     const dockerNetwork = process.env.DOCKER_NETWORK || "storesprite-shared-net";
 
-    try {
-      await this._ensureImageExists(imageName);
-    } catch (buildError) {
-      this._logger?.error("Could not ensure Docker image before run", {
-        error: Util.stringifyError(buildError),
-      });
-      return;
-    }
+    // Any failure here is thrown (not swallowed): the image build/pull or the container
+    // launch never produced a worker, so nothing will report back over the internal API.
+    // Rejecting lets the caller surface the error to the UI instead of leaving a
+    // connection test or mapping run hanging forever.
+    await this._ensureImageExists(imageName);
 
     const args = ["run", "--rm", "-d", `--network=${dockerNetwork}`];
     for (const [key, value] of Object.entries(env)) {
@@ -172,23 +173,32 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
 
     this._logger?.info("Spawning docker container", { command: "docker", args });
 
+    let result: { code: number | null; stdout: string; stderr: string };
     try {
-      const { code, stdout, stderr } = await this._spawnDocker(args);
-      if (code !== 0) {
-        this._logger?.error("Docker run failed to launch container", {
-          code,
-          stderr: stderr.trim(),
-          stdout: stdout.trim(),
-        });
-      } else {
-        this._logger?.info("Docker worker container launched successfully", {
-          containerId: stdout.trim(),
-        });
-      }
+      result = await this._spawnDocker(args);
     } catch (error) {
-      this._logger?.error("Failed to spawn docker container", {
-        error: Util.stringifyError(error),
-      });
+      // e.g. docker CLI missing (spawn "error" event)
+      const err = new Error(
+        `Failed to launch docker container for '${imageName}': ${error instanceof Error ? error.message : String(error)}`
+      );
+      this._logger?.error("Failed to spawn docker container", { error: err.message });
+      throw err;
     }
+
+    if (result.code !== 0) {
+      const err = new Error(
+        `Failed to launch docker container for '${imageName}' (exit ${result.code}): ${result.stderr.trim()}`
+      );
+      this._logger?.error("Docker run failed to launch container", {
+        code: result.code,
+        stderr: result.stderr.trim(),
+        stdout: result.stdout.trim(),
+      });
+      throw err;
+    }
+
+    this._logger?.info("Docker worker container launched successfully", {
+      containerId: result.stdout.trim(),
+    });
   }
 }

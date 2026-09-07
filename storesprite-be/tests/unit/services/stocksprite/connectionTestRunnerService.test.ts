@@ -46,6 +46,37 @@ function envEntries(args: string[]): string[] {
   return out;
 }
 
+type SpawnHandler = (...args: unknown[]) => void;
+
+type SpawnResult = { kind: "close"; code: number } | { kind: "error"; error: Error };
+
+/** Each spawn call settles per the results array: `close` with a code, or reject via an `error` event. */
+function mockSpawnSequence(results: SpawnResult[]): ReturnType<typeof vi.fn> {
+  const impl = vi.fn(() => {
+    const events: Array<[string, SpawnHandler]> = [];
+    const child = {
+      stdout: null,
+      stderr: null,
+      on: vi.fn((event: string, cb: SpawnHandler) => {
+        events.push([event, cb]);
+        return child;
+      }),
+    };
+    const idx = impl.mock.calls.length - 1;
+    const result = results[idx] ?? { kind: "close", code: 0 };
+    setImmediate(() => {
+      if (result.kind === "error") {
+        events.find(([e]) => e === "error")?.[1](result.error);
+      } else {
+        events.find(([e]) => e === "close")?.[1](result.code, null);
+      }
+    });
+    return child;
+  });
+  spawnMock.mockImplementation(impl as unknown as typeof spawn);
+  return impl;
+}
+
 describe("ConnectionTestRunnerService", () => {
   let service: ConnectionTestRunnerService;
 
@@ -276,5 +307,34 @@ describe("ConnectionTestRunnerService", () => {
     await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
 
     expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("runTest: rejects when the on-demand image build fails", async () => {
+    // call 1 = image inspect (missing, code 1), call 2 = build (fails, code 1)
+    mockSpawnSequence([{ kind: "close", code: 1 }, { kind: "close", code: 1 }]);
+
+    await expect(service.runTest("conn9", "u1", "tok", "http://be:3000")).rejects.toThrow(/Failed to build/);
+    expect(spawnMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("runMapping: rejects when docker run exits non-zero", async () => {
+    // call 1 = image inspect (present, code 0), call 2 = docker run (fails, code 1)
+    mockSpawnSequence([{ kind: "close", code: 0 }, { kind: "close", code: 1 }]);
+
+    await expect(
+      service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000")
+    ).rejects.toThrow(/exit 1/);
+  });
+
+  it("runTest: rejects when spawning the docker CLI errors", async () => {
+    // call 1 = image inspect (present, code 0), call 2 = docker run errors (e.g. ENOENT)
+    mockSpawnSequence([
+      { kind: "close", code: 0 },
+      { kind: "error", error: new Error("spawn docker ENOENT") },
+    ]);
+
+    await expect(service.runTest("conn9", "u1", "tok", "http://be:3000")).rejects.toThrow(
+      /Failed to launch docker container/
+    );
   });
 });

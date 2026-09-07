@@ -11,6 +11,7 @@ import { isScheduleDue } from "../../utils/stocksprite/schedule-util.js";
 import { DEFAULT_TIMEZONE } from "../../config/timezone.constants.js";
 import { HISTORY_RETENTION } from "../../config/stocksprite/history.constants.js";
 import { TYPES } from "../../di/types.js";
+import { Util } from "../../utils/index.js";
 
 @injectable()
 export class SchedulerService implements ISchedulerService {
@@ -101,6 +102,32 @@ export class SchedulerService implements ISchedulerService {
       backendUrl,
     });
 
-    void this._runner.runMapping(mapping.connection.id, mapping.id, run.id, userId, token, backendUrl);
+    // Launch failures (image build/pull, docker daemon) reject now that the runner awaits
+    // the container launch. Nothing would report back, so mark the freshly-opened run
+    // failed here — otherwise the row stays "running" forever and the rejection is lost.
+    this._runner
+      .runMapping(mapping.connection.id, mapping.id, run.id, userId, token, backendUrl)
+      .catch(async (err: unknown) => {
+        const message = Util.describeError(err);
+        this._logger?.error("Scheduler could not launch mapping run container", {
+          mappingId: mapping.id,
+          runId: run.id,
+          error: message,
+        });
+        try {
+          const row = await this._historyRepository.findById(run.id);
+          if (row && row.status === "running") {
+            row.status = "failed";
+            row.error = message;
+            row.finishedAt = new Date();
+            await this._historyRepository.save(row);
+          }
+        } catch (reportErr) {
+          this._logger?.error("Failed to mark mapping run failed after launch error", {
+            runId: run.id,
+            error: Util.stringifyError(reportErr),
+          });
+        }
+      });
   }
 }

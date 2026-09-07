@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { SchedulerService } from "../../../../src/services/stocksprite/SchedulerService.js";
 import { IMappingRepository } from "../../../../src/types/stocksprite/MappingRepository.interface.js";
@@ -49,6 +49,8 @@ describe("SchedulerService", () => {
     settingMock = mock<ISettingService>();
     historyMock = mock<IMappingHistoryRepository>();
     runnerMock = mock<IConnectionTestRunnerService>();
+    // SchedulerService attaches .catch to the runner promise, so it must resolve by default.
+    runnerMock.runMapping.mockResolvedValue(undefined);
     service = new SchedulerService(repoMock, settingMock, historyMock, runnerMock);
   });
 
@@ -160,5 +162,27 @@ describe("SchedulerService", () => {
 
     expect(historyMock.create).not.toHaveBeenCalled();
     expect(runnerMock.runMapping).not.toHaveBeenCalled();
+  });
+
+  it("marks the opened run failed when the runner rejects dispatching (e.g. image build failure)", async () => {
+    const now = new Date("2026-07-15T09:30:00Z");
+    const mapping = makeMapping({ frequency: "daily", times: [11], daysOfWeek: [3] });
+    repoMock.getEnabledSchedules.mockResolvedValue([mapping]);
+    settingMock.getUserSettings.mockResolvedValue({ timezone: "Europe/Budapest" } as never);
+    const run = makeRun(mapping);
+    historyMock.create.mockResolvedValue(run);
+    historyMock.findById.mockResolvedValue(run);
+    runnerMock.runMapping.mockRejectedValue(new Error("Failed to build 'storesprite-worker:latest': boom"));
+
+    await service.runDue(now);
+
+    await vi.waitFor(() => {
+      expect(historyMock.findById).toHaveBeenCalledWith("run1");
+      expect(historyMock.save).toHaveBeenCalledTimes(1);
+    });
+    const saved = historyMock.save.mock.calls[0][0] as MappingHistory;
+    expect(saved.status).toBe("failed");
+    expect(saved.error).toContain("Failed to build");
+    expect(saved.finishedAt).toBeInstanceOf(Date);
   });
 });

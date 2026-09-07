@@ -10,6 +10,9 @@ export default defineConfig({
       PGDATABASE: "storesprite_test_db",
       INTERNAL_TOKEN: "mock_internal_token",
       INTERNAL_BACKEND_URL: "http://storesprite-be:3000",
+      // Keep the runner hermetic in integration tests: never build/spawn a real worker
+      // container against the test DB, and let run-test stay at progress "start".
+      INTERNAL_DRIVER: "noop",
     },
   },
 });

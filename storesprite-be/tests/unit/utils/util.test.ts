@@ -20,6 +20,18 @@ describe("Backend Util Module", () => {
     });
   });
 
+  describe("describeError", () => {
+    it("should use the error message without a stack trace", () => {
+      const result = Util.describeError(new Error("boom"));
+      expect(result).toBe("boom");
+    });
+
+    it("should cap long error text at the max length", () => {
+      const result = Util.describeError(new Error("x".repeat(100)), 50);
+      expect(result).toBe(`${"x".repeat(50)}… (truncated)`);
+    });
+  });
+
   describe("decodeJwtPayload", () => {
     it("should decode valid JWT payload", () => {
       // payload = { "sub": "user_123", "email": "test@example.com" }
