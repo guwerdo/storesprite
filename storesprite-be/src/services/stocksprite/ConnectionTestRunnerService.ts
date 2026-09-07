@@ -3,6 +3,7 @@ import path from "node:path";
 import { injectable, inject, optional } from "inversify";
 import type { Logger } from "log4js";
 import { TYPES } from "../../di/types.js";
+import { Util } from "../../utils/index.js";
 import { IConnectionTestRunnerService } from "../../types/stocksprite/ConnectionTestRunnerService.interface.js";
 
 /**
@@ -84,8 +85,7 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       return;
     }
 
-    // See runTest: launching is awaited so a failure rejects instead of leaving the run
-    // history row dangling in "running" with no worker ever reporting back.
+    // See runTest: awaited so a dispatch failure rejects and the caller can fail the run row.
     await this._runContainer(this._imageName(), {
       CONNECTION_ID: connectionId,
       MAPPING_ID: mappingId,
@@ -156,13 +156,16 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
     throw err;
   }
 
+  private _launchError(imageName: string, reason: string): Error {
+    return new Error(`Failed to launch docker container for '${imageName}': ${reason}`);
+  }
+
   private async _runContainer(imageName: string, env: Record<string, string>): Promise<void> {
     const dockerNetwork = process.env.DOCKER_NETWORK || "storesprite-shared-net";
 
-    // Any failure here is thrown (not swallowed): the image build/pull or the container
-    // launch never produced a worker, so nothing will report back over the internal API.
-    // Rejecting lets the caller surface the error to the UI instead of leaving a
-    // connection test or mapping run hanging forever.
+    // Throwing (not swallowing) is deliberate: a build/pull/daemon failure means no
+    // container exists to report back over the internal API, so the caller must surface
+    // the rejection or the connection test / mapping run hangs forever.
     await this._ensureImageExists(imageName);
 
     const args = ["run", "--rm", "-d", `--network=${dockerNetwork}`];
@@ -173,32 +176,25 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
 
     this._logger?.info("Spawning docker container", { command: "docker", args });
 
-    let result: { code: number | null; stdout: string; stderr: string };
-    try {
-      result = await this._spawnDocker(args);
-    } catch (error) {
-      // e.g. docker CLI missing (spawn "error" event)
-      const err = new Error(
-        `Failed to launch docker container for '${imageName}': ${error instanceof Error ? error.message : String(error)}`
-      );
-      this._logger?.error("Failed to spawn docker container", { error: err.message });
-      throw err;
-    }
+    // e.g. the docker CLI is missing (spawn "error" event). Callers log the rejection,
+    // so there is no throw-site log for this branch.
+    const { code, stdout, stderr } = await this._spawnDocker(args).catch((error: unknown) => {
+      throw this._launchError(imageName, Util.describeError(error));
+    });
 
-    if (result.code !== 0) {
-      const err = new Error(
-        `Failed to launch docker container for '${imageName}' (exit ${result.code}): ${result.stderr.trim()}`
-      );
+    if (code !== 0) {
+      const stderrText = stderr.trim();
+      const launchErr = this._launchError(imageName, `exit ${code}: ${stderrText}`);
       this._logger?.error("Docker run failed to launch container", {
-        code: result.code,
-        stderr: result.stderr.trim(),
-        stdout: result.stdout.trim(),
+        code,
+        stderr: stderrText,
+        stdout: stdout.trim(),
       });
-      throw err;
+      throw launchErr;
     }
 
     this._logger?.info("Docker worker container launched successfully", {
-      containerId: result.stdout.trim(),
+      containerId: stdout.trim(),
     });
   }
 }

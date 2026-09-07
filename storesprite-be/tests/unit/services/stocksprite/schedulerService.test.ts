@@ -171,18 +171,17 @@ describe("SchedulerService", () => {
     settingMock.getUserSettings.mockResolvedValue({ timezone: "Europe/Budapest" } as never);
     const run = makeRun(mapping);
     historyMock.create.mockResolvedValue(run);
-    historyMock.findById.mockResolvedValue(run);
     runnerMock.runMapping.mockRejectedValue(new Error("Failed to build 'storesprite-worker:latest': boom"));
 
     await service.runDue(now);
 
+    // The same repo method also performs the supersede (m1,"superseded") at dispatch
+    // start, so scope on the error text to assert the launch-failure transition.
     await vi.waitFor(() => {
-      expect(historyMock.findById).toHaveBeenCalledWith("run1");
-      expect(historyMock.save).toHaveBeenCalledTimes(1);
+      expect(historyMock.markRunningAsFailed).toHaveBeenCalledWith(
+        "m1",
+        expect.stringContaining("Failed to build")
+      );
     });
-    const saved = historyMock.save.mock.calls[0][0] as MappingHistory;
-    expect(saved.status).toBe("failed");
-    expect(saved.error).toContain("Failed to build");
-    expect(saved.finishedAt).toBeInstanceOf(Date);
   });
 });

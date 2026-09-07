@@ -102,9 +102,9 @@ export class SchedulerService implements ISchedulerService {
       backendUrl,
     });
 
-    // Launch failures (image build/pull, docker daemon) reject now that the runner awaits
-    // the container launch. Nothing would report back, so mark the freshly-opened run
-    // failed here — otherwise the row stays "running" forever and the rejection is lost.
+    // Launch failures reject now that dispatch is awaited; nothing would report back, so
+    // fail the just-opened run — the only "running" row for this mapping at this point —
+    // through the repo's atomic running→failed transition instead of leaving it stuck.
     this._runner
       .runMapping(mapping.connection.id, mapping.id, run.id, userId, token, backendUrl)
       .catch(async (err: unknown) => {
@@ -115,13 +115,7 @@ export class SchedulerService implements ISchedulerService {
           error: message,
         });
         try {
-          const row = await this._historyRepository.findById(run.id);
-          if (row && row.status === "running") {
-            row.status = "failed";
-            row.error = message;
-            row.finishedAt = new Date();
-            await this._historyRepository.save(row);
-          }
+          await this._historyRepository.markRunningAsFailed(mapping.id, message);
         } catch (reportErr) {
           this._logger?.error("Failed to mark mapping run failed after launch error", {
             runId: run.id,

@@ -148,7 +148,8 @@ export default function connectionsApi(fastify: FastifyInstance, _opts: unknown,
       }
 
       try {
-        const startedAt = new Date().toISOString();
+        const startMs = Date.now();
+        const startedAt = new Date(startMs).toISOString();
         await connectionService.saveTestResult(id, {
           progress: "start",
           started_at: startedAt,
@@ -178,13 +179,14 @@ export default function connectionsApi(fastify: FastifyInstance, _opts: unknown,
           const message = Util.describeError(err);
           logger.error("Connection test failed to launch worker container", { id, userId, error: message });
           try {
-            const finishedAt = new Date().toISOString();
+            const finishedMs = Date.now();
+            const finishedAt = new Date(finishedMs).toISOString();
             const failed = await connectionService.saveTestResult(id, {
               progress: "finish",
               success: false,
               errorMessage: message,
               finished_at: finishedAt,
-              duration_ms: Math.max(0, Date.parse(finishedAt) - Date.parse(startedAt)),
+              duration_ms: Math.max(0, finishedMs - startMs),
             });
             if (failed?.userId) {
               fastify.io.to(`tenant_${failed.userId}`).emit("connection_test_result", {
