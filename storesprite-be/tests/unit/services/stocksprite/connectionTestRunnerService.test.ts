@@ -82,7 +82,7 @@ describe("ConnectionTestRunnerService", () => {
 
   const saveEnv = (): Record<string, string | undefined> => {
     const keys = [
-      "INTERNAL_DRIVER",
+      "WORKER_DRIVER",
       "NODE_ENV",
       "STOCKSPRITE_IMAGE",
       "STOCKSPRITE_BUILD_CONTEXT",
@@ -109,9 +109,10 @@ describe("ConnectionTestRunnerService", () => {
     vi.clearAllMocks();
     envSnapshot = saveEnv();
     service = new ConnectionTestRunnerService();
-    // Ensure a docker driver by default; NODE_ENV must not short-circuit to noop.
+    // Pin docker explicitly and clear NODE_ENV so vitest's default 'test' cannot skew the
+    // driver default (only 'prod' would select cloud-run).
     delete process.env.NODE_ENV;
-    process.env.INTERNAL_DRIVER = "docker";
+    process.env.WORKER_DRIVER = "docker";
     process.env.STOCKSPRITE_IMAGE = "storesprite-worker:latest";
     process.env.STOCKSPRITE_DOCKERFILE = "stocksprite/Dockerfile";
     process.env.STOCKSPRITE_BUILD_CONTEXT = "/workspace";
@@ -284,28 +285,30 @@ describe("ConnectionTestRunnerService", () => {
     ]);
   });
 
-  it("skips the spawn entirely under the test driver", async () => {
-    process.env.INTERNAL_DRIVER = "noop";
+  it("skips the spawn entirely under the noop driver", async () => {
+    process.env.WORKER_DRIVER = "noop";
 
     await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
 
     expect(spawnMock).not.toHaveBeenCalled();
   });
 
-  it("skips the spawn entirely under the cloud_run driver", async () => {
-    process.env.INTERNAL_DRIVER = "cloud_run";
+  it("fails closed under the cloud-run driver until the launcher is implemented", async () => {
+    process.env.WORKER_DRIVER = "cloud-run";
 
-    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
-
+    await expect(
+      service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000")
+    ).rejects.toThrow(/Cloud Run worker execution is not implemented/);
     expect(spawnMock).not.toHaveBeenCalled();
   });
 
-  it("defaults to cloud_run in production when no driver override is set", async () => {
-    delete process.env.INTERNAL_DRIVER;
-    process.env.NODE_ENV = "production";
+  it("defaults to cloud-run in prod when no driver override is set (fails closed)", async () => {
+    delete process.env.WORKER_DRIVER;
+    process.env.NODE_ENV = "prod";
 
-    await service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000");
-
+    await expect(
+      service.runMapping("conn1", "map1", "run1", "u1", "tok", "http://be:3000")
+    ).rejects.toThrow(/Cloud Run worker execution is not implemented/);
     expect(spawnMock).not.toHaveBeenCalled();
   });
 

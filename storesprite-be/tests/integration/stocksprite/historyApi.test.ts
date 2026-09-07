@@ -37,7 +37,7 @@ describe("History API Integration Tests", () => {
   beforeAll(async () => {
     process.env.INTERNAL_TOKEN = token;
     // Never spawn a real container from the scheduler during tests.
-    process.env.INTERNAL_DRIVER = "noop";
+    process.env.WORKER_DRIVER = "noop";
     app = buildApp({ logger: false });
     await app.ready();
     await resetTestDatabase(app);
@@ -63,7 +63,7 @@ describe("History API Integration Tests", () => {
     }
     await app.close();
     delete process.env.INTERNAL_TOKEN;
-    delete process.env.INTERNAL_DRIVER;
+    delete process.env.WORKER_DRIVER;
   });
 
   const seedDueMapping = async (): Promise<string> => {

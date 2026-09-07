@@ -43,7 +43,7 @@ my-service/
 │   ├── configuration.json         # Base defaults for all environments
 │   ├── configuration.dev.json     # Development overrides (NODE_ENV=dev)
 │   ├── configuration.test.json    # Test mocks / queues (NODE_ENV=test)
-│   └── configuration.prod.json    # Production overrides (NODE_ENV=production)
+│   └── configuration.prod.json    # Production overrides (NODE_ENV=prod)
 └── src/
     └── config/
         └── configuration.ts       # Builds and exports IConfiguration instance

@@ -29,7 +29,9 @@ export function getAppConfig(): AppConfig {
     }
 
     const internalToken = process.env.INTERNAL_TOKEN?.trim();
-    if (!internalToken && process.env.NODE_ENV === "production") {
+    // Fail closed: a worker may run without a real token only in dev (NODE_ENV=dev), where the
+    // mock fallback below applies. Any other environment requires INTERNAL_TOKEN to be set.
+    if (!internalToken && (process.env.NODE_ENV || "").toLowerCase() !== "dev") {
         throw new Error("Missing required environment variable: INTERNAL_TOKEN");
     }
     const backendUrl = (process.env.BACKEND_URL?.trim() || "http://storesprite-be:3000").replace(/\/+$/, "");

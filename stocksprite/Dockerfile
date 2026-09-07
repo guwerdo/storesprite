@@ -38,7 +38,7 @@ COPY --from=downloader /app/package.json ./package.json
 COPY --from=downloader /app/node_modules ./node_modules
 COPY --from=downloader /app/dist ./dist
 RUN mkdir -p /app/temp
-ENV NODE_ENV=production
+ENV NODE_ENV=prod
 ENV OUTPUT_DIR=/app/temp
 CMD ["node", "dist/index.js"]
 
@@ -74,6 +74,6 @@ COPY --from=processor /workspace/packages ./packages
 # from the build stage; replicate that path so the processor can resolve them at runtime.
 COPY --from=processor /workspace/packages /workspace/packages
 RUN mkdir -p /app/temp
-ENV NODE_ENV=production
+ENV NODE_ENV=prod
 ENV OUTPUT_DIR=/app/temp
 CMD ["sh","-c","cd /app/downloader && node dist/index.js && [ -z \"$TEST_CONNECTION\" ] && cd /app/processor && node dist/index.js"]

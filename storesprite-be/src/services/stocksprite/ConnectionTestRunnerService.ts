@@ -34,13 +34,14 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       backendUrl,
     });
 
-    if (driver === "cloud_run") {
-      this._logger?.info("Cloud Run worker execution selected", { connectionId });
-      return;
+    if (driver === "cloud-run") {
+      // Prod defaults to cloud-run, but the launcher is not implemented yet: fail closed so
+      // a connection test can never report success without a worker actually having run.
+      throw new Error("Cloud Run worker execution is not implemented");
     }
 
-    if (driver === "noop" || process.env.NODE_ENV?.toLowerCase() === "test") {
-      this._logger?.info("Noop/test driver selected, skipping spawn", { connectionId });
+    if (driver === "noop") {
+      this._logger?.info("Noop driver selected, skipping spawn", { connectionId });
       return;
     }
 
@@ -75,13 +76,13 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
       backendUrl,
     });
 
-    if (driver === "cloud_run") {
-      this._logger?.info("Cloud Run worker execution selected", { mappingId });
-      return;
+    if (driver === "cloud-run") {
+      // See runTest: fail closed until the Cloud Run launcher is implemented.
+      throw new Error("Cloud Run worker execution is not implemented");
     }
 
-    if (driver === "noop" || process.env.NODE_ENV?.toLowerCase() === "test") {
-      this._logger?.info("Noop/test driver selected, skipping spawn", { mappingId });
+    if (driver === "noop") {
+      this._logger?.info("Noop driver selected, skipping spawn", { mappingId });
       return;
     }
 
@@ -120,8 +121,10 @@ export class ConnectionTestRunnerService implements IConnectionTestRunnerService
 
   private _resolveDriver(): string {
     const nodeEnv = (process.env.NODE_ENV || "dev").toLowerCase();
-    const defaultDriver = nodeEnv === "prod" || nodeEnv === "production" ? "cloud_run" : "docker";
-    return (process.env.INTERNAL_DRIVER || defaultDriver).toLowerCase();
+    // Only "prod" selects cloud-run; dev/test/unset default to docker.
+    const defaultDriver = nodeEnv === "prod" ? "cloud-run" : "docker";
+    // WORKER_DRIVER overrides the NODE_ENV default (noop in tests, cloud-run when trialling it).
+    return (process.env.WORKER_DRIVER || defaultDriver).toLowerCase();
   }
 
   private _imageName(): string {

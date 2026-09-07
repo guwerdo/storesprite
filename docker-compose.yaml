@@ -59,8 +59,11 @@ services:
       - PGDATABASE=storesprite_db
       - PGPORT=5432
       - CLERK_SECRET_KEY=sk_test_betoW7FNs6IwHbjTgibXzIPyU7e2VzHWcyGsS8NhV0
+      # NODE_ENV=dev|prod names the environment. WORKER_DRIVER=docker|noop|cloud-run
+      # overrides the launch-driver default (dev→docker, prod→cloud-run) for tests and
+      # temporary pinning; the compose stack runs the worker as a local docker container.
       - NODE_ENV=dev
-      - INTERNAL_DRIVER=docker
+      - WORKER_DRIVER=docker
       - INTERNAL_TOKEN=storesprite-internal-worker-secret-token
       - INTERNAL_BACKEND_URL=http://storesprite-be:3000
       - STOCKSPRITE_IMAGE=stocksprite-worker-dev
@@ -77,6 +80,7 @@ services:
   # exits 0. Refresh after worker changes with: docker compose build stocksprite-worker
   stocksprite-worker:
     image: stocksprite-worker-dev
+    container_name: stocksprite-worker-dev
     build:
       context: .
       dockerfile: ./stocksprite/Dockerfile

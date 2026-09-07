@@ -41,7 +41,10 @@ RUN cd /workspace/stocksprite/downloader && npm install
 COPY stocksprite/processor/ /workspace/stocksprite/processor/
 RUN cd /workspace/stocksprite/processor && npm install
 
-# Hardcoded development environment variables for the downloader
+# Hardcoded development environment variables for the downloader.
+# NODE_ENV=dev is the contract that lets the downloader/processor run without a real
+# INTERNAL_TOKEN (the app.config guards fail closed on any non-dev environment).
+ENV NODE_ENV=dev
 ENV USER_ID="user_3Hgss1Pn9eF6eXyIf53rKLieGJp"
 ENV INTERNAL_TOKEN="mock_internal_token"
 ENV BACKEND_URL="http://storesprite-be:3000"
