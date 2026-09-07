@@ -10,7 +10,13 @@ services:
     volumes:
       - ./storesprite-fe:/workspace
       - ./packages:/packages
+      # node_modules + dist stay inside the container (anonymous volumes),
+      # never written back to the host bind mount. The FE only consumes
+      # @storesprite/mapping-rules from the shared packages.
       - /workspace/node_modules
+      - /workspace/dist
+      - /packages/mapping-rules/node_modules
+      - /packages/mapping-rules/dist
     depends_on:
       - storesprite-be
     networks:

@@ -7,7 +7,7 @@
     "start:dev": "npm run build:deps && CHOKIDAR_USEPOLLING=1 CHOKIDAR_INTERVAL=3000 tsx watch src/server.ts",
     "build:deps": "npm --prefix ../packages/app-config run build && npm --prefix ../packages/unas-json-client run build && npm --prefix ../packages/mapping-rules run build",
     "generate-schemas": "ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type HttpConnectionConfig -o src/schemas/connection-config-http.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type SftpConnectionConfig -o src/schemas/connection-config-sftp.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type CsvDataFormatConfig -o src/schemas/connection-data-format-config-csv.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type XmlDataFormatConfig -o src/schemas/connection-data-format-config-xml.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type HttpCredentials -o src/schemas/connection-credentials-http.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type SftpCredentials -o src/schemas/connection-credentials-sftp.schema.json && ts-json-schema-generator --path src/types/stocksprite/DataConnectionRepository.interface.ts --type ConnectionTestResult -o src/schemas/connection-test-result.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type StockMappingItems -o src/schemas/stock-mapping-items.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type MappingRules -o src/schemas/mapping-rules.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingRepository.interface.ts --type MappingSchedule -o src/schemas/mapping-schedule.schema.json && ts-json-schema-generator --path src/types/stocksprite/MappingHistoryRepository.interface.ts --type SkuNormalizations -o src/schemas/sku-normalizations.schema.json",
-    "build": "npm run build:deps && npm run generate-schemas && tsc && cpx \"src/schemas/*.json\" dist/schemas/",
+    "build": "npm run build:deps && npm run generate-schemas && tsc && node scripts/copy-schemas.cjs",
     "start": "node dist/server.js",
     "rel": "node dist/server.js",
     "test": "vitest run --config vitest.config.ts",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^1.8.0",
-    "@fastify/cors": "^9.0.1",
+    "@fastify/cors": "^11.3.0",
     "@mikro-orm/core": "^6.6.16",
     "@mikro-orm/migrations": "^6.6.16",
     "@mikro-orm/postgresql": "^6.6.16",
@@ -29,11 +29,10 @@
     "@storesprite/unas-json-client": "file:../packages/unas-json-client",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "cpx": "^1.5.0",
     "dotenv": "^16.4.5",
     "fast-json-stable-stringify": "^2.1.0",
-    "fastify": "^4.28.1",
-    "fastify-plugin": "^4.5.1",
+    "fastify": "^5.12.3",
+    "fastify-plugin": "^6.0.0",
     "inversify": "^8.2.3",
     "log4js": "^6.9.1",
     "microdiff": "^1.6.0",
@@ -45,7 +44,6 @@
     "@eslint/js": "^10.0.1",
     "@mikro-orm/cli": "^6.6.16",
     "@types/node": "^20.14.9",
-    "esbuild": "^0.23.0",
     "eslint": "^10.8.1",
     "ts-json-schema-generator": "^2.4.0",
     "tsx": "^4.19.4",
@@ -53,5 +51,10 @@
     "typescript-eslint": "^8.67.0",
     "vitest": "^4.0.17",
     "vitest-mock-extended": "^5.1.1"
+  },
+  "overrides": {
+    "@rushstack/node-core-library": {
+      "ajv": "8.20.0"
+    }
   }
 }
