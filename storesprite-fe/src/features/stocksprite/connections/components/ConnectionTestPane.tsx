@@ -47,8 +47,10 @@ export function ConnectionTestPane({
 
   return (
     <>
-      {/* Test in Progress Alert (Only shown while actively running and not superseded by completed/failed test result) */}
-      {isTestingRunning && testResult?.success === undefined && (
+      {/* Test in Progress Alert — shown for every active run. Re-testing a connection that
+          already has a completed result keeps that result card on screen, but must not hide
+          the live progress; it disappears when the new result lands and isTestingRunning drops. */}
+      {isTestingRunning && (
         <Alert
           severity="info"
           icon={<CircularProgress size={20} color="inherit" />}

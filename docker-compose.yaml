@@ -50,6 +50,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - postgres
+      - stocksprite-worker
     environment:
       - DATABASE_URL=postgresql://storesprite:storesprite_secure_pass@postgres:5432/storesprite_db
       - PGHOST=postgres
@@ -62,6 +63,25 @@ services:
       - INTERNAL_DRIVER=docker
       - INTERNAL_TOKEN=storesprite-internal-worker-secret-token
       - INTERNAL_BACKEND_URL=http://storesprite-be:3000
+      - STOCKSPRITE_IMAGE=stocksprite-worker-dev
+    networks:
+      - storesprite-net
+
+  # Pre-builds the combined worker image the backend spawns through the mounted
+  # docker.sock, tagged stocksprite-worker-dev to mark it as the compose/dev build (a
+  # production deploy builds/tags its own storesprite-worker:latest instead).
+  # storesprite-be points STOCKSPRITE_IMAGE at this tag. Building when the stack comes up
+  # means a connection test / mapping run never triggers a lazy mid-request build (whose
+  # BuildKit token fetch to Docker Hub can fail behind TLS-intercepting proxies). Compose
+  # builds the tag in its build phase whenever it is absent; this throwaway container then
+  # exits 0. Refresh after worker changes with: docker compose build stocksprite-worker
+  stocksprite-worker:
+    image: stocksprite-worker-dev
+    build:
+      context: .
+      dockerfile: ./stocksprite/Dockerfile
+    restart: "no"
+    command: ["echo", "stocksprite-worker-dev image built"]
     networks:
       - storesprite-net
 

@@ -348,5 +348,58 @@ describe('StockSpriteConnectionsTab', () => {
       expect(screen.queryByText(key)).not.toBeInTheDocument();
     }
   });
+
+  it('shows the in-progress status pane when re-testing a connection that already has a successful result', async () => {
+    mockConnectionService.getConnections.mockResolvedValueOnce({
+      connections: [
+        {
+          id: 'conn-retest',
+          name: 'Re-test Connection',
+          channel: 'HTTP',
+          dataFormat: 'CSV',
+          config: { channel: 'HTTP', url: 'https://example.com/feed.csv' },
+          dataFormatConfig: { format: 'CSV', delimiter: ';' },
+          isActive: true,
+          testResult: {
+            success: true,
+            started_at: '2026-08-22T21:29:12.000Z',
+            duration_ms: 1250,
+            rowCount: 100,
+            columnCount: 5,
+            fileSize: 20480,
+            columns: ['sku'],
+            rows: [['SKU1']],
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    });
+
+    renderTab();
+
+    await waitFor(() => {
+      expect(screen.getByText('Re-test Connection')).toBeInTheDocument();
+    });
+
+    // Open the edit form: the previous successful result card is visible here.
+    fireEvent.click(screen.getByText('Re-test Connection'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Test Connection|Kapcsolat tesztelése/i })).toBeInTheDocument();
+      expect(screen.getByText(/Connection Test Successful|Kapcsolat tesztelése sikeres/i)).toBeInTheDocument();
+    });
+
+    // Starting a new run must surface the in-progress pane even though a previous
+    // successful result is still present (the old testResult.success gate hid it).
+    fireEvent.click(screen.getByRole('button', { name: /Test Connection|Kapcsolat tesztelése/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Initiating connection test...')).toBeInTheDocument();
+    });
+
+    // The previous result card stays visible alongside the live status pane.
+    expect(screen.getByText(/Connection Test Successful|Kapcsolat tesztelése sikeres/i)).toBeInTheDocument();
+  });
 });
 
