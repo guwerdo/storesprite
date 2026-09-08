@@ -1,0 +1,11 @@
+{
+	"sku": "sku",
+        "title": "title",
+        "description": "description",
+	"stocks": [
+		{
+			"warehouse": "stanley-stock",
+			"stock": "stock"
+		}
+	]
+}

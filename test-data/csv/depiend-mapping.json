@@ -1,0 +1,15 @@
+{
+	"sku": "Cikkszám",
+        "title": "Megnevezés",
+        "description": "Leírás",
+	"stocks": [
+		{
+			"warehouse": "depiend-stock",
+			"stock": "Készlet"
+		},
+		{
+			"warehouse": "depiend-oem-stock",
+			"stock": "Gyártói készlet"
+		}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"sku": "Cikkszám",
+        "title": "Név",
+        "description": "Leírás",
+	"stocks": [
+		{
+			"warehouse": "magictools-stock",
+			"stock": "Készlet"
+		},
+		{
+			"warehouse": "magictools-oem-stock",
+			"stock": "Gyártói készlet"
+		},
+		{
+			"warehouse": "magictools-exp-stock",
+			"stock": "Várható érkezés mennyiség"
+		}
+	]
+}

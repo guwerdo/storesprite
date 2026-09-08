@@ -1,0 +1,11 @@
+{
+	"sku": "sku",
+        "title": "title",
+        "description": "description",
+	"stocks": [
+		{
+			"warehouse": "madalbal-stock",
+			"stock": "stock"
+		}
+	]
+}

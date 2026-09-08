@@ -1,0 +1,22 @@
+{
+  "name": "unas-test-creator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone UNAS test XML payload generator from supplier CSV feeds.",
+  "scripts": {
+    "start": "node dist/index.js",
+    "start:dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.17"
+  }
+}
