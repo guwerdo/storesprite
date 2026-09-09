@@ -36,6 +36,7 @@ export class PayloadGenerator {
     const csvDir = options?.csvDir ?? this.resolveDefaultCsvDir();
     const outputXmlPath = options?.outputXmlPath ?? this.resolveDefaultOutputDir();
     const feeds = options?.feeds ?? SUPPLIER_FEEDS;
+    const warehouseMap = options?.warehouseMap;
 
     console.log(`[PayloadGenerator] Loading supplier feeds from: ${csvDir}`);
     const allProducts: MappedProduct[] = [];
@@ -57,7 +58,14 @@ export class PayloadGenerator {
       const mappingRaw = fs.readFileSync(mappingPath, { encoding: 'utf-8' });
       const mappingConfig: SupplierMappingConfig = JSON.parse(mappingRaw);
 
-      const products = this._csvParser.parseSupplierCsv(csvPath, mappingConfig, options?.warehouseMap);
+      if (warehouseMap) {
+        mappingConfig.stocks = mappingConfig.stocks.map((s) => ({
+          ...s,
+          warehouse: warehouseMap.get(s.warehouse) ?? s.warehouse
+        }));
+      }
+
+      const products = this._csvParser.parseSupplierCsv(csvPath, mappingConfig);
       supplierCounts[feed.name] = products.length;
       allProducts.push(...products);
 
@@ -114,6 +122,10 @@ export class PayloadGenerator {
     }
 
     return path.resolve(process.cwd(), 'xml', 'payload.xml');
+  }
+
+  public resolveMappingPaths(csvDir: string, feeds: SupplierFeedDef[] = SUPPLIER_FEEDS): string[] {
+    return feeds.map((feed) => this.resolveMappingPath(csvDir, feed.mappingFileName));
   }
 
   private resolveMappingPath(csvDir: string, defaultMappingName: string): string {

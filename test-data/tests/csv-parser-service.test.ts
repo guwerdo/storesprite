@@ -61,33 +61,6 @@ SKU-002;Product Title 2;Product Description 2;0;20`;
       });
     });
 
-    it('should replace warehouse name with UNAS numeric ID when warehouseMap is provided', () => {
-      const csv = `part;web_title;description;free_stock_hu;free_stock_cz
-SKU-001;Product Title 1;Product Description 1;10;5`;
-
-      const mapping: SupplierMappingConfig = {
-        sku: 'part',
-        title: 'web_title',
-        description: 'description',
-        stocks: [
-          { warehouse: 'test-wh-hu', stock: 'free_stock_hu' },
-          { warehouse: 'test-wh-cz', stock: 'free_stock_cz' }
-        ]
-      };
-
-      const warehouseMap = new Map<string, string>([
-        ['test-wh-hu', '5726549'],
-        ['test-wh-cz', '5726554']
-      ]);
-
-      const result = service.parseCsvContent(csv, mapping, warehouseMap);
-      expect(result).toHaveLength(1);
-      expect(result[0]?.stocks).toEqual([
-        { warehouseId: '5726549', isActive: 'yes', qty: '10' },
-        { warehouseId: '5726554', isActive: 'yes', qty: '5' }
-      ]);
-    });
-
     it('should handle CSV feeds where title or description are not present', () => {
       const csv = `sku;stock
 1820;84

@@ -4,7 +4,7 @@ import type { UnasAuthService } from '../src/services/unas-auth-service.js';
 
 describe('UnasWarehouseService', () => {
   const mockAuthService = {
-    getValidToken: vi.fn().mockResolvedValue('test-bearer-token')
+    getAuthHeaders: vi.fn().mockResolvedValue({ Authorization: 'Bearer test-bearer-token' })
   } as unknown as UnasAuthService;
 
   describe('getAllWarehouses', () => {
@@ -222,8 +222,6 @@ describe('UnasWarehouseService', () => {
 
       expect(result.existingCount).toBe(2);
       expect(result.createdCount).toBe(0);
-      expect(result.warehouses.get('101')).toBe('test-wh-1');
-      expect(result.warehouses.get('102')).toBe('test-wh-2');
       expect(result.nameToId.get('test-wh-1')).toBe('101');
       expect(result.nameToId.get('test-wh-2')).toBe('102');
       expect(mockFetch).toHaveBeenCalledTimes(1); // Only getWarehouse called

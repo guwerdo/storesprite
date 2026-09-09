@@ -3,24 +3,16 @@ import { parse } from 'csv-parse/sync';
 import type { MappedProduct, ProductStock, SupplierMappingConfig } from '../models/types.js';
 
 export class CsvParserService {
-  public parseSupplierCsv(
-    csvPath: string,
-    mappingConfig: SupplierMappingConfig,
-    warehouseMap?: Map<string, string>
-  ): MappedProduct[] {
+  public parseSupplierCsv(csvPath: string, mappingConfig: SupplierMappingConfig): MappedProduct[] {
     if (!fs.existsSync(csvPath)) {
       throw new Error(`CSV file not found: ${csvPath}`);
     }
 
     const fileContent = fs.readFileSync(csvPath, { encoding: 'utf-8' });
-    return this.parseCsvContent(fileContent, mappingConfig, warehouseMap);
+    return this.parseCsvContent(fileContent, mappingConfig);
   }
 
-  public parseCsvContent(
-    content: string,
-    mappingConfig: SupplierMappingConfig,
-    warehouseMap?: Map<string, string>
-  ): MappedProduct[] {
+  public parseCsvContent(content: string, mappingConfig: SupplierMappingConfig): MappedProduct[] {
     const records: Array<Record<string, string>> = parse(content, {
       delimiter: ';',
       columns: true,
@@ -50,10 +42,9 @@ export class CsvParserService {
       const stocks: ProductStock[] = mappingConfig.stocks.map((stockMap) => {
         const rawStock = record[stockMap.stock];
         const normalizedQty = this.normalizeStockQty(rawStock);
-        const resolvedWarehouseId = warehouseMap?.get(stockMap.warehouse) ?? stockMap.warehouse;
 
         return {
-          warehouseId: resolvedWarehouseId,
+          warehouseId: stockMap.warehouse,
           isActive: 'yes',
           qty: normalizedQty
         };

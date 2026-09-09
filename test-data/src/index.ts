@@ -14,11 +14,12 @@ async function main(): Promise<void> {
 
     const generator = new PayloadGenerator();
     const csvDir = generator.resolveDefaultCsvDir();
+    const mappingPaths = generator.resolveMappingPaths(csvDir);
 
     console.log('-----------------------------------------------------');
     console.log('[UNAS Warehouse Sync] Checking & synchronizing warehouses...');
     const warehouseService = new UnasWarehouseService({ authService });
-    const syncResult = await warehouseService.syncWarehousesFromMappings(csvDir);
+    const syncResult = await warehouseService.syncWarehousesFromMappings(mappingPaths);
 
     console.log('[UNAS Warehouse Sync] Finished! Current Warehouse Map:');
     console.log(` - Existing in UNAS: ${syncResult.existingCount}`);

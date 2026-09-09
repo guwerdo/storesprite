@@ -1,4 +1,5 @@
 import type { MappedProduct, ProductStock } from '../models/types.js';
+import { escapeCdata as escapeCdataText, escapeXml as escapeXmlText } from '../utils/xml.js';
 
 export class XmlBuilderService {
   public buildPayloadXml(products: MappedProduct[]): string {
@@ -68,16 +69,10 @@ ${stocksXml}
   }
 
   public escapeXml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+    return escapeXmlText(text);
   }
 
   public escapeCdata(text: string): string {
-    // If text contains ']]>', split it so the CDATA section is safely terminated and reopened
-    return text.replace(/\]\]>/g, ']]]]><![CDATA[>');
+    return escapeCdataText(text);
   }
 }

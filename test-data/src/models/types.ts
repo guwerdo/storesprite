@@ -46,7 +46,6 @@ export interface UnasWarehouse {
 }
 
 export interface WarehouseSyncResult {
-  warehouses: Map<string, string>; // warehouseId -> warehouseName
   nameToId: Map<string, string>;   // warehouseName -> warehouseId
   existingCount: number;
   createdCount: number;
