@@ -28,3 +28,8 @@ export interface SupplierFeedDef {
   csvFileName: string;
   mappingFileName: string;
 }
+
+export interface UnasTokenData {
+  token: string;
+  createdAt: string;
+}

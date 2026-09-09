@@ -1,10 +1,15 @@
 import { PayloadGenerator } from './services/payload-generator.js';
+import { UnasAuthService } from './services/unas-auth-service.js';
 
-function main(): void {
+async function main(): Promise<void> {
   try {
     console.log('=====================================================');
     console.log('UNAS Test Creator: CSV to UNAS setProduct XML Builder');
     console.log('=====================================================');
+
+    const authService = new UnasAuthService();
+    const token = await authService.getValidToken();
+    console.log(`[UNAS Auth] Authenticated successfully (Token: ${token.slice(0, 8)}...${token.slice(-4)})`);
 
     const generator = new PayloadGenerator();
     const result = generator.run();
@@ -23,4 +28,5 @@ function main(): void {
   }
 }
 
-main();
+void main();
+

@@ -31,49 +31,43 @@ docker build -t unas-test-creator .
 
 ## Running the Container
 
-### Option 1: One-Off Execution of Built `dist` Application
+### Option 1: Persistent Background Container (Recommended)
 
-Run the compiled code inside a transient container (container executes `node dist/index.js` and exits):
+Start the container in the background without any volume mounts. It compiles TypeScript on start and stays alive:
 
 ```bash
-docker run -t --rm unas-test-creator node dist/index.js
+docker run -d --name unas-test-creator -e UNAS_API_KEY="your-unas-api-key" unas-test-creator
 ```
 
-Or via `npm run start`:
+Then execute commands interactively:
 
 ```bash
-docker run -t --rm unas-test-creator npm run start
-```
+# Run payload generator
+docker exec -it unas-test-creator npm start
 
-### Option 2: Persistent Background Container (Interactive / Exec Mode)
-
-Run the container as a persistent background daemon (kept alive by `tail -f /dev/null`):
-
-```bash
-# Start background container
-docker run -d --name unas-test-creator unas-test-creator
-
-# Run the payload generator inside the container
-docker exec -it unas-test-creator npm run start
-# or
-docker exec -it unas-test-creator node dist/index.js
-
-# Run unit tests inside the container
+# Run unit tests
 docker exec -it unas-test-creator npm test
 
-# Rebuild code inside container after edits
+# Rebuild TypeScript
 docker exec -it unas-test-creator npm run build
+
+# Open interactive bash shell
+docker exec -it unas-test-creator bash
 ```
 
-### Option 3: Output Payload to Host Filesystem
+### Option 2: One-Off Execution
 
-To save the generated `payload.xml` directly to your host machine's `test-data/xml` directory, mount the `xml` volume:
+Run the tests or application in a temporary container:
 
 ```bash
-docker run -t --rm -v ${PWD}/xml:/workspace/xml unas-test-creator node dist/index.js
+# Run tests
+docker run --rm -e UNAS_API_KEY="your-unas-api-key" unas-test-creator npm test
+
+# Run application
+docker run --rm -e UNAS_API_KEY="your-unas-api-key" unas-test-creator npm start
 ```
 
----
+
 
 ## Directory Structure
 

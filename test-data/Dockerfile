@@ -16,10 +16,9 @@ WORKDIR /workspace
 COPY package.json tsconfig.json ./
 RUN npm install
 
-# Copy source and compile TypeScript into dist/
+# Copy source and tests
 COPY src/ ./src/
 COPY tests/ ./tests/
-RUN npm run build
 
 # Copy CSV files and mapping configurations
 COPY csv/ ./csv/
@@ -27,5 +26,7 @@ COPY csv/ ./csv/
 # Prepare xml output directory
 RUN mkdir -p /workspace/xml
 
-# Keep container alive on startup so commands can be executed via docker exec
-CMD ["sh", "-c", "tail -f /dev/null"]
+# Build TypeScript on start and keep alive for docker exec
+CMD ["sh", "-c", "npm run build && tail -f /dev/null"]
+
+
