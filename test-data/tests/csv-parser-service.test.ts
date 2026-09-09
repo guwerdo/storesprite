@@ -35,6 +35,7 @@ SKU-002;Product Title 2;Product Description 2;0;20`;
         sku: 'part',
         title: 'web_title',
         description: 'description',
+        category: 729110,
         stocks: [
           { warehouse: 'wh-hu', stock: 'free_stock_hu' },
           { warehouse: 'wh-cz', stock: 'free_stock_cz' }
@@ -47,6 +48,7 @@ SKU-002;Product Title 2;Product Description 2;0;20`;
         sku: 'SKU-001',
         title: 'Product Title 1',
         description: 'Product Description 1',
+        category: 729110,
         stocks: [
           { warehouseId: 'wh-hu', isActive: 'yes', qty: '10' },
           { warehouseId: 'wh-cz', isActive: 'yes', qty: '5' }

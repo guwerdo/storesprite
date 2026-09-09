@@ -7,6 +7,7 @@ export interface SupplierMappingConfig {
   sku: string;
   title?: string;
   description?: string;
+  category?: number | string;
   stocks: StockMapping[];
 }
 
@@ -20,6 +21,7 @@ export interface MappedProduct {
   sku: string;
   title: string;
   description: string;
+  category?: number | string;
   stocks: ProductStock[];
 }
 

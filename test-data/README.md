@@ -120,6 +120,12 @@ test-data/
                 <![CDATA[ AS-90 Megakadályozza a hegesztési fröcskölések felhalmozódását... ]]>
             </Long>
         </Description>
+        <Categories>
+            <Category>
+                <Type>base</Type>
+                <Id>729110</Id>
+            </Category>
+        </Categories>
         <Stocks>
             <Status>
                 <Active>1</Active>

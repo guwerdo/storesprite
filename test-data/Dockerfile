@@ -26,7 +26,10 @@ COPY csv/ ./csv/
 # Prepare xml output directory
 RUN mkdir -p /workspace/xml
 
-# Build TypeScript on start and keep alive for docker exec
-CMD ["sh", "-c", "npm run build && tail -f /dev/null"]
+# Build TypeScript
+RUN npm run build
+
+# Keep alive for docker exec
+CMD ["tail", "-f", "/dev/null"]
 
 

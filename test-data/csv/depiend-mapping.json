@@ -2,13 +2,14 @@
 	"sku": "Cikkszám",
         "title": "Megnevezés",
         "description": "Leírás",
+        "category": 729110,
 	"stocks": [
 		{
-			"warehouse": "depiend-stock",
+			"warehouse": "test-depiend-stock",
 			"stock": "Készlet"
 		},
 		{
-			"warehouse": "depiend-oem-stock",
+			"warehouse": "test-depiend-oem-stock",
 			"stock": "Gyártói készlet"
 		}
 	]

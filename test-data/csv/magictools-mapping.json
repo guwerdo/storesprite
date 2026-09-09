@@ -2,17 +2,18 @@
 	"sku": "Cikkszám",
         "title": "Név",
         "description": "Leírás",
+        "category": 729110,
 	"stocks": [
 		{
-			"warehouse": "magictools-stock",
+			"warehouse": "test-magictools-stock",
 			"stock": "Készlet"
 		},
 		{
-			"warehouse": "magictools-oem-stock",
+			"warehouse": "test-magictools-oem-stock",
 			"stock": "Gyártói készlet"
 		},
 		{
-			"warehouse": "magictools-exp-stock",
+			"warehouse": "test-magictools-exp-stock",
 			"stock": "Várható érkezés mennyiség"
 		}
 	]

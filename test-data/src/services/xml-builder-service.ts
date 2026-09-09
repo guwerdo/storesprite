@@ -11,6 +11,7 @@ export class XmlBuilderService {
     const sku = this.escapeXml(product.sku);
     const safeTitle = this.escapeCdata(product.title);
     const safeDescription = this.escapeCdata(product.description);
+    const categoriesXml = this.renderCategories(product.category);
     const stocksXml = this.renderStocks(product.stocks);
 
     return `    <Product>
@@ -22,7 +23,7 @@ export class XmlBuilderService {
                 <![CDATA[ ${safeDescription} ]]>
             </Long>
         </Description>
-        <Stocks>
+${categoriesXml}        <Stocks>
             <Status>
                 <Active>1</Active>
             </Status>
@@ -38,6 +39,20 @@ ${stocksXml}
             </Price>
         </Prices>
     </Product>`;
+  }
+
+  public renderCategories(category?: number | string): string {
+    if (category === undefined || category === null || String(category).trim() === '') {
+      return '';
+    }
+
+    const safeCategory = this.escapeXml(String(category).trim());
+    return `        <Categories>
+            <Category>
+                <Type>base</Type>
+                <Id>${safeCategory}</Id>
+            </Category>
+        </Categories>\n`;
   }
 
   public renderStocks(stocks: ProductStock[]): string {

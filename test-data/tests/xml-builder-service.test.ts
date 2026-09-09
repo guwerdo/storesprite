@@ -10,6 +10,7 @@ describe('XmlBuilderService', () => {
       sku: 'TEST-SKU-100',
       title: 'Drill Set 10mm',
       description: 'Heavy duty drill bit set',
+      category: 729110,
       stocks: [
         { warehouseId: 'wh-main', isActive: 'yes', qty: '15' },
         { warehouseId: 'wh-secondary', isActive: 'yes', qty: '0' }
@@ -22,11 +23,24 @@ describe('XmlBuilderService', () => {
     expect(xml).toContain('<Action>add</Action>');
     expect(xml).toContain('<Name> <![CDATA[Drill Set 10mm]]> </Name>');
     expect(xml).toContain('<![CDATA[ Heavy duty drill bit set ]]>');
+    expect(xml).toContain('<Categories>\n            <Category>\n                <Type>base</Type>\n                <Id>729110</Id>\n            </Category>\n        </Categories>');
     expect(xml).toContain('<WarehouseId>wh-main</WarehouseId>');
     expect(xml).toContain('<Qty>15</Qty>');
     expect(xml).toContain('<WarehouseId>wh-secondary</WarehouseId>');
     expect(xml).toContain('<Qty>0</Qty>');
     expect(xml).toContain('<Vat>27%</Vat>');
+  });
+
+  it('should omit <Categories> tag if category is not provided', () => {
+    const product: MappedProduct = {
+      sku: 'TEST-NO-CAT',
+      title: 'Product Without Category',
+      description: 'Description',
+      stocks: []
+    };
+
+    const xml = service.renderProduct(product);
+    expect(xml).not.toContain('<Categories>');
   });
 
   it('should escape special XML characters and handle CDATA correctly', () => {

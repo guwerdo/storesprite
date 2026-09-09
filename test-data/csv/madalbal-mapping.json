@@ -2,9 +2,10 @@
 	"sku": "sku",
         "title": "title",
         "description": "description",
+        "category": 729110,
 	"stocks": [
 		{
-			"warehouse": "madalbal-stock",
+			"warehouse": "test-madalbal-stock",
 			"stock": "stock"
 		}
 	]

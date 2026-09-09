@@ -2,17 +2,18 @@
 	"sku": "part",
         "title": "web_title",
         "description": "description",
+        "category": 729110,
 	"stocks": [
 		{
-			"warehouse": "cromwell-stock-hu",
+			"warehouse": "test-cromwell-stock-hu",
 			"stock": "free_stock_hu"
 		},
 		{
-			"warehouse": "cromwell-stock-cz",
+			"warehouse": "test-cromwell-stock-cz",
 			"stock": "free_stock_cz"
 		},
 		{
-			"warehouse": "cromwell-stock-wdc",
+			"warehouse": "test-cromwell-stock-wdc",
 			"stock": "free_stock_wdc"
 		}
 	]

@@ -54,6 +54,7 @@ export class CsvParserService {
         sku,
         title,
         description,
+        category: mappingConfig.category,
         stocks
       });
     }

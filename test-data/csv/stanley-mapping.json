@@ -2,9 +2,10 @@
 	"sku": "sku",
         "title": "title",
         "description": "description",
+        "category": 729110,
 	"stocks": [
 		{
-			"warehouse": "stanley-stock",
+			"warehouse": "test-stanley-stock",
 			"stock": "stock"
 		}
 	]
