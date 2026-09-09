@@ -31,6 +31,7 @@ export class PayloadGenerator {
     csvDir?: string;
     outputXmlPath?: string;
     feeds?: SupplierFeedDef[];
+    warehouseMap?: Map<string, string>;
   }): GenerationResult {
     const csvDir = options?.csvDir ?? this.resolveDefaultCsvDir();
     const outputXmlPath = options?.outputXmlPath ?? this.resolveDefaultOutputDir();
@@ -56,7 +57,7 @@ export class PayloadGenerator {
       const mappingRaw = fs.readFileSync(mappingPath, { encoding: 'utf-8' });
       const mappingConfig: SupplierMappingConfig = JSON.parse(mappingRaw);
 
-      const products = this._csvParser.parseSupplierCsv(csvPath, mappingConfig);
+      const products = this._csvParser.parseSupplierCsv(csvPath, mappingConfig, options?.warehouseMap);
       supplierCounts[feed.name] = products.length;
       allProducts.push(...products);
 

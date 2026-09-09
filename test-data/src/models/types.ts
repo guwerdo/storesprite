@@ -35,3 +35,19 @@ export interface UnasTokenData {
   token: string;
   createdAt: string;
 }
+
+export interface UnasWarehouse {
+  id: string;
+  name: string;
+  publicName?: string;
+  active?: string;
+  type?: string;
+}
+
+export interface WarehouseSyncResult {
+  warehouses: Map<string, string>; // warehouseId -> warehouseName
+  nameToId: Map<string, string>;   // warehouseName -> warehouseId
+  existingCount: number;
+  createdCount: number;
+}
+
