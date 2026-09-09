@@ -1,7 +1,8 @@
 import type { IGetProductDBRequest } from "../endpoints/get-product-db/get-product-db.types.js";
-import type { IWarehouseResponse } from "../endpoints/get-warehouse/get-warehouse.types.js";
+import type { IGetWarehouseRequest, IWarehouseResponse } from "../endpoints/get-warehouse/get-warehouse.types.js";
 import type { ILoginResponse } from "../endpoints/login/login.types.js";
 import type { ISetProductRequest, ISetProductResponse } from "../endpoints/set-product/set-product.types.js";
+import type { ISetWarehouseRequest, ISetWarehouseResponse } from "../endpoints/set-warehouse/set-warehouse.types.js";
 
 export interface IUnasJsonClient {
     /** Exchange the API key for a session token; returns the full login response. Pass `true` to also fetch webshop info. */
@@ -10,6 +11,8 @@ export interface IUnasJsonClient {
     getProductDB(request?: IGetProductDBRequest): Promise<string>;
     /** Add/modify products (batched); returns per-product statuses. */
     setProduct(request: ISetProductRequest): Promise<ISetProductResponse[]>;
-    /** List warehouses. */
-    getWarehouse(): Promise<IWarehouseResponse[]>;
+    /** List warehouses (optionally filtered by name or id). */
+    getWarehouse(request?: IGetWarehouseRequest): Promise<IWarehouseResponse[]>;
+    /** Add/modify/delete warehouses (batched); returns per-warehouse statuses. */
+    setWarehouse(request: ISetWarehouseRequest): Promise<ISetWarehouseResponse[]>;
 }

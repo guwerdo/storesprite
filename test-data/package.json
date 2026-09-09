@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Standalone UNAS test XML payload generator from supplier CSV feeds.",
+  "description": "Standalone UNAS test data generator and uploader from supplier CSV feeds.",
   "scripts": {
     "start": "node dist/index.js",
     "start:dev": "tsx src/index.ts",
@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@storesprite/unas-json-client": "file:../packages/unas-json-client",
     "csv-parse": "^5.6.0"
   },
   "devDependencies": {

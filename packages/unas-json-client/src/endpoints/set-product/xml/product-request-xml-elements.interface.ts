@@ -1,10 +1,10 @@
-// Internal PascalCase XML element shapes for the setProduct request.
-// These mirror UNAS's wire format and are not part of the public JSON API.
-
 export interface IProductElement {
     Sku: string;
     Action: string;
+    Name: { "#cdata": string } | undefined;
     Description: IDescriptionElement | undefined;
+    Categories: { Category: ICategoryElement[] } | undefined;
+    Prices: IPricesElement | undefined;
     Stocks: { Status: { Active: number }; Stock: IStockElement[] } | undefined;
     Images: IImagesElement | undefined;
     Datas: { Data: IDataElement[] } | undefined;
@@ -14,8 +14,25 @@ export interface IDescriptionElement {
     Long: { "#cdata": string };
 }
 
+export interface ICategoryElement {
+    Type: string;
+    Id: string | number;
+}
+
+export interface IPriceElement {
+    Type: string;
+    Net?: number | string;
+    Gross?: number | string;
+    Actual?: number | string;
+}
+
+export interface IPricesElement {
+    Vat?: string;
+    Price?: IPriceElement[];
+}
+
 export interface IStockElement {
-    WarehouseId: number | undefined;
+    WarehouseId: number | string | undefined;
     IsActive: string;
     Qty: number;
 }

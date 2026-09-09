@@ -52,7 +52,36 @@ describe("UnasJsonClient", () => {
         const client = setup(fake);
 
         const warehouses = await client.getWarehouse();
-        expect(warehouses).toEqual([{ id: 1, name: "N", publicName: "P" }]);
+        expect(warehouses).toEqual([
+            {
+                id: 1,
+                name: "N",
+                publicName: "P",
+                active: undefined,
+                info: undefined,
+                order: undefined,
+                syncMainStockDisabled: undefined,
+                type: undefined,
+                useFilter: undefined,
+                visibleOnProductDetails: undefined,
+            },
+        ]);
+        expect(fake.requests[1].headers).toEqual({ Authorization: "Bearer tok-1" });
+    });
+
+    it("sends a Bearer header for setWarehouse", async () => {
+        const fake = new FakeUnasHttpClient();
+        fake.enqueue(`${BASE}login`, LOGIN_OK);
+        fake.enqueue(`${BASE}setWarehouse`, {
+            status: 200,
+            data: '<?xml version="1.0" encoding="UTF-8"?><Warehouses><Warehouse><Id>99</Id><Status>ok</Status></Warehouse></Warehouses>',
+        });
+        const client = setup(fake);
+
+        const result = await client.setWarehouse({
+            warehouses: [{ name: "New Wh", action: "add" }],
+        });
+        expect(result).toEqual([{ id: "99", status: "ok", error: undefined, action: undefined }]);
         expect(fake.requests[1].headers).toEqual({ Authorization: "Bearer tok-1" });
     });
 

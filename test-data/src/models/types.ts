@@ -1,3 +1,5 @@
+import type { ISetProduct, IWarehouseResponse } from "@storesprite/unas-json-client";
+
 export interface StockMapping {
   warehouse: string;
   stock: string;
@@ -31,23 +33,10 @@ export interface SupplierFeedDef {
   mappingFileName: string;
 }
 
-export interface UnasTokenData {
-  token: string;
-  createdAt: string;
-}
-
-export interface UnasWarehouse {
-  id: string;
-  name: string;
-  publicName?: string;
-  active?: string;
-  type?: string;
-  order?: number;
-}
-
 export interface WarehouseSyncResult {
-  nameToId: Map<string, string>;   // warehouseName -> warehouseId
+  nameToId: Map<string, string>; // warehouseName -> warehouseId (string)
   existingCount: number;
   createdCount: number;
 }
 
+export type { ISetProduct, IWarehouseResponse };

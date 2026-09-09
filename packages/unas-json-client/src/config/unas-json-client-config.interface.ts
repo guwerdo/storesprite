@@ -1,6 +1,6 @@
 export interface IUnasJsonClientConfig {
-    /** Base URL of the UNAS shop API, e.g. "https://api.unas.eu/shop/" (trailing slash). */
-    baseUrl: string;
+    /** Base URL of the UNAS shop API, e.g. "https://api.unas.eu/shop/" (trailing slash). Defaults to "https://api.unas.eu/shop/". */
+    baseUrl?: string;
     apiKey: string;
     /**
      * Key under which this client's auth token is stored in the injected token

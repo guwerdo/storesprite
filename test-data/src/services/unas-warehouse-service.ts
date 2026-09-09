@@ -1,60 +1,45 @@
 import * as fs from 'node:fs';
-import type { SupplierMappingConfig, UnasWarehouse, WarehouseSyncResult } from '../models/types.js';
-import { escapeCdata, extractXmlValue } from '../utils/xml.js';
-import { UnasAuthService } from './unas-auth-service.js';
+import type { IUnasJsonClient, IWarehouseResponse } from '@storesprite/unas-json-client';
+import type { SupplierMappingConfig, WarehouseSyncResult } from '../models/types.js';
 
 export interface UnasWarehouseServiceOptions {
-  authService?: UnasAuthService;
-  getWarehouseUrl?: string;
-  setWarehouseUrl?: string;
-  fetchFn?: typeof fetch;
+  client: IUnasJsonClient;
 }
 
 export class UnasWarehouseService {
-  private readonly _authService: UnasAuthService;
-  private readonly _getWarehouseUrl: string;
-  private readonly _setWarehouseUrl: string;
-  private readonly _fetchFn: typeof fetch;
+  private readonly _client: IUnasJsonClient;
 
-  public constructor(options: UnasWarehouseServiceOptions = {}) {
-    this._authService = options.authService ?? new UnasAuthService();
-    this._getWarehouseUrl = options.getWarehouseUrl ?? 'https://api.unas.eu/shop/getWarehouse';
-    this._setWarehouseUrl = options.setWarehouseUrl ?? 'https://api.unas.eu/shop/setWarehouse';
-    this._fetchFn = options.fetchFn ?? globalThis.fetch;
+  public constructor(options: UnasWarehouseServiceOptions) {
+    this._client = options.client;
   }
 
-  public async getAllWarehouses(): Promise<UnasWarehouse[]> {
-    const xmlPayload = '<?xml version="1.0" encoding="UTF-8" ?>\n<Params></Params>';
-    const responseText = await this.postXml(this._getWarehouseUrl, 'getWarehouse', xmlPayload);
-    return this.parseWarehousesXml(responseText);
+  public async getAllWarehouses(): Promise<IWarehouseResponse[]> {
+    return this._client.getWarehouse();
   }
 
   public async createWarehouse(name: string, publicName?: string, order: number = 1): Promise<string> {
-    const safeName = escapeCdata(name);
-    const safePublicName = escapeCdata(publicName ?? name);
+    const responses = await this._client.setWarehouse({
+      warehouses: [
+        {
+          action: 'add',
+          active: 'yes',
+          name,
+          publicName: publicName ?? name,
+          order,
+          type: 'external',
+          syncMainStockDisabled: 'yes',
+          visibleOnProductDetails: 'only_if_on_stock',
+        },
+      ],
+    });
 
-    const xmlPayload = `<?xml version="1.0" encoding="UTF-8" ?>
-<Warehouses>
-    <Warehouse>
-        <Action>add</Action>
-        <Active>yes</Active>
-        <Name><![CDATA[${safeName}]]></Name>
-        <PublicName><![CDATA[${safePublicName}]]></PublicName>
-        <Order>${order}</Order>
-        <Type>external</Type>
-        <SyncMainStockDisabled>yes</SyncMainStockDisabled>
-        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
-    </Warehouse>
-</Warehouses>`;
-
-    const responseText = await this.postXml(this._setWarehouseUrl, 'setWarehouse', xmlPayload);
-
-    const newId = extractXmlValue(responseText, 'Id');
-    if (!newId) {
-      throw new Error(`No <Id> returned in UNAS setWarehouse response: ${responseText}`);
+    const first = responses[0];
+    if (!first || first.status === 'error' || !first.id) {
+      const errorMsg = first?.error ?? 'Unknown error creating warehouse';
+      throw new Error(`UNAS setWarehouse rejected: ${errorMsg}`);
     }
 
-    return newId;
+    return first.id;
   }
 
   public extractWarehouseNamesFromMappings(mappingPaths: string[]): string[] {
@@ -92,13 +77,11 @@ export class UnasWarehouseService {
 
   public async syncWarehouses(requiredWarehouseNames: string[]): Promise<WarehouseSyncResult> {
     const existing = await this.getAllWarehouses();
-
-    const nameToId = new Map<string, string>(); // warehouseName -> warehouseId
+    const nameToId = new Map<string, string>();
 
     let maxOrder = 0;
-
     for (const wh of existing) {
-      nameToId.set(wh.name, wh.id);
+      nameToId.set(wh.name, String(wh.id));
       if (wh.order !== undefined && wh.order > maxOrder) {
         maxOrder = wh.order;
       }
@@ -106,87 +89,19 @@ export class UnasWarehouseService {
 
     const missingNames = [...new Set(requiredWarehouseNames)].filter((name) => !nameToId.has(name));
 
-    const created = await Promise.all(
-      missingNames.map(async (name, index) => {
-        const order = maxOrder + index + 1;
-        console.log(`[UnasWarehouseService] Warehouse "${name}" not found on UNAS. Creating with Order=${order}...`);
-        const newId = await this.createWarehouse(name, undefined, order);
-        console.log(`[UnasWarehouseService] -> Successfully created warehouse "${name}" with UNAS ID: ${newId} (Order: ${order})`);
-        return [name, newId] as const;
-      })
-    );
-
-    for (const [name, id] of created) {
-      nameToId.set(name, id);
+    for (let i = 0; i < missingNames.length; i++) {
+      const name = missingNames[i]!;
+      const order = maxOrder + i + 1;
+      console.log(`[UnasWarehouseService] Warehouse "${name}" not found on UNAS. Creating with Order=${order}...`);
+      const newId = await this.createWarehouse(name, undefined, order);
+      console.log(`[UnasWarehouseService] -> Successfully created warehouse "${name}" with UNAS ID: ${newId}`);
+      nameToId.set(name, newId);
     }
 
     return {
       nameToId,
       existingCount: existing.length,
-      createdCount: missingNames.length
+      createdCount: missingNames.length,
     };
-  }
-
-  private async postXml(url: string, opLabel: string, body: string): Promise<string> {
-    const authHeaders = await this._authService.getAuthHeaders();
-
-    let response: Response;
-    try {
-      response = await this._fetchFn(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/xml; charset=utf-8',
-          ...authHeaders
-        },
-        body
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to communicate with UNAS ${opLabel} endpoint (${url}): ${message}`);
-    }
-
-    const responseText = await response.text();
-
-    if (!response.ok) {
-      throw new Error(`UNAS ${opLabel} request failed with HTTP ${response.status}: ${responseText}`);
-    }
-
-    const status = extractXmlValue(responseText, 'Status');
-    if (status && status.toLowerCase() === 'error') {
-      const errorMsg = extractXmlValue(responseText, 'Error') ?? 'Unknown UNAS error';
-      throw new Error(`UNAS ${opLabel} rejected: ${errorMsg}`);
-    }
-
-    return responseText;
-  }
-
-  private parseWarehousesXml(xml: string): UnasWarehouse[] {
-    const warehouseRegex = /<Warehouse(?:\s[^>]*)?>([\s\S]*?)<\/Warehouse>/gi;
-    let match: RegExpExecArray | null;
-    const warehouses: UnasWarehouse[] = [];
-
-    while ((match = warehouseRegex.exec(xml)) !== null) {
-      const block = match[1];
-      const id = extractXmlValue(block, 'Id');
-      const name = extractXmlValue(block, 'Name');
-      const publicName = extractXmlValue(block, 'PublicName');
-      const active = extractXmlValue(block, 'Active');
-      const type = extractXmlValue(block, 'Type');
-      const orderRaw = extractXmlValue(block, 'Order');
-      const order = orderRaw && !Number.isNaN(Number(orderRaw)) ? Number(orderRaw) : undefined;
-
-      if (id && name) {
-        warehouses.push({
-          id,
-          name,
-          publicName: publicName ?? undefined,
-          active: active ?? undefined,
-          type: type ?? undefined,
-          order
-        });
-      }
-    }
-
-    return warehouses;
   }
 }

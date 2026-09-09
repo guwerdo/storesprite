@@ -7,6 +7,7 @@ import { GetProductDbEndpoint } from "../endpoints/get-product-db/get-product-db
 import { GetWarehouseEndpoint } from "../endpoints/get-warehouse/get-warehouse-endpoint.js";
 import { LoginEndpoint } from "../endpoints/login/login-endpoint.js";
 import { SetProductEndpoint } from "../endpoints/set-product/set-product-endpoint.js";
+import { SetWarehouseEndpoint } from "../endpoints/set-warehouse/set-warehouse-endpoint.js";
 import { AxiosUnasHttpClient } from "../http/axios-unas-http-client.js";
 import { ConsoleLogger } from "../logging/console-logger.js";
 import { TYPES } from "../types/binding-keys.js";
@@ -27,7 +28,7 @@ export function registerUnasJsonClient(container: Container, config: IUnasJsonCl
     bindDefault(container, TYPES.ILogger, ConsoleLogger);
     bindDefault(container, TYPES.IXmlService, FastXmlService);
 
-    for (const Endpoint of [LoginEndpoint, GetProductDbEndpoint, GetWarehouseEndpoint, SetProductEndpoint]) {
+    for (const Endpoint of [LoginEndpoint, GetProductDbEndpoint, GetWarehouseEndpoint, SetWarehouseEndpoint, SetProductEndpoint]) {
         container.bind<IUnasEndpoint>(TYPES.UnasEndpoint).to(Endpoint).inSingletonScope();
     }
 

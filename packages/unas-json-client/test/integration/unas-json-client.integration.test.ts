@@ -52,6 +52,30 @@ describe("unas-json-client integration", () => {
         expect(warehouses[0].id).toBe(5726549);
     });
 
+    it("sets warehouses over real HTTP", async () => {
+        server = await startTestHttpServer((request) => {
+            if (request.url.endsWith("/login")) {
+                return { status: 200, body: loadFixture("responses", "login-response.xml") };
+            }
+            if (request.url.endsWith("/setWarehouse")) {
+                return {
+                    status: 200,
+                    body: '<?xml version="1.0" encoding="UTF-8"?><Warehouses><Warehouse><Id>4590231</Id><Status>ok</Status></Warehouse></Warehouses>',
+                };
+            }
+            return { status: 404, body: "<Error>not found</Error>" };
+        });
+
+        const client = createUnasJsonClient({ baseUrl: server.baseUrl, apiKey: "test-key" });
+        const result = await client.setWarehouse({
+            warehouses: [{ name: "New Warehouse", action: "add", order: 1 }],
+        });
+
+        expect(result).toEqual([{ id: "4590231", status: "ok", error: undefined, action: undefined }]);
+        expect(server.requests).toHaveLength(2);
+        expect(server.requests[1].headers.authorization).toBe("Bearer tok-123");
+    });
+
     it("requests webshop info when login(true)", async () => {
         server = await startTestHttpServer((request) => {
             if (request.url.endsWith("/login")) {

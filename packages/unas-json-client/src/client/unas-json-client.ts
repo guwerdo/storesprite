@@ -6,9 +6,10 @@ import type { ILogger } from "../core/logger.interface.js";
 import type { ITokenStore } from "../core/token-store.interface.js";
 import type { IXmlService } from "../core/xml-service.interface.js";
 import type { IGetProductDBRequest } from "../endpoints/get-product-db/get-product-db.types.js";
-import type { IWarehouseResponse } from "../endpoints/get-warehouse/get-warehouse.types.js";
+import type { IGetWarehouseRequest, IWarehouseResponse } from "../endpoints/get-warehouse/get-warehouse.types.js";
 import type { ILoginRequest, ILoginResponse } from "../endpoints/login/login.types.js";
 import type { ISetProductRequest, ISetProductResponse } from "../endpoints/set-product/set-product.types.js";
+import type { ISetWarehouseRequest, ISetWarehouseResponse } from "../endpoints/set-warehouse/set-warehouse.types.js";
 import { TYPES } from "../types/binding-keys.js";
 import { UnasAuthError, UnasConfigError, UnasHttpError, UnasTransportError } from "../types/errors.js";
 import type { IUnasJsonClient } from "./unas-json-client.interface.js";
@@ -29,7 +30,8 @@ export class UnasJsonClient implements IUnasJsonClient {
         @inject(TYPES.IXmlService) private readonly _xmlService: IXmlService,
         @multiInject(TYPES.UnasEndpoint) endpoints: IUnasEndpoint[],
     ) {
-        this._baseUrl = this._config.baseUrl.endsWith("/") ? this._config.baseUrl : `${this._config.baseUrl}/`;
+        const rawBaseUrl = this._config.baseUrl ?? "https://api.unas.eu/shop/";
+        this._baseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
         this._tokenKey = this._config.tokenKey ?? DEFAULT_TOKEN_KEY;
         this._endpoints = new Map(endpoints.map((endpoint) => [endpoint.name, endpoint] as const));
     }
@@ -46,8 +48,12 @@ export class UnasJsonClient implements IUnasJsonClient {
         return this._call<ISetProductRequest, ISetProductResponse[]>("setProduct", request);
     }
 
-    public async getWarehouse(): Promise<IWarehouseResponse[]> {
-        return this._call<undefined, IWarehouseResponse[]>("getWarehouse", undefined);
+    public async getWarehouse(request?: IGetWarehouseRequest): Promise<IWarehouseResponse[]> {
+        return this._call<IGetWarehouseRequest | undefined, IWarehouseResponse[]>("getWarehouse", request);
+    }
+
+    public async setWarehouse(request: ISetWarehouseRequest): Promise<ISetWarehouseResponse[]> {
+        return this._call<ISetWarehouseRequest, ISetWarehouseResponse[]>("setWarehouse", request);
     }
 
     private async _call<TRequest, TResponse>(name: string, request: TRequest): Promise<TResponse> {
