@@ -60,10 +60,12 @@ describe('UnasWarehouseService', () => {
         name: 'test-cromwell-stock-hu',
         publicName: 'Központi magyar raktár',
         active: 'yes',
-        type: 'external'
+        type: 'external',
+        order: 1
       });
       expect(result[1]?.id).toBe('5726554');
       expect(result[1]?.name).toBe('test-cromwell-stock-cz');
+      expect(result[1]?.order).toBe(2);
     });
 
     it('should return an empty array if no warehouses are present', async () => {
@@ -141,7 +143,7 @@ describe('UnasWarehouseService', () => {
         fetchFn: mockFetch as unknown as typeof fetch
       });
 
-      const newId = await service.createWarehouse('test-custom-stock', 'Custom Public Stock');
+      const newId = await service.createWarehouse('test-custom-stock', 'Custom Public Stock', 8);
 
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.unas.eu/shop/setWarehouse',
@@ -159,10 +161,10 @@ describe('UnasWarehouseService', () => {
       expect(sentBody).toContain('<Active>yes</Active>');
       expect(sentBody).toContain('<![CDATA[test-custom-stock]]>');
       expect(sentBody).toContain('<![CDATA[Custom Public Stock]]>');
-      expect(sentBody).toContain('<Order>4</Order>');
+      expect(sentBody).toContain('<Order>8</Order>');
       expect(sentBody).toContain('<Type>external</Type>');
       expect(sentBody).toContain('<SyncMainStockDisabled>yes</SyncMainStockDisabled>');
-      expect(sentBody).toContain('<VisibleOnProductDetails>yes</VisibleOnProductDetails>');
+      expect(sentBody).toContain('<VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>');
 
       expect(newId).toBe('9876543');
     });
@@ -196,10 +198,12 @@ describe('UnasWarehouseService', () => {
     <Warehouse>
         <Id>101</Id>
         <Name><![CDATA[test-wh-1]]></Name>
+        <Order>5</Order>
     </Warehouse>
     <Warehouse>
         <Id>102</Id>
         <Name><![CDATA[test-wh-2]]></Name>
+        <Order>9</Order>
     </Warehouse>
 </Warehouses>`;
 
@@ -225,19 +229,28 @@ describe('UnasWarehouseService', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1); // Only getWarehouse called
     });
 
-    it('should create missing warehouses and populate both existing and new in the map', async () => {
+    it('should create missing warehouses with incremented Order exceeding maximum existing order', async () => {
       const getXml = `<?xml version="1.0" encoding="UTF-8" ?>
 <Warehouses>
     <Warehouse>
         <Id>101</Id>
         <Name><![CDATA[test-wh-1]]></Name>
+        <Order>9</Order>
     </Warehouse>
 </Warehouses>`;
 
-      const setXml = `<?xml version="1.0" encoding="UTF-8" ?>
+      const setXml1 = `<?xml version="1.0" encoding="UTF-8" ?>
 <Warehouses>
     <Warehouse>
         <Id>202</Id>
+        <Status>ok</Status>
+    </Warehouse>
+</Warehouses>`;
+
+      const setXml2 = `<?xml version="1.0" encoding="UTF-8" ?>
+<Warehouses>
+    <Warehouse>
+        <Id>203</Id>
         <Status>ok</Status>
     </Warehouse>
 </Warehouses>`;
@@ -252,7 +265,12 @@ describe('UnasWarehouseService', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          text: async () => setXml
+          text: async () => setXml1
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          text: async () => setXml2
         });
 
       const service = new UnasWarehouseService({
@@ -260,15 +278,23 @@ describe('UnasWarehouseService', () => {
         fetchFn: mockFetch as unknown as typeof fetch
       });
 
-      const result = await service.syncWarehouses(['test-wh-1', 'test-missing-wh']);
+      const result = await service.syncWarehouses(['test-wh-1', 'test-missing-1', 'test-missing-2']);
 
       expect(result.existingCount).toBe(1);
-      expect(result.createdCount).toBe(1);
+      expect(result.createdCount).toBe(2);
       expect(result.nameToId.get('test-wh-1')).toBe('101');
-      expect(result.nameToId.get('test-missing-wh')).toBe('202');
-      expect(result.warehouses.get('101')).toBe('test-wh-1');
-      expect(result.warehouses.get('202')).toBe('test-missing-wh');
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(result.nameToId.get('test-missing-1')).toBe('202');
+      expect(result.nameToId.get('test-missing-2')).toBe('203');
+
+      // First new warehouse gets Order: 10 (9 + 1)
+      const firstSetBody = mockFetch.mock.calls[1][1].body;
+      expect(firstSetBody).toContain('<Order>10</Order>');
+      expect(firstSetBody).toContain('<![CDATA[test-missing-1]]>');
+
+      // Second new warehouse gets Order: 11 (10 + 1)
+      const secondSetBody = mockFetch.mock.calls[2][1].body;
+      expect(secondSetBody).toContain('<Order>11</Order>');
+      expect(secondSetBody).toContain('<![CDATA[test-missing-2]]>');
     });
 
     it('should never send modify or delete actions and leave all existing warehouses untouched on UNAS', async () => {

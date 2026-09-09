@@ -42,6 +42,7 @@ export interface UnasWarehouse {
   publicName?: string;
   active?: string;
   type?: string;
+  order?: number;
 }
 
 export interface WarehouseSyncResult {

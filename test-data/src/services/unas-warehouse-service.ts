@@ -57,7 +57,7 @@ export class UnasWarehouseService {
     return this.parseWarehousesXml(responseText);
   }
 
-  public async createWarehouse(name: string, publicName?: string): Promise<string> {
+  public async createWarehouse(name: string, publicName?: string, order: number = 1): Promise<string> {
     const token = await this._authService.getValidToken();
     const safeName = this.escapeCdata(name);
     const safePublicName = this.escapeCdata(publicName ?? name);
@@ -69,10 +69,10 @@ export class UnasWarehouseService {
         <Active>yes</Active>
         <Name><![CDATA[${safeName}]]></Name>
         <PublicName><![CDATA[${safePublicName}]]></PublicName>
-        <Order>4</Order>
+        <Order>${order}</Order>
         <Type>external</Type>
         <SyncMainStockDisabled>yes</SyncMainStockDisabled>
-        <VisibleOnProductDetails>yes</VisibleOnProductDetails>
+        <VisibleOnProductDetails>only_if_on_stock</VisibleOnProductDetails>
     </Warehouse>
 </Warehouses>`;
 
@@ -152,9 +152,14 @@ export class UnasWarehouseService {
     const warehouses = new Map<string, string>(); // warehouseId -> warehouseName
     const nameToId = new Map<string, string>();   // warehouseName -> warehouseId
 
+    let maxOrder = 0;
+
     for (const wh of existing) {
       warehouses.set(wh.id, wh.name);
       nameToId.set(wh.name, wh.id);
+      if (wh.order !== undefined && wh.order > maxOrder) {
+        maxOrder = wh.order;
+      }
     }
 
     const existingCount = existing.length;
@@ -162,12 +167,13 @@ export class UnasWarehouseService {
 
     for (const requiredName of requiredWarehouseNames) {
       if (!nameToId.has(requiredName)) {
-        console.log(`[UnasWarehouseService] Warehouse "${requiredName}" not found on UNAS. Creating...`);
-        const newId = await this.createWarehouse(requiredName);
+        maxOrder += 1;
+        console.log(`[UnasWarehouseService] Warehouse "${requiredName}" not found on UNAS. Creating with Order=${maxOrder}...`);
+        const newId = await this.createWarehouse(requiredName, undefined, maxOrder);
         nameToId.set(requiredName, newId);
         warehouses.set(newId, requiredName);
         createdCount++;
-        console.log(`[UnasWarehouseService] -> Successfully created warehouse "${requiredName}" with UNAS ID: ${newId}`);
+        console.log(`[UnasWarehouseService] -> Successfully created warehouse "${requiredName}" with UNAS ID: ${newId} (Order: ${maxOrder})`);
       }
     }
 
@@ -191,6 +197,8 @@ export class UnasWarehouseService {
       const publicName = this.extractXmlValue(block, 'PublicName');
       const active = this.extractXmlValue(block, 'Active');
       const type = this.extractXmlValue(block, 'Type');
+      const orderRaw = this.extractXmlValue(block, 'Order');
+      const order = orderRaw && !Number.isNaN(Number(orderRaw)) ? Number(orderRaw) : undefined;
 
       if (id && name) {
         warehouses.push({
@@ -198,7 +206,8 @@ export class UnasWarehouseService {
           name,
           publicName: publicName ?? undefined,
           active: active ?? undefined,
-          type: type ?? undefined
+          type: type ?? undefined,
+          order
         });
       }
     }
