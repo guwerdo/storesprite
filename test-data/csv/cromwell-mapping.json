@@ -1,6 +1,6 @@
 {
-	"sku": "part",
-        "title": "web_title",
+	"sku": "sku",
+        "title": "title",
         "description": "description",
         "category": 729110,
 	"stocks": [
