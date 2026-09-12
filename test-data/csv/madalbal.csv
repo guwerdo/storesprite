@@ -1,10 +1,10 @@
 sku;stock;title;description
-test-sp-003-1;84;title 1820;description 1820
-test-sp-003-2;100;title 546;description 546
-test-sp-003-3;100;title 10266;description 10266
-test-sp-003-4;100;title 10622;description 10622
-test-sp-003-5;0;title 86145;description 86145
-test-sp-003-6;11;title 108400;description 108400
-test-sp-003-7;100;title 108500;description 108500
-test-sp-003-8;100;title 108611;description 108611
-test-sp-003-9;100;title 108612;description 108612
+test-sp-003-1;84;title test-sp-003-1;description test-sp-003-1
+test-sp-003-2;100;title test-sp-003-2;description test-sp-003-2
+test-sp-003-3;100;title test-sp-003-3;description test-sp-003-3
+test-sp-003-4;100;title test-sp-003-4;description test-sp-003-4
+test-sp-003-5;0;title test-sp-003-5;description test-sp-003-5
+test-sp-003-6;11;title test-sp-003-6;description test-sp-003-6
+test-sp-003-7;100;title test-sp-003-7;description test-sp-003-7
+test-sp-003-8;100;title test-sp-003-8;description test-sp-003-8
+test-sp-003-9;100;title test-sp-003-9;description test-sp-003-9

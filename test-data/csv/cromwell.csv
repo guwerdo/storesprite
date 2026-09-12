@@ -1,11 +1,11 @@
 sku;title;description;free_stock_total;free_stock_hu;free_stock_cz;free_stock_wdc
-test-sp-000-1;Atlas Workholders. V50-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;318;25;23;270
-test-sp-000-2;Atlas Workholders. V80-FF FIX ORSÓS FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;124;0;0;124
-test-sp-000-3;Atlas Workholders. V90-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;340;17;226;97
-test-sp-000-4;Atlas Workholders. V200-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;107;27;0;80
-test-sp-000-5;Atlas Workholders. V217-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;140;0;0;140
-test-sp-000-6;Atlas Workholders. V217-FS TÖMÖR KAROS FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;2;2;0;0
-test-sp-000-7;Atlas Workholders. V450-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;10;10;0;-9
-test-sp-000-8;Atlas Workholders. V150-FA 'U' KAROS ÁLLÍTHATÓ FÜGGŐLEGES GYORSSZORÍTÓ;Arra tervezték, hogy javítsa a teljesítményt gyártásban és rögzítést igénylő műhelymunkáknál. A gyorsszorítók használata által lehetővé tett gyors nyitás/zárás nagymértékben csökkentheti az állási időt a termelés összes fázisában.;165;5;4;156
-test-sp-000-9;Atlas Workholders. H20-FA 'U' KAROS ÁLLÍTHATÓ VÍZSZINTES GYORSSZORÍTÓ;Alacsony kialakítású szorító olyan alkalmazásokhoz, ahol jobb hozzáférés szükséges a megmunkálás alatt lévő munkadarabhoz. A szorító lefelé, a kartól 90°-ra fejti ki a szorítóerőt.;286;2;48;236
-test-sp-000-10;Atlas Workholders. H80-FA 'U' KAROS ÁLLÍTHATÓ VÍZSZINTES GYORSSZORÍTÓ;Alacsony kialakítású szorító olyan alkalmazásokhoz, ahol jobb hozzáférés szükséges a megmunkálás alatt lévő munkadarabhoz. A szorító lefelé, a kartól 90°-ra fejti ki a szorítóerőt.;330;57;32;241
+test-sp-000-1;title test-sp-000-1;description test-sp-000-1;318;25;23;270
+test-sp-000-2;title test-sp-000-2;description test-sp-000-2;124;0;0;124
+test-sp-000-3;title test-sp-000-3;description test-sp-000-3;340;17;226;97
+test-sp-000-4;title test-sp-000-4;description test-sp-000-4;107;27;0;80
+test-sp-000-5;title test-sp-000-5;description test-sp-000-5;140;0;0;140
+test-sp-000-6;title test-sp-000-6;description test-sp-000-6;2;2;0;0
+test-sp-000-7;title test-sp-000-7;description test-sp-000-7;10;10;0;-9
+test-sp-000-8;title test-sp-000-8;description test-sp-000-8;165;5;4;156
+test-sp-000-9;title test-sp-000-9;description test-sp-000-9;286;2;48;236
+test-sp-000-10;title test-sp-000-10;description test-sp-000-10;330;57;32;241
