@@ -51,3 +51,63 @@ Build the multi-stage Docker image from repository root:
 ```bash
 docker build -t unas-test-creator -f test-data/Dockerfile .
 ```
+
+---
+
+## Running in Docker
+
+The `Dockerfile` defines `CMD ["tail", "-f", "/dev/null"]` as its default command, so the container remains running in the background automatically upon startup without needing local volume mounts.
+
+### 1. Start the Container
+
+```bash
+# Start in the background
+docker run -d --name unas-test-creator \
+  -e UNAS_API_KEY="your-unas-api-key" \
+  unas-test-creator
+```
+
+To enable debug mode at startup (logging all outgoing/incoming UNAS XML payloads with URLs):
+
+```bash
+docker run -d --name unas-test-creator \
+  -e UNAS_API_KEY="your-unas-api-key" \
+  -e DEBUG_UNAS_JSON_CLIENT="true" \
+  unas-test-creator
+```
+
+### 2. Enter the Container
+
+Open an interactive shell inside `/workspace/test-data`:
+
+```bash
+docker exec -it unas-test-creator bash
+```
+
+### 3. Run Commands Inside the Container
+
+Once inside the container:
+
+```bash
+# Run unit tests
+npm test
+
+# Build TypeScript
+npm run build
+
+# Run in dry-run mode (syncs warehouses without uploading products)
+DRY_RUN=true npm start
+
+# Run full sync and product upload
+npm start
+
+# Run with UNAS XML debug logging enabled (prints sent and received XML payloads)
+DEBUG_UNAS_JSON_CLIENT=true npm start
+```
+
+### 4. Stop & Remove the Container
+
+```bash
+docker stop unas-test-creator
+docker rm unas-test-creator
+```
