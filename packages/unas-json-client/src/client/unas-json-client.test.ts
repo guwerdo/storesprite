@@ -74,7 +74,7 @@ describe("UnasJsonClient", () => {
         fake.enqueue(`${BASE}login`, LOGIN_OK);
         fake.enqueue(`${BASE}setWarehouse`, {
             status: 200,
-            data: '<?xml version="1.0" encoding="UTF-8"?><Warehouses><Warehouse><Id>99</Id><Status>ok</Status></Warehouse></Warehouses>',
+            data: '<?xml version="1.0" encoding="UTF-8"?><Warehouses><Warehouse><id>99</id><Status>ok</Status></Warehouse></Warehouses>',
         });
         const client = setup(fake);
 

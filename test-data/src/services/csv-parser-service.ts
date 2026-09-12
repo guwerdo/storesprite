@@ -74,10 +74,11 @@ export class CsvParserService {
 
     // Strip unit strings like "db", spaces, etc. (e.g. "0 db" -> "0")
     const cleaned = str.replace(/[^0-9.-]/g, '').trim();
-    if (cleaned === '' || Number.isNaN(Number(cleaned))) {
+    const num = Number(cleaned);
+    if (cleaned === '' || Number.isNaN(num)) {
       return '0';
     }
 
-    return cleaned;
+    return String(Math.max(0, num));
   }
 }

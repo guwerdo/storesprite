@@ -8,7 +8,7 @@ import type { ISetWarehouse, ISetWarehouseRequest, ISetWarehouseResponse } from 
 interface ISetWarehouseResponseContent {
     Warehouses?: {
         Warehouse?: {
-            Id?: string | number;
+            id?: string | number;
             Status?: string;
             Action?: string;
             Error?: string;
@@ -90,7 +90,7 @@ export class SetWarehouseEndpoint implements IUnasEndpoint<ISetWarehouseRequest,
             return [];
         }
         return warehouses.map((w) => ({
-            id: String(w.Id ?? "").trim(),
+            id: String(w.id ?? "").trim(),
             status: w.Status?.toLowerCase() === "error" ? "error" : "ok",
             error: w.Error?.trim(),
             action: w.Action?.trim(),

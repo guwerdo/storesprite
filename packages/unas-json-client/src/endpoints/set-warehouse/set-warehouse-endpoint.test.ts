@@ -62,7 +62,7 @@ describe("SetWarehouseEndpoint", () => {
             const xml = `<?xml version="1.0" encoding="UTF-8" ?>
 <Warehouses>
     <Warehouse>
-        <Id>4590231</Id>
+        <id>4590231</id>
         <Status>ok</Status>
     </Warehouse>
 </Warehouses>`;
@@ -79,7 +79,7 @@ describe("SetWarehouseEndpoint", () => {
             const xml = `<?xml version="1.0" encoding="UTF-8" ?>
 <Warehouses>
     <Warehouse>
-        <Id>4590231</Id>
+        <id>4590231</id>
         <Status>error</Status>
         <Error>Warehouse not found</Error>
     </Warehouse>
