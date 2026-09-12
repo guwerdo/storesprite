@@ -109,6 +109,10 @@ export class UnasJsonClient implements IUnasJsonClient {
         const body = endpoint.buildRequest(request);
         this._logger.info("UNAS request", { name: endpoint.name, url });
 
+        if (this._isDebugLoggingEnabled()) {
+            this._logDebugRequest(url, body);
+        }
+
         let response: IUnasHttpResponse;
         try {
             response = await this._httpClient.post(url, body, token ? { Authorization: `Bearer ${token}` } : undefined);
@@ -117,11 +121,35 @@ export class UnasJsonClient implements IUnasJsonClient {
             throw new UnasTransportError(`UNAS transport error for ${endpoint.name}`, { cause: error });
         }
 
+        if (this._isDebugLoggingEnabled()) {
+            this._logDebugResponse(url, response.status, response.data);
+        }
+
         if (response.status !== 200) {
             throw this.createHttpError(response, url);
         }
 
         return endpoint.parseResponse(response.data);
+    }
+
+    private _isDebugLoggingEnabled(): boolean {
+        const flag = process.env.DEBUG_UNAS_JSON_CLIENT?.trim().toLowerCase();
+        return flag !== undefined && flag !== "" && flag !== "0" && flag !== "false";
+    }
+
+    private _logDebugRequest(url: string, body: string | undefined): void {
+        const sanitizedBody = body !== undefined ? this._maskSensitiveXml(body) : "(empty)";
+        console.log(`[DEBUG_UNAS_JSON_CLIENT] >>> REQUEST to: ${url}\n${sanitizedBody}`);
+        this._logger.debug("UNAS debug request", { url, body: sanitizedBody });
+    }
+
+    private _logDebugResponse(url: string, status: number, data: string): void {
+        console.log(`[DEBUG_UNAS_JSON_CLIENT] <<< RESPONSE from: ${url} (Status: ${status})\n${data}`);
+        this._logger.debug("UNAS debug response", { url, status, data });
+    }
+
+    private _maskSensitiveXml(xml: string): string {
+        return xml.replace(/<ApiKey>[\s\S]*?<\/ApiKey>/gi, "<ApiKey>***REDACTED***</ApiKey>");
     }
 
     private createHttpError(response: IUnasHttpResponse, url: string): UnasHttpError {

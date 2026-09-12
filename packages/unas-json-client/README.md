@@ -74,6 +74,27 @@ container.bind(TYPES.ILogger).to(Log4jsLogger).inSingletonScope();
 registerUnasJsonClient(container, config);
 ```
 
+## Debugging
+
+You can enable verbose XML debug logging by setting the `DEBUG_UNAS_JSON_CLIENT` environment variable:
+
+```bash
+DEBUG_UNAS_JSON_CLIENT=true
+```
+
+When enabled (truthy and not `"0"` / `"false"`), the client logs:
+- Outgoing requests with the target URL and the generated XML payload (with `<ApiKey>` credentials automatically redacted).
+- Incoming responses with the URL, HTTP status code, and raw XML response payload.
+
+### Example Console Output
+
+```text
+[DEBUG_UNAS_JSON_CLIENT] >>> REQUEST to: https://api.unas.eu/shop/login
+<?xml version="1.0" encoding="UTF-8"?><Params><ApiKey>***REDACTED***</ApiKey></Params>
+[DEBUG_UNAS_JSON_CLIENT] <<< RESPONSE from: https://api.unas.eu/shop/login (Status: 200)
+<?xml version="1.0" encoding="UTF-8"?><Login><Token>...</Token><Status>ok</Status></Login>
+```
+
 ## Adding a new endpoint
 
 `getProduct` is the canonical example. The full recipe is in `docs/unas-json-client/plan.md` ("Extension mechanism") and `AGENTS.md`. In short:
